@@ -148,6 +148,7 @@ public class BrowserActivity extends AppCompatActivity implements BrowserControl
     private Cookie cookieHosts;
     private AdBlock adBlock;
     private Remote remote;
+    private final BrowserContainer browserContainer = new BrowserContainer();
 
     private long newIcon;
     private boolean filter;
@@ -354,7 +355,7 @@ public class BrowserActivity extends AppCompatActivity implements BrowserControl
             Intent toClearService = new Intent(this, ClearService.class);
             startService(toClearService);
         }
-        BrowserContainer.clear();
+        browserContainer.clear();
         unregisterReceiver(downloadReceiver);
         finish();
         super.onDestroy();
@@ -1375,11 +1376,11 @@ public class BrowserActivity extends AppCompatActivity implements BrowserControl
 
         final View albumView = ninjaWebView.getAlbumView();
         if (currentAlbumController != null) {
-            int index = BrowserContainer.indexOf(currentAlbumController) + 1;
-            BrowserContainer.add(ninjaWebView, index);
+            int index = browserContainer.indexOf(currentAlbumController) + 1;
+            browserContainer.add(ninjaWebView, index);
             tab_container.addView(albumView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         } else {
-            BrowserContainer.add(ninjaWebView);
+            browserContainer.add(ninjaWebView);
             tab_container.addView(albumView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         }
 
@@ -1425,7 +1426,7 @@ public class BrowserActivity extends AppCompatActivity implements BrowserControl
 
     @Override
     public synchronized void removeAlbum (final AlbumController controller) {
-        if (BrowserContainer.size() <= 1) {
+        if (browserContainer.size() <= 1) {
             if(!sp.getBoolean("sp_reopenLastTab", false)) {
                 doubleTapsQuit();
             }else{
@@ -1437,12 +1438,12 @@ public class BrowserActivity extends AppCompatActivity implements BrowserControl
                 @Override
                 public void run() {
                     tab_container.removeView(controller.getAlbumView());
-                    int index = BrowserContainer.indexOf(controller);
-                    BrowserContainer.remove(controller);
-                    if (index >= BrowserContainer.size()) {
-                        index = BrowserContainer.size() - 1;
+                    int index = browserContainer.indexOf(controller);
+                    browserContainer.remove(controller);
+                    if (index >= browserContainer.size()) {
+                        index = browserContainer.size() - 1;
                     }
-                    showAlbum(BrowserContainer.get(index));
+                    showAlbum(browserContainer.get(index));
                 }
             });
         }
@@ -2283,10 +2284,10 @@ public class BrowserActivity extends AppCompatActivity implements BrowserControl
     }
 
     private AlbumController nextAlbumController(boolean next) {
-        if (BrowserContainer.size() <= 1) {
+        if (browserContainer.size() <= 1) {
             return currentAlbumController;
         }
-        List<AlbumController> list = BrowserContainer.list();
+        List<AlbumController> list = browserContainer.list();
         int index = list.indexOf(currentAlbumController);
         if (next) {
             index++;
