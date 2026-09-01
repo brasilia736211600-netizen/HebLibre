@@ -7,10 +7,10 @@ GitHub is the source of truth. Chat history, agent memory, and local workspace s
 ## Current repository state
 - Repository: `brasilia736211600-netizen/HebLibre`
 - Active development branch: `genspark-dev`
-- Current HEAD: `19bd8a826f422f545367b2d62ebf1f99d63cdc1e`
+- Current HEAD: `3c86c4857e0b96b31c992cd00885fccfdfb4d932`
 - Default branch: `l10n_crowdin`
 - Project type: Android application based on the FOSS Browser/WebView codebase
-- The two latest commits only establish the canonical workflow state and portable resume command; no product code changed in those commits.
+- The three latest commits (`1a930a7`, `19bd8a8`, `3c86c48`) only establish/record the canonical workflow state and portable resume command; no product code changed in those commits.
 
 ## Verification ladder
 Never mark a capability as complete merely because code exists.
@@ -58,21 +58,21 @@ Status: NOT VERIFIED.
 Product feature implementation has not yet started on this branch after the baseline/CI recovery.
 
 ### Current phase
-`P0 — Profile / Identity Isolation — TDD Discovery`
+`P0 — Profile / Identity Isolation — Deep Architecture Trace COMPLETE`
 
-### Exact current objective
-Determine the smallest viable profile/identity isolation boundary using the existing architecture, before implementing feature code.
+### Exact current objective (done)
+Determined the smallest viable profile/identity isolation boundary using the existing architecture, before implementing feature code. Full source-level trace completed at HEAD `3c86c4857e0b96b31c992cd00885fccfdfb4d932`. No production code modified during the trace (read-only).
 
-### Required investigation
-1. WebView lifecycle.
-2. Cookie/storage/database handling.
-3. Settings/preferences that influence browser state.
-4. Tab/session lifecycle.
-5. Global versus per-WebView/per-tab state.
-6. Smallest existing isolation seam.
+### Investigation completed (SOURCE-VERIFIED)
+1. WebView lifecycle: `NinjaWebView` (per-tab object) created in `BrowserActivity.addAlbum()`, destroyed via `BrowserContainer.remove()/clear()` calling `NinjaWebView.destroy()`.
+2. Cookie/storage/database handling: `android.webkit.CookieManager.getInstance()` is a process-wide singleton (used in `NinjaWebViewClient`, `BrowserUnit`, `HelperUnit`). WebView DOM storage/IndexedDB/WebSQL/cache backed by one shared Chromium profile dir (`app_webview/`, hardcoded in `BrowserUnit.clearIndexedDB`). No `WebView.setDataDirectorySuffix()` call exists anywhere in the codebase.
+3. Settings/preferences: all identity-relevant toggles (JS/cookies/ad-block/remote-content/UA/search-engine/saveHistory) live in one shared `PreferenceManager.getDefaultSharedPreferences(context)` file, read independently by `NinjaWebView`, `NinjaWebViewClient`, `BrowserActivity`, `RecordAction`, `BrowserUnit`.
+4. Tab/session lifecycle: `BrowserContainer.list` is a single `private static final List<AlbumController>` — one flat global tab list for the whole process.
+5. Global vs per-tab state: only the `NinjaWebView` Java object and its `WebSettings` feature-toggle flags are genuinely per-instance. Cookies, DOM storage, history, bookmarks, tab list, and whitelist domains (JS/AdBlock/Cookie/Remote) are all process-wide singletons or single shared SQLite file (`Ninja4.db`, hardcoded name in `RecordHelper`) with no `profile_id` concept anywhere in `RecordUnit`.
+6. Smallest existing isolation seam: **none exists today.** Every stateful subsystem is global/static. Full leakage map and boundary analysis recorded in the P0 discovery report (chat transcript); summary: tabs/history/bookmarks/whitelist-domains/prefs are isolable via non-architectural refactor (remove `static`, parameterize DB/prefs file by profile id); cookies + WebView disk storage are capped by an Android/WebView platform ceiling (`CookieManager` singleton, `setDataDirectorySuffix` must be called once before any WebView exists in the process) — true multi-profile cookie/storage isolation without a full-restart-per-switch would require multi-process architecture, which is explicitly deferred (YAGNI) pending proof it's required.
 
-### TDD requirement
-Before production changes, define the smallest meaningful pure-Java/business-logic test contract that can be exercised without an emulator. Add Robolectric only if source inspection proves it is necessary.
+### TDD status
+No isolation boundary class exists yet to test (nothing to instantiate — `BrowserContainer`/`AdBlock`/`Javascript`/`Cookie`/`Remote` are all `static`-only). Writing an isolation test now would require inventing behavior that doesn't exist, which violates the no-artificial-RED rule. Proposed first legitimate pure-Java TDD seam (NOT yet authorized, NOT yet implemented): extract the duplicated `isWhite(List<String>, String)` matching logic from `AdBlock`/`Javascript`/`Cookie`/`Remote` into one pure-Java static helper (`UrlMatcher.containsAnyDomain`), with a first pure-JVM test characterizing it — no Robolectric, no Android dependency, no static/global-state change yet. This is a prerequisite seam for the later per-profile whitelist refactor, not the isolation feature itself.
 
 ### Explicit YAGNI boundary
 Do not implement the following during P0 discovery:
@@ -123,8 +123,7 @@ A step is not considered closed until:
 - and the next single execution step is written down.
 
 ## Current single next execution step
-Run the P0 TDD discovery prompt against the current branch HEAD `19bd8a826f422f545367b2d62ebf1f99d63cdc1e` (the product code is unchanged from the CI-verified baseline).
-Do not implement the feature until the discovery report identifies the isolation boundary and exact test contract.
+Await explicit user authorization for the smallest production change identified by the P0 trace: extract the pure string-matching logic duplicated across `AdBlock.isWhite`/`Javascript.isWhite`/`Cookie.isWhite`/`Remote.isWhite` into one pure-Java static helper (`UrlMatcher.containsAnyDomain(List<String>, String)`), plus a first pure-JVM characterization test (`UrlMatcherTest`) — no Robolectric, no static/global-state change, no isolation logic yet. Do not begin the isolation/profile feature implementation itself until this seam is authorized and landed, and do not begin any P1/production feature work until P0 is explicitly closed by the user.
 
 ## Last updated
-2026-09-01
+2026-09-01 (P0 deep architecture trace completed; no production code changed this round; local checkout reconciled to `origin/genspark-dev` HEAD `3c86c4857e0b96b31c992cd00885fccfdfb4d932`)
