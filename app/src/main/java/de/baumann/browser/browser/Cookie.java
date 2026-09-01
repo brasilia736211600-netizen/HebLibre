@@ -15,12 +15,13 @@ import java.util.Locale;
 import java.util.Set;
 
 import de.baumann.browser.database.RecordAction;
+import de.baumann.browser.unit.ProfileScopedWhitelist;
 import de.baumann.browser.unit.RecordUnit;
 
 public class Cookie {
     private static final String FILE = "cookieHosts.txt";
     private static final Set<String> hostsCookie = new HashSet<>();
-    private static final List<String> whitelistCookie = new ArrayList<>();
+    private static final ProfileScopedWhitelist whitelists = new ProfileScopedWhitelist();
     @SuppressLint("ConstantLocale")
     private static final Locale locale = Locale.getDefault();
 
@@ -43,7 +44,7 @@ public class Cookie {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context) {
+    private synchronized static void loadDomains(Context context, List<String> whitelistCookie) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelistCookie.clear();
@@ -52,14 +53,20 @@ public class Cookie {
     }
 
     private final Context context;
+    private final List<String> whitelistCookie;
 
     public Cookie(Context context) {
+        this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
+    }
+
+    public Cookie(Context context, String profileId) {
         this.context = context;
+        this.whitelistCookie = whitelists.forProfile(profileId);
 
         if (hostsCookie.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context);
+        loadDomains(context, whitelistCookie);
     }
 
     public boolean isWhite(String url) {

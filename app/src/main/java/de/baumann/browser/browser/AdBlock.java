@@ -6,6 +6,7 @@ import android.content.res.AssetManager;
 import android.util.Log;
 
 import de.baumann.browser.database.RecordAction;
+import de.baumann.browser.unit.ProfileScopedWhitelist;
 import de.baumann.browser.unit.RecordUnit;
 
 import java.io.BufferedReader;
@@ -18,7 +19,7 @@ import java.util.*;
 public class AdBlock {
     private static final String FILE = "hosts.txt";
     private static final Set<String> hosts = new HashSet<>();
-    private static final List<String> whitelist = new ArrayList<>();
+    private static final ProfileScopedWhitelist whitelists = new ProfileScopedWhitelist();
     @SuppressLint("ConstantLocale")
     private static final Locale locale = Locale.getDefault();
 
@@ -41,7 +42,7 @@ public class AdBlock {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context) {
+    private synchronized static void loadDomains(Context context, List<String> whitelist) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelist.clear();
@@ -66,14 +67,20 @@ public class AdBlock {
     }
 
     private final Context context;
+    private final List<String> whitelist;
 
     public AdBlock(Context context) {
+        this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
+    }
+
+    public AdBlock(Context context, String profileId) {
         this.context = context;
+        this.whitelist = whitelists.forProfile(profileId);
 
         if (hosts.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context);
+        loadDomains(context, whitelist);
     }
 
     public boolean isWhite(String url) {

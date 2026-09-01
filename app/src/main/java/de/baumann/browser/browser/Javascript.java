@@ -15,12 +15,13 @@ import java.util.Locale;
 import java.util.Set;
 
 import de.baumann.browser.database.RecordAction;
+import de.baumann.browser.unit.ProfileScopedWhitelist;
 import de.baumann.browser.unit.RecordUnit;
 
 public class Javascript {
     private static final String FILE = "javaHosts.txt";
     private static final Set<String> hostsJS = new HashSet<>();
-    private static final List<String> whitelistJS = new ArrayList<>();
+    private static final ProfileScopedWhitelist whitelists = new ProfileScopedWhitelist();
     @SuppressLint("ConstantLocale")
     private static final Locale locale = Locale.getDefault();
 
@@ -43,7 +44,7 @@ public class Javascript {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context) {
+    private synchronized static void loadDomains(Context context, List<String> whitelistJS) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelistJS.clear();
@@ -52,14 +53,20 @@ public class Javascript {
     }
 
     private final Context context;
+    private final List<String> whitelistJS;
 
     public Javascript(Context context) {
+        this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
+    }
+
+    public Javascript(Context context, String profileId) {
         this.context = context;
+        this.whitelistJS = whitelists.forProfile(profileId);
 
         if (hostsJS.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context);
+        loadDomains(context, whitelistJS);
     }
 
     public boolean isWhite(String url) {

@@ -15,12 +15,13 @@ import java.util.Locale;
 import java.util.Set;
 
 import de.baumann.browser.database.RecordAction;
+import de.baumann.browser.unit.ProfileScopedWhitelist;
 import de.baumann.browser.unit.RecordUnit;
 
 public class Remote {
     private static final String FILE = "remoteHosts.txt";
     private static final Set<String> hostsRemote = new HashSet<>();
-    private static final List<String> whitelistRemote = new ArrayList<>();
+    private static final ProfileScopedWhitelist whitelists = new ProfileScopedWhitelist();
     @SuppressLint("ConstantLocale")
     private static final Locale locale = Locale.getDefault();
 
@@ -43,7 +44,7 @@ public class Remote {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context) {
+    private synchronized static void loadDomains(Context context, List<String> whitelistRemote) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelistRemote.clear();
@@ -52,14 +53,20 @@ public class Remote {
     }
 
     private final Context context;
+    private final List<String> whitelistRemote;
 
     public Remote(Context context) {
+        this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
+    }
+
+    public Remote(Context context, String profileId) {
         this.context = context;
+        this.whitelistRemote = whitelists.forProfile(profileId);
 
         if (hostsRemote.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context);
+        loadDomains(context, whitelistRemote);
     }
 
     public boolean isWhite(String url) {
