@@ -7,9 +7,10 @@ GitHub is the source of truth. Chat history, agent memory, and local workspace s
 ## Current repository state
 - Repository: `brasilia736211600-netizen/HebLibre`
 - Active development branch: `genspark-dev`
-- Current HEAD: `9aca596d6361104d7982563c3784512caab98cfa`
+- Current HEAD: `19bd8a826f422f545367b2d62ebf1f99d63cdc1e`
 - Default branch: `l10n_crowdin`
 - Project type: Android application based on the FOSS Browser/WebView codebase
+- The two latest commits only establish the canonical workflow state and portable resume command; no product code changed in those commits.
 
 ## Verification ladder
 Never mark a capability as complete merely because code exists.
@@ -42,10 +43,11 @@ Status: TEST-VERIFIED.
 
 ### CI
 - GitHub Actions workflow uses JDK 17 for Android SDK setup and JDK 11 for the legacy Gradle build/test toolchain.
-- Successful CI head: `9aca596d6361104d7982563c3784512caab98cfa`.
+- Successful CI head before the documentation-only commits: `9aca596d6361104d7982563c3784512caab98cfa`.
 - Successful workflow run: `33459477325`.
 
 Status: CI-VERIFIED for `9aca596d6361104d7982563c3784512caab98cfa`.
+- Documentation-only commits `1a930a715c17110c07b318f5e75e150959787bc0` and `19bd8a826f422f545367b2d62ebf1f99d63cdc1e` have not yet been treated as CI-verified until their branch CI result is checked.
 
 ### Runtime
 - No Android device/emulator runtime verification has been completed yet.
@@ -87,7 +89,7 @@ Do not implement the following during P0 discovery:
 Do not add a new architecture unless the existing architecture is demonstrably insufficient.
 
 ## Work-allocation policy
-Use the two-agent setup intentionally:
+Use the two-agent setup intentionally.
 
 ### Genspark should consume credits on
 - Deep repository archaeology and cross-file architectural tracing.
@@ -121,7 +123,7 @@ A step is not considered closed until:
 - and the next single execution step is written down.
 
 ## Current single next execution step
-Run the P0 TDD discovery prompt against commit `9aca596d6361104d7982563c3784512caab98cfa`.
+Run the P0 TDD discovery prompt against the current branch HEAD `19bd8a826f422f545367b2d62ebf1f99d63cdc1e` (the product code is unchanged from the CI-verified baseline).
 Do not implement the feature until the discovery report identifies the isolation boundary and exact test contract.
 
 ## Last updated
