@@ -7,10 +7,12 @@ GitHub is the source of truth. Chat history, agent memory, and local workspace s
 ## Current repository state
 - Repository: `brasilia736211600-netizen/HebLibre`
 - Active development branch: `genspark-dev`
-- Current HEAD: `3c86c4857e0b96b31c992cd00885fccfdfb4d932`
+- Current HEAD: `1ded82a77b240e41f416376d3a27663974d273e8`
 - Default branch: `l10n_crowdin`
 - Project type: Android application based on the FOSS Browser/WebView codebase
-- The three latest commits (`1a930a7`, `19bd8a8`, `3c86c48`) only establish/record the canonical workflow state and portable resume command; no product code changed in those commits.
+- Re-verified live against `origin/genspark-dev` (fresh `git fetch`, not assumed from memory): local HEAD, remote HEAD, and this document agree exactly, working tree clean.
+- CI run status for the current branch cannot be checked via API with the current credential (`HTTP 403: Resource not accessible by integration` on `actions/runs`, `check-runs`, and `status` endpoints — missing `actions:read`/`checks:read` scope). Repository is private, so no unauthenticated fallback exists. This is a known, previously documented limitation, not a new blocker.
+- The four latest commits (`1a930a7`, `19bd8a8`, `3c86c48`, `1ded82a`) are documentation-only; no product code changed in any of them.
 
 ## Verification ladder
 Never mark a capability as complete merely because code exists.
@@ -123,7 +125,8 @@ A step is not considered closed until:
 - and the next single execution step is written down.
 
 ## Current single next execution step
-Await explicit user authorization for the smallest production change identified by the P0 trace: extract the pure string-matching logic duplicated across `AdBlock.isWhite`/`Javascript.isWhite`/`Cookie.isWhite`/`Remote.isWhite` into one pure-Java static helper (`UrlMatcher.containsAnyDomain(List<String>, String)`), plus a first pure-JVM characterization test (`UrlMatcherTest`) — no Robolectric, no static/global-state change, no isolation logic yet. Do not begin the isolation/profile feature implementation itself until this seam is authorized and landed, and do not begin any P1/production feature work until P0 is explicitly closed by the user.
+P0 (Deep Architecture Trace) is complete and closed. The previously proposed `UrlMatcher` extraction is **preparatory P1 production code, not a P0 deliverable** — re-checked this round and confirmed it must NOT be started automatically just because a prior report mentioned it; that would be unauthorized speculative production work under this engagement's phase-gating rules and YAGNI.
+**Decision point (requires explicit user authorization, not autonomous action):** whether to open `P1 — Profile / Identity Isolation — Implementation`, and if so, whether its first bounded step is the `UrlMatcher` seam or something else. Nothing will be implemented until the user explicitly authorizes entering P1.
 
 ## Last updated
-2026-09-01 (P0 deep architecture trace completed; no production code changed this round; local checkout reconciled to `origin/genspark-dev` HEAD `3c86c4857e0b96b31c992cd00885fccfdfb4d932`)
+2026-09-01 (Re-verified branch/HEAD/remote/working-tree with a fresh `git fetch` — no drift found, local and remote both at `1ded82a77b240e41f416376d3a27663974d273e8`. CI run status remains unreadable via API due to a known credential scope gap. No code changed. Confirmed `UrlMatcher` is not yet authorized and correctly withheld.)
