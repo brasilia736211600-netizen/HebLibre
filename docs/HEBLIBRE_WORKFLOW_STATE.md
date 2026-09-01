@@ -7,12 +7,11 @@ GitHub is the source of truth. Chat history, agent memory, and local workspace s
 ## Current repository state
 - Repository: `brasilia736211600-netizen/HebLibre`
 - Active development branch: `genspark-dev`
-- Current HEAD: `1ded82a77b240e41f416376d3a27663974d273e8`
+- Current HEAD: `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced`
 - Default branch: `l10n_crowdin`
 - Project type: Android application based on the FOSS Browser/WebView codebase
-- Re-verified live against `origin/genspark-dev` (fresh `git fetch`, not assumed from memory): local HEAD, remote HEAD, and this document agree exactly, working tree clean.
-- CI run status for the current branch cannot be checked via API with the current credential (`HTTP 403: Resource not accessible by integration` on `actions/runs`, `check-runs`, and `status` endpoints — missing `actions:read`/`checks:read` scope). Repository is private, so no unauthenticated fallback exists. This is a known, previously documented limitation, not a new blocker.
-- The four latest commits (`1a930a7`, `19bd8a8`, `3c86c48`, `1ded82a`) are documentation-only; no product code changed in any of them.
+- Verified via fresh `git fetch`: local HEAD = `origin/genspark-dev` HEAD, working tree clean.
+- CI run status still cannot be checked via API with the current credential (`HTTP 403: Resource not accessible by integration`, missing `actions:read`/`checks:read` scope). Known limitation, not a new blocker.
 
 ## Verification ladder
 Never mark a capability as complete merely because code exists.
@@ -60,7 +59,14 @@ Status: NOT VERIFIED.
 Product feature implementation has not yet started on this branch after the baseline/CI recovery.
 
 ### Current phase
-`P0 — Profile / Identity Isolation — Deep Architecture Trace COMPLETE`
+`P1 — Profile / Identity Isolation — Implementation (OPENED, step 1 of N complete)`
+
+### P1 step 1 (complete)
+**What changed:** Extracted the identical `isWhite(String)` domain-matching loop, previously duplicated in `AdBlock`, `Javascript`, `Cookie`, `Remote`, into one pure-Java static helper `de.baumann.browser.unit.UrlMatcher.containsAnyDomain(List<String>, String)`. All four classes now delegate to it. No behavior change, no architecture change, no new dependency, no multi-process/data-directory work (explicitly out of scope, untouched).
+**Tests:** New `UrlMatcherTest` (5 tests, all GREEN) characterizes current matching semantics (substring containment, null-safe, empty-list-safe) before any future per-profile refactor. Existing `BrowserUnitTest` (4 tests) still GREEN — no regression. `./gradlew :app:testDebugUnitTest` → BUILD SUCCESSFUL, 9/9 tests pass. Verified locally; Android runtime not required for this step (pure JVM logic) and was correctly not invoked.
+**New HEAD:** `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced` (pushed, verified local = `origin/genspark-dev`).
+**Diff scope:** 6 files — 4 modified (`AdBlock.java`, `Javascript.java`, `Cookie.java`, `Remote.java`, each: loop replaced by one delegation line), 2 new (`UrlMatcher.java`, `UrlMatcherTest.java`). No unrelated files touched.
+**What was NOT done:** No per-profile storage/DB/prefs/cookie isolation yet — this step only prepared a shared seam. No multi-process or `WebView.setDataDirectorySuffix` work (explicitly excluded). No `BrowserContainer`/static-whitelist-field refactor yet.
 
 ### Exact current objective (done)
 Determined the smallest viable profile/identity isolation boundary using the existing architecture, before implementing feature code. Full source-level trace completed at HEAD `3c86c4857e0b96b31c992cd00885fccfdfb4d932`. No production code modified during the trace (read-only).
@@ -125,8 +131,7 @@ A step is not considered closed until:
 - and the next single execution step is written down.
 
 ## Current single next execution step
-P0 (Deep Architecture Trace) is complete and closed. The previously proposed `UrlMatcher` extraction is **preparatory P1 production code, not a P0 deliverable** — re-checked this round and confirmed it must NOT be started automatically just because a prior report mentioned it; that would be unauthorized speculative production work under this engagement's phase-gating rules and YAGNI.
-**Decision point (requires explicit user authorization, not autonomous action):** whether to open `P1 — Profile / Identity Isolation — Implementation`, and if so, whether its first bounded step is the `UrlMatcher` seam or something else. Nothing will be implemented until the user explicitly authorizes entering P1.
+P1 step 1 (UrlMatcher seam) is complete, tested, committed, and pushed. Await explicit user authorization for P1 step 2. Candidate next bounded step (NOT yet authorized, NOT started): remove `static` from the whitelist-cache fields in `AdBlock`/`Javascript`/`Cookie`/`Remote` and from `BrowserContainer.list`, making them instance-scoped, as the next-smallest piece of the isolation boundary identified in the P0 trace (tabs/whitelist-domains path; still excludes cookies/DOM-storage which remain capped by the documented platform ceiling and multi-process work, which stays out of scope).
 
 ## Last updated
-2026-09-01 (Re-verified branch/HEAD/remote/working-tree with a fresh `git fetch` — no drift found, local and remote both at `1ded82a77b240e41f416376d3a27663974d273e8`. CI run status remains unreadable via API due to a known credential scope gap. No code changed. Confirmed `UrlMatcher` is not yet authorized and correctly withheld.)
+2026-09-01 (P1 opened and step 1 executed: UrlMatcher extraction, TDD characterization test, 9/9 unit tests GREEN, pushed as `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced`, verified local = remote.)
