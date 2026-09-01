@@ -63,12 +63,7 @@ public class Javascript {
     }
 
     public boolean isWhite(String url) {
-        for (String domain : whitelistJS) {
-            if (url != null && url.contains(domain)) {
-                return true;
-            }
-        }
-        return false;
+        return de.baumann.browser.unit.UrlMatcher.containsAnyDomain(whitelistJS, url);
     }
 
     public synchronized void addDomain(String domain) {

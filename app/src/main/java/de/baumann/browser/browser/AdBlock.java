@@ -77,12 +77,7 @@ public class AdBlock {
     }
 
     public boolean isWhite(String url) {
-        for (String domain : whitelist) {
-            if (url != null && url.contains(domain)) {
-                return true;
-            }
-        }
-        return false;
+        return de.baumann.browser.unit.UrlMatcher.containsAnyDomain(whitelist, url);
     }
 
     boolean isAd(String url) {

@@ -63,12 +63,7 @@ public class Cookie {
     }
 
     public boolean isWhite(String url) {
-        for (String domain : whitelistCookie) {
-            if (url != null && url.contains(domain)) {
-                return true;
-            }
-        }
-        return false;
+        return de.baumann.browser.unit.UrlMatcher.containsAnyDomain(whitelistCookie, url);
     }
 
     public synchronized void addDomain(String domain) {

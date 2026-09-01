@@ -63,12 +63,7 @@ public class Remote {
     }
 
     public boolean isWhite(String url) {
-        for (String domain : whitelistRemote) {
-            if (url != null && url.contains(domain)) {
-                return true;
-            }
-        }
-        return false;
+        return de.baumann.browser.unit.UrlMatcher.containsAnyDomain(whitelistRemote, url);
     }
 
     public synchronized void addDomain(String domain) {
