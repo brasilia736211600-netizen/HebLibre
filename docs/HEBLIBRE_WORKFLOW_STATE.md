@@ -7,7 +7,7 @@ GitHub is the source of truth. Chat history, agent memory, and local workspace s
 ## Current repository state
 - Repository: `brasilia736211600-netizen/HebLibre`
 - Active development branch: `genspark-dev`
-- Current HEAD: `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced`
+- Current HEAD: `9498936c52dd6a7a614da246a8d1638c1a781d1d`
 - Default branch: `l10n_crowdin`
 - Project type: Android application based on the FOSS Browser/WebView codebase
 - Verified via fresh `git fetch`: local HEAD = `origin/genspark-dev` HEAD, working tree clean.
@@ -59,14 +59,22 @@ Status: NOT VERIFIED.
 Product feature implementation has not yet started on this branch after the baseline/CI recovery.
 
 ### Current phase
-`P1 — Profile / Identity Isolation — Implementation (OPENED, step 1 of N complete)`
+`P1 — Profile / Identity Isolation — Implementation (OPENED, step 2 of N complete)`
 
 ### P1 step 1 (complete)
 **What changed:** Extracted the identical `isWhite(String)` domain-matching loop, previously duplicated in `AdBlock`, `Javascript`, `Cookie`, `Remote`, into one pure-Java static helper `de.baumann.browser.unit.UrlMatcher.containsAnyDomain(List<String>, String)`. All four classes now delegate to it. No behavior change, no architecture change, no new dependency, no multi-process/data-directory work (explicitly out of scope, untouched).
 **Tests:** New `UrlMatcherTest` (5 tests, all GREEN) characterizes current matching semantics (substring containment, null-safe, empty-list-safe) before any future per-profile refactor. Existing `BrowserUnitTest` (4 tests) still GREEN — no regression. `./gradlew :app:testDebugUnitTest` → BUILD SUCCESSFUL, 9/9 tests pass. Verified locally; Android runtime not required for this step (pure JVM logic) and was correctly not invoked.
-**New HEAD:** `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced` (pushed, verified local = `origin/genspark-dev`).
+**HEAD after this step:** `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced`.
 **Diff scope:** 6 files — 4 modified (`AdBlock.java`, `Javascript.java`, `Cookie.java`, `Remote.java`, each: loop replaced by one delegation line), 2 new (`UrlMatcher.java`, `UrlMatcherTest.java`). No unrelated files touched.
 **What was NOT done:** No per-profile storage/DB/prefs/cookie isolation yet — this step only prepared a shared seam. No multi-process or `WebView.setDataDirectorySuffix` work (explicitly excluded). No `BrowserContainer`/static-whitelist-field refactor yet.
+
+### P1 step 2 (complete)
+**What changed:** Removed process-wide `static` from `BrowserContainer` — `list`, and all of `get`/`add`/`remove`/`indexOf`/`list()`/`size`/`clear`, are now instance-scoped. `BrowserActivity` (the sole caller; `android:launchMode="singleInstance"` so exactly one instance exists per process) now holds `private final BrowserContainer browserContainer = new BrowserContainer();` and all 12 former `BrowserContainer.xxx(...)` call sites in `BrowserActivity.java` were updated to `browserContainer.xxx(...)`. No other file referenced `BrowserContainer`. No behavior change for the production single-instance case. No architecture change, no new dependency, no multi-process/data-directory work.
+**Blocker identified and correctly NOT worked around (per instruction to stop and report rather than expand scope):** the candidate whitelist-cache fields (`whitelist` in `AdBlock`, `whitelistJS` in `Javascript`, `whitelistCookie` in `Cookie`, `whitelistRemote` in `Remote`) were inspected but NOT converted to instance state this step. Source inspection (SOURCE-VERIFIED) showed multiple concurrent instances of each class are constructed independently (per-tab in `NinjaWebView`, per-dialog-open in `BrowserActivity`, per-activity in each `Whitelist_*` screen, per-click in `WhitelistAdapter`, per-call in `BrowserUnit` import/export) and today all of them share one process-wide static `List` by design: adding/removing a domain from any instance (e.g. the whitelist management screen) is instantly visible to every already-open tab's `isWhite()` check because they hold a reference to the same static list object. Converting these fields to instance-scoped would silently regress this currently-relied-upon cross-instance visibility (each instance would freeze a stale snapshot at its own construction time) without delivering any actual profile isolation, since there is still no `profile_id` concept anywhere (single `Ninja4.db`, no per-profile parameterization). Fixing that regression would require a real shared-state/refresh mechanism, i.e. new architecture — explicitly out of scope for this step's constraints (no new architecture, no unrelated refactoring, stop-and-report on architectural blockers).
+**Tests:** New `BrowserContainerTest` (2 tests). Genuine RED confirmed first: `container.add(...)` on two separate `new BrowserContainer()` instances shared one process-wide list under the old static field, so both isolation assertions failed against the pre-change code. GREEN after the instance-scoping change. Covers: flat-list behavior (`add`/`get`/`indexOf`/`size`/`list()`), and non-sharing between two separate instances. `remove()`/`clear()` are not unit-tested (they cast to the concrete Android `NinjaWebView`/`WebView`, requiring Android runtime — out of scope for JVM tests, consistent with prior phases). Existing `UrlMatcherTest` (5) and `BrowserUnitTest` (4) still GREEN. `./gradlew :app:testDebugUnitTest` → BUILD SUCCESSFUL, 11/11 tests pass, no regression. LOCAL-JVM-VERIFIED; Android runtime not required and correctly not invoked.
+**New HEAD:** `9498936c52dd6a7a614da246a8d1638c1a781d1d` (pushed, verified local = `origin/genspark-dev`).
+**Diff scope:** 3 files — 2 modified (`BrowserContainer.java`: static → instance methods/field; `BrowserActivity.java`: new instance field + 12 call sites updated to use it), 1 new (`BrowserContainerTest.java`). No unrelated files touched.
+**What was NOT done:** `AdBlock`/`Javascript`/`Cookie`/`Remote` whitelist-cache fields remain `static` (see blocker above — deliberately deferred, not an oversight). No per-profile DB/prefs/cookie/DOM-storage isolation. No multi-process or `WebView.setDataDirectorySuffix` work.
 
 ### Exact current objective (done)
 Determined the smallest viable profile/identity isolation boundary using the existing architecture, before implementing feature code. Full source-level trace completed at HEAD `3c86c4857e0b96b31c992cd00885fccfdfb4d932`. No production code modified during the trace (read-only).
@@ -131,7 +139,7 @@ A step is not considered closed until:
 - and the next single execution step is written down.
 
 ## Current single next execution step
-P1 step 1 (UrlMatcher seam) is complete, tested, committed, and pushed. Await explicit user authorization for P1 step 2. Candidate next bounded step (NOT yet authorized, NOT started): remove `static` from the whitelist-cache fields in `AdBlock`/`Javascript`/`Cookie`/`Remote` and from `BrowserContainer.list`, making them instance-scoped, as the next-smallest piece of the isolation boundary identified in the P0 trace (tabs/whitelist-domains path; still excludes cookies/DOM-storage which remain capped by the documented platform ceiling and multi-process work, which stays out of scope).
+P1 step 2 (`BrowserContainer` instance-scoping) is complete, tested, committed, and pushed. `AdBlock`/`Javascript`/`Cookie`/`Remote` whitelist-cache fields are a genuine architectural blocker for simple static-removal (see P1 step 2 note above) — NOT a bounded step until a decision is made on how to preserve current cross-instance whitelist visibility (e.g. a shared registry/reload mechanism), which is itself new architecture and requires explicit user authorization/direction before any design work starts. Await explicit user authorization for P1 step 3. No candidate step is proposed unilaterally beyond surfacing this decision point.
 
 ## Last updated
-2026-09-01 (P1 opened and step 1 executed: UrlMatcher extraction, TDD characterization test, 9/9 unit tests GREEN, pushed as `0da72a2bd6a85e9a9ffb9ce9a2ab01a49e46eced`, verified local = remote.)
+2026-09-01 (P1 step 2 executed: BrowserContainer static → instance refactor, TDD RED→GREEN via BrowserContainerTest, 11/11 unit tests GREEN, pushed as `9498936c52dd6a7a614da246a8d1638c1a781d1d`, verified local = remote. AdBlock/Javascript/Cookie/Remote static whitelist fields inspected and deliberately left untouched — converting them would regress currently-relied-upon cross-instance whitelist visibility without delivering real isolation; reported as blocker per instructions rather than worked around.)
