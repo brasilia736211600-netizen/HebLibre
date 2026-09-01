@@ -19,7 +19,7 @@ public class Fragment_settings_start extends PreferenceFragmentCompat {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preference_start, rootKey);
 
-        Objects.requireNonNull(findPreference("start_AdBlock")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("start_AdBlock"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Whitelist_AdBlock.class);
@@ -27,7 +27,7 @@ public class Fragment_settings_start extends PreferenceFragmentCompat {
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("start_java")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("start_java"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Whitelist_Javascript.class);
@@ -35,7 +35,7 @@ public class Fragment_settings_start extends PreferenceFragmentCompat {
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("start_cookie")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("start_cookie"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Whitelist_Cookie.class);
@@ -43,7 +43,7 @@ public class Fragment_settings_start extends PreferenceFragmentCompat {
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("start_remote")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("start_remote"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Whitelist_Remote.class);

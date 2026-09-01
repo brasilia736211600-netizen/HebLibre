@@ -24,6 +24,10 @@ android {
         checkReleaseBuilds false
         disable 'MissingTranslation'
     }
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
     return void
 }
 

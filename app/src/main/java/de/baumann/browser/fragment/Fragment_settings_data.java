@@ -63,7 +63,7 @@ public class Fragment_settings_data extends PreferenceFragmentCompat {
         final File previewsFolder_app = new File(data, database_app);
         final File previewsFolder_backup = new File(sd, database_backup);
 
-        Objects.requireNonNull(findPreference("data_exDB")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("data_exDB"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 dialog = new BottomSheetDialog(Objects.requireNonNull(getActivity()));
@@ -107,7 +107,7 @@ public class Fragment_settings_data extends PreferenceFragmentCompat {
             }
         });
 
-        Objects.requireNonNull(findPreference("data_imDB")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("data_imDB"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 dialog = new BottomSheetDialog(Objects.requireNonNull(getActivity()));
@@ -149,14 +149,14 @@ public class Fragment_settings_data extends PreferenceFragmentCompat {
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("data_imBookmark")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("data_imBookmark"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 new ImportWhitelistTask(getActivity(), 4).execute();
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("data_exBookmark")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("data_exBookmark"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 new ExportWhiteListTask(getActivity(), 4).execute();

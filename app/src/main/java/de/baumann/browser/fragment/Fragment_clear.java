@@ -22,7 +22,7 @@ public class Fragment_clear extends PreferenceFragmentCompat {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preference_clear, rootKey);
 
-        Objects.requireNonNull(findPreference("sp_deleteDatabase")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("sp_deleteDatabase"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 final SharedPreferences sp = getPreferenceScreen().getSharedPreferences();

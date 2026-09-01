@@ -33,7 +33,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preference_setting, rootKey);
 
-        Objects.requireNonNull(findPreference("settings_filter")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_filter"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Settings_FilterActivity.class);
@@ -41,7 +41,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_data")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_data"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Settings_DataActivity.class);
@@ -49,7 +49,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_ui")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_ui"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Settings_UIActivity.class);
@@ -57,7 +57,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_gesture")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_gesture"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Settings_GestureActivity.class);
@@ -65,7 +65,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_start")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_start"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Settings_StartActivity.class);
@@ -73,7 +73,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_clear")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_clear"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent(getActivity(), Settings_ClearActivity.class);
@@ -81,7 +81,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_community")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_community"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 showContributors = true;
@@ -89,7 +89,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_info")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_info"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 showContributors = false;
@@ -97,7 +97,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_help")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_help"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 showContributors = false;
@@ -105,7 +105,7 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
-        Objects.requireNonNull(findPreference("settings_appSettings")).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_appSettings"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
                 Intent intent = new Intent();
