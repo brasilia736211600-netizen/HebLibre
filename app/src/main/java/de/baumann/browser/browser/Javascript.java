@@ -44,16 +44,17 @@ public class Javascript {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context, List<String> whitelistJS) {
+    private synchronized static void loadDomains(Context context, List<String> whitelistJS, String profileId) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelistJS.clear();
-        whitelistJS.addAll(action.listDomains(RecordUnit.TABLE_JAVASCRIPT));
+        whitelistJS.addAll(action.listDomains(RecordUnit.TABLE_JAVASCRIPT, profileId));
         action.close();
     }
 
     private final Context context;
     private final List<String> whitelistJS;
+    private final String profileId;
 
     public Javascript(Context context) {
         this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
@@ -61,12 +62,13 @@ public class Javascript {
 
     public Javascript(Context context, String profileId) {
         this.context = context;
-        this.whitelistJS = whitelists.forProfile(profileId);
+        this.profileId = (profileId != null) ? profileId : ProfileScopedWhitelist.DEFAULT_PROFILE;
+        this.whitelistJS = whitelists.forProfile(this.profileId);
 
         if (hostsJS.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context, whitelistJS);
+        loadDomains(context, whitelistJS, this.profileId);
     }
 
     public boolean isWhite(String url) {
@@ -76,7 +78,7 @@ public class Javascript {
     public synchronized void addDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.addDomain(domain, RecordUnit.TABLE_JAVASCRIPT);
+        action.addDomain(domain, RecordUnit.TABLE_JAVASCRIPT, profileId);
         action.close();
         whitelistJS.add(domain);
     }
@@ -84,7 +86,7 @@ public class Javascript {
     public synchronized void removeDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.deleteDomain(domain, RecordUnit.TABLE_JAVASCRIPT);
+        action.deleteDomain(domain, RecordUnit.TABLE_JAVASCRIPT, profileId);
         action.close();
         whitelistJS.remove(domain);
     }
@@ -92,7 +94,7 @@ public class Javascript {
     public synchronized void clearDomains() {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.clearTable(RecordUnit.TABLE_JAVASCRIPT);
+        action.clearTable(RecordUnit.TABLE_JAVASCRIPT, profileId);
         action.close();
         whitelistJS.clear();
     }

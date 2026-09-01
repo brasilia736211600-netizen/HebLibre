@@ -234,23 +234,32 @@ public class RecordAction {
 
 
     // General
+    //
+    // P1 step 4: the four whitelist domain tables (WHITELIST/JAVASCRIPT/
+    // COOKIE/REMOTE - the only callers of addDomain/checkDomain/
+    // deleteDomain/listDomains) are now profile-scoped via PROFILE_ID.
+    // Every read/write below is filtered/tagged by profileId so that two
+    // different profile ids never see or affect each other's rows, while
+    // callers that pass the same profileId continue to share full CRUD
+    // visibility exactly as before this step.
 
-    public void addDomain(String domain, String table) {
+    public void addDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) { return; }
         ContentValues values = new ContentValues();
         values.put(RecordUnit.COLUMN_DOMAIN, domain.trim());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, profileId);
         database.insert(table, null, values);
     }
 
-    public boolean checkDomain(String domain, String table) {
+    public boolean checkDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) {
             return false;
         }
         Cursor cursor = database.query(
                 table,
                 new String[] {RecordUnit.COLUMN_DOMAIN},
-                RecordUnit.COLUMN_DOMAIN + "=?",
-                new String[] {domain.trim()},
+                RecordUnit.COLUMN_DOMAIN + "=? AND " + RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {domain.trim(), profileId},
                 null,
                 null,
                 null
@@ -263,18 +272,23 @@ public class RecordAction {
         return false;
     }
 
-    public void deleteDomain(String domain, String table) {
+    public void deleteDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) { return; }
-        database.execSQL("DELETE FROM "+ table + " WHERE " + RecordUnit.COLUMN_DOMAIN + " = " + "\"" + domain.trim() + "\"");
+        // Kept as the pre-existing raw execSQL/string-concatenation style
+        // (unchanged parameterization strategy) - only the extra
+        // PROFILE_ID condition is new, per the P1 step 4 scope.
+        database.execSQL("DELETE FROM " + table
+                + " WHERE " + RecordUnit.COLUMN_DOMAIN + " = " + "\"" + domain.trim() + "\""
+                + " AND " + RecordUnit.COLUMN_PROFILE_ID + " = " + "\"" + profileId + "\"");
     }
 
-    public List<String> listDomains(String table) {
+    public List<String> listDomains(String table, String profileId) {
         List<String> list = new ArrayList<>();
         Cursor cursor = database.query(
                 table,
                 new String[] {RecordUnit.COLUMN_DOMAIN},
-                null,
-                null,
+                RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {profileId},
                 null,
                 null,
                 RecordUnit.COLUMN_DOMAIN
@@ -320,6 +334,14 @@ public class RecordAction {
 
     public void clearTable (String table) {
         database.execSQL("DELETE FROM " + table);
+    }
+
+    // P1 step 4: profile-scoped clear, used only by the four whitelist
+    // tables so that clearing one profile's whitelist cannot affect any
+    // other profile's rows in the same table. The unscoped clearTable(table)
+    // above remains unchanged and is still used by GRID/BOOKMARK/HISTORY.
+    public void clearTable (String table, String profileId) {
+        database.delete(table, RecordUnit.COLUMN_PROFILE_ID + "=?", new String[] {profileId});
     }
 
     private Record getRecord(Cursor cursor) {

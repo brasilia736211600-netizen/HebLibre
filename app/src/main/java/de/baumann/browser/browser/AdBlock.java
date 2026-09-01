@@ -42,11 +42,11 @@ public class AdBlock {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context, List<String> whitelist) {
+    private synchronized static void loadDomains(Context context, List<String> whitelist, String profileId) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelist.clear();
-        whitelist.addAll(action.listDomains(RecordUnit.TABLE_WHITELIST));
+        whitelist.addAll(action.listDomains(RecordUnit.TABLE_WHITELIST, profileId));
         action.close();
     }
 
@@ -68,6 +68,7 @@ public class AdBlock {
 
     private final Context context;
     private final List<String> whitelist;
+    private final String profileId;
 
     public AdBlock(Context context) {
         this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
@@ -75,12 +76,18 @@ public class AdBlock {
 
     public AdBlock(Context context, String profileId) {
         this.context = context;
-        this.whitelist = whitelists.forProfile(profileId);
+        // Normalize null the same way ProfileScopedWhitelist does, so the
+        // in-memory list and the persisted rows are always keyed by the
+        // same non-null id (SQLite "COLUMN=?" with a null arg would bind
+        // NULL and never match, silently breaking legacy default-profile
+        // callers that pass null).
+        this.profileId = (profileId != null) ? profileId : ProfileScopedWhitelist.DEFAULT_PROFILE;
+        this.whitelist = whitelists.forProfile(this.profileId);
 
         if (hosts.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context, whitelist);
+        loadDomains(context, whitelist, this.profileId);
     }
 
     public boolean isWhite(String url) {
@@ -100,7 +107,7 @@ public class AdBlock {
     public synchronized void addDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.addDomain(domain, RecordUnit.TABLE_WHITELIST);
+        action.addDomain(domain, RecordUnit.TABLE_WHITELIST, profileId);
         action.close();
         whitelist.add(domain);
     }
@@ -108,7 +115,7 @@ public class AdBlock {
     public synchronized void removeDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.deleteDomain(domain, RecordUnit.TABLE_WHITELIST);
+        action.deleteDomain(domain, RecordUnit.TABLE_WHITELIST, profileId);
         action.close();
         whitelist.remove(domain);
     }
@@ -116,7 +123,7 @@ public class AdBlock {
     public synchronized void clearDomains() {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.clearTable(RecordUnit.TABLE_WHITELIST);
+        action.clearTable(RecordUnit.TABLE_WHITELIST, profileId);
         action.close();
         whitelist.clear();
     }

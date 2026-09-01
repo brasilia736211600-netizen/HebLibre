@@ -44,16 +44,17 @@ public class Cookie {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context, List<String> whitelistCookie) {
+    private synchronized static void loadDomains(Context context, List<String> whitelistCookie, String profileId) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelistCookie.clear();
-        whitelistCookie.addAll(action.listDomains(RecordUnit.TABLE_COOKIE));
+        whitelistCookie.addAll(action.listDomains(RecordUnit.TABLE_COOKIE, profileId));
         action.close();
     }
 
     private final Context context;
     private final List<String> whitelistCookie;
+    private final String profileId;
 
     public Cookie(Context context) {
         this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
@@ -61,12 +62,13 @@ public class Cookie {
 
     public Cookie(Context context, String profileId) {
         this.context = context;
-        this.whitelistCookie = whitelists.forProfile(profileId);
+        this.profileId = (profileId != null) ? profileId : ProfileScopedWhitelist.DEFAULT_PROFILE;
+        this.whitelistCookie = whitelists.forProfile(this.profileId);
 
         if (hostsCookie.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context, whitelistCookie);
+        loadDomains(context, whitelistCookie, this.profileId);
     }
 
     public boolean isWhite(String url) {
@@ -76,7 +78,7 @@ public class Cookie {
     public synchronized void addDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.addDomain(domain, RecordUnit.TABLE_COOKIE);
+        action.addDomain(domain, RecordUnit.TABLE_COOKIE, profileId);
         action.close();
         whitelistCookie.add(domain);
     }
@@ -84,7 +86,7 @@ public class Cookie {
     public synchronized void removeDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.deleteDomain(domain, RecordUnit.TABLE_COOKIE);
+        action.deleteDomain(domain, RecordUnit.TABLE_COOKIE, profileId);
         action.close();
         whitelistCookie.remove(domain);
     }
@@ -92,7 +94,7 @@ public class Cookie {
     public synchronized void clearDomains() {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.clearTable(RecordUnit.TABLE_COOKIE);
+        action.clearTable(RecordUnit.TABLE_COOKIE, profileId);
         action.close();
         whitelistCookie.clear();
     }

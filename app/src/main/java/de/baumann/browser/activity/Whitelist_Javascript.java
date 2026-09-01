@@ -56,7 +56,7 @@ public class Whitelist_Javascript extends AppCompatActivity {
 
         RecordAction action = new RecordAction(this);
         action.open(false);
-        list = action.listDomains(RecordUnit.TABLE_JAVASCRIPT);
+        list = action.listDomains(RecordUnit.TABLE_JAVASCRIPT, RecordUnit.DEFAULT_PROFILE_ID);
         action.close();
 
         ListView listView = findViewById(R.id.whitelist);
@@ -95,7 +95,7 @@ public class Whitelist_Javascript extends AppCompatActivity {
                 } else {
                     RecordAction action = new RecordAction(Whitelist_Javascript.this);
                     action.open(true);
-                    if (action.checkDomain(domain, RecordUnit.TABLE_JAVASCRIPT)) {
+                    if (action.checkDomain(domain, RecordUnit.TABLE_JAVASCRIPT, RecordUnit.DEFAULT_PROFILE_ID)) {
                         NinjaToast.show(Whitelist_Javascript.this, R.string.toast_domain_already_exists);
                     } else {
                         Javascript adBlock = new Javascript(Whitelist_Javascript.this);

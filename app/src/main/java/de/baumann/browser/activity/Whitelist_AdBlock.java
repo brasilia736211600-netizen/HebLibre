@@ -56,7 +56,7 @@ public class Whitelist_AdBlock extends AppCompatActivity {
 
         RecordAction action = new RecordAction(this);
         action.open(false);
-        list = action.listDomains(RecordUnit.TABLE_WHITELIST);
+        list = action.listDomains(RecordUnit.TABLE_WHITELIST, RecordUnit.DEFAULT_PROFILE_ID);
         action.close();
 
         ListView listView = findViewById(R.id.whitelist);
@@ -95,7 +95,7 @@ public class Whitelist_AdBlock extends AppCompatActivity {
                 } else {
                     RecordAction action = new RecordAction(Whitelist_AdBlock.this);
                     action.open(true);
-                    if (action.checkDomain(domain, RecordUnit.TABLE_WHITELIST)) {
+                    if (action.checkDomain(domain, RecordUnit.TABLE_WHITELIST, RecordUnit.DEFAULT_PROFILE_ID)) {
                         NinjaToast.show(Whitelist_AdBlock.this, R.string.toast_domain_already_exists);
                     } else {
                         AdBlock adBlock = new AdBlock(Whitelist_AdBlock.this);

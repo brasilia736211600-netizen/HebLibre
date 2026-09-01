@@ -227,19 +227,19 @@ public class BrowserUnit {
         action.open(false);
         switch (i) {
             case 0:
-                list = action.listDomains(RecordUnit.TABLE_WHITELIST);
+                list = action.listDomains(RecordUnit.TABLE_WHITELIST, RecordUnit.DEFAULT_PROFILE_ID);
                 filename = "export_whitelist_AdBlock.txt";
                 break;
             case 1:
-                list = action.listDomains(RecordUnit.TABLE_JAVASCRIPT);
+                list = action.listDomains(RecordUnit.TABLE_JAVASCRIPT, RecordUnit.DEFAULT_PROFILE_ID);
                 filename = "export_whitelist_java.txt";
                 break;
             case 3:
-                list = action.listDomains(RecordUnit.TABLE_REMOTE);
+                list = action.listDomains(RecordUnit.TABLE_REMOTE, RecordUnit.DEFAULT_PROFILE_ID);
                 filename = "export_whitelist_remote.txt";
                 break;
             default:
-                list = action.listDomains(RecordUnit.TABLE_COOKIE);
+                list = action.listDomains(RecordUnit.TABLE_COOKIE, RecordUnit.DEFAULT_PROFILE_ID);
                 filename = "export_whitelist_cookie.txt";
                 break;
         }
@@ -292,25 +292,25 @@ public class BrowserUnit {
             while ((line = reader.readLine()) != null) {
                 switch (i) {
                     case 0:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_WHITELIST)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_WHITELIST, RecordUnit.DEFAULT_PROFILE_ID)) {
                             adBlock.addDomain(line);
                             count++;
                         }
                         break;
                     case 1:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_JAVASCRIPT)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_JAVASCRIPT, RecordUnit.DEFAULT_PROFILE_ID)) {
                             js.addDomain(line);
                             count++;
                         }
                         break;
                     case 3:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_REMOTE)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_REMOTE, RecordUnit.DEFAULT_PROFILE_ID)) {
                             remote.addDomain(line);
                             count++;
                         }
                         break;
                     default:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_COOKIE)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_COOKIE, RecordUnit.DEFAULT_PROFILE_ID)) {
                             cookie.addDomain(line);
                             count++;
                         }

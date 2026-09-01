@@ -22,11 +22,13 @@ import java.util.Map;
  * shared by every caller that asks for the same id, isolated from callers
  * that ask for a different id.
  *
- * Scope: in-memory only. It does not touch persisted storage (the
- * whitelist domain tables in Ninja4.db remain a single unpartitioned
- * table, and RecordAction is not modified). It does not touch
- * CookieManager, WebView data directories, SharedPreferences, or any
- * other subsystem - those remain out of scope for this step.
+ * Scope: in-memory only. As of P1 step 4, the persisted whitelist tables
+ * in Ninja4.db are separately profile-scoped via a PROFILE_ID column
+ * (see RecordUnit/RecordAction/RecordHelper); this class is unaware of
+ * that and only manages the in-memory per-profile List instances used
+ * for live cross-tab visibility. It does not touch CookieManager, WebView
+ * data directories, SharedPreferences, or any other subsystem - those
+ * remain out of scope.
  */
 public class ProfileScopedWhitelist {
 

@@ -44,16 +44,17 @@ public class Remote {
         thread.start();
     }
 
-    private synchronized static void loadDomains(Context context, List<String> whitelistRemote) {
+    private synchronized static void loadDomains(Context context, List<String> whitelistRemote, String profileId) {
         RecordAction action = new RecordAction(context);
         action.open(false);
         whitelistRemote.clear();
-        whitelistRemote.addAll(action.listDomains(RecordUnit.TABLE_REMOTE));
+        whitelistRemote.addAll(action.listDomains(RecordUnit.TABLE_REMOTE, profileId));
         action.close();
     }
 
     private final Context context;
     private final List<String> whitelistRemote;
+    private final String profileId;
 
     public Remote(Context context) {
         this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
@@ -61,12 +62,13 @@ public class Remote {
 
     public Remote(Context context, String profileId) {
         this.context = context;
-        this.whitelistRemote = whitelists.forProfile(profileId);
+        this.profileId = (profileId != null) ? profileId : ProfileScopedWhitelist.DEFAULT_PROFILE;
+        this.whitelistRemote = whitelists.forProfile(this.profileId);
 
         if (hostsRemote.isEmpty()) {
             loadHosts(context);
         }
-        loadDomains(context, whitelistRemote);
+        loadDomains(context, whitelistRemote, this.profileId);
     }
 
     public boolean isWhite(String url) {
@@ -76,7 +78,7 @@ public class Remote {
     public synchronized void addDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.addDomain(domain, RecordUnit.TABLE_REMOTE);
+        action.addDomain(domain, RecordUnit.TABLE_REMOTE, profileId);
         action.close();
         whitelistRemote.add(domain);
     }
@@ -84,7 +86,7 @@ public class Remote {
     public synchronized void removeDomain(String domain) {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.deleteDomain(domain, RecordUnit.TABLE_REMOTE);
+        action.deleteDomain(domain, RecordUnit.TABLE_REMOTE, profileId);
         action.close();
         whitelistRemote.remove(domain);
     }
@@ -92,7 +94,7 @@ public class Remote {
     public synchronized void clearDomains() {
         RecordAction action = new RecordAction(context);
         action.open(true);
-        action.clearTable(RecordUnit.TABLE_REMOTE);
+        action.clearTable(RecordUnit.TABLE_REMOTE, profileId);
         action.close();
         whitelistRemote.clear();
     }

@@ -56,7 +56,7 @@ public class Whitelist_Cookie extends AppCompatActivity {
 
         RecordAction action = new RecordAction(this);
         action.open(false);
-        list = action.listDomains(RecordUnit.TABLE_COOKIE);
+        list = action.listDomains(RecordUnit.TABLE_COOKIE, RecordUnit.DEFAULT_PROFILE_ID);
         action.close();
 
         ListView listView = findViewById(R.id.whitelist);
@@ -95,7 +95,7 @@ public class Whitelist_Cookie extends AppCompatActivity {
                 } else {
                     RecordAction action = new RecordAction(Whitelist_Cookie.this);
                     action.open(true);
-                    if (action.checkDomain(domain, RecordUnit.TABLE_COOKIE)) {
+                    if (action.checkDomain(domain, RecordUnit.TABLE_COOKIE, RecordUnit.DEFAULT_PROFILE_ID)) {
                         NinjaToast.show(Whitelist_Cookie.this, R.string.toast_domain_already_exists);
                     } else {
                         Cookie cookie = new Cookie(Whitelist_Cookie.this);

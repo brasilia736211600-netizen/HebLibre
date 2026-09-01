@@ -56,7 +56,7 @@ public class Whitelist_Remote extends AppCompatActivity {
 
         RecordAction action = new RecordAction(this);
         action.open(false);
-        list = action.listDomains(RecordUnit.TABLE_REMOTE);
+        list = action.listDomains(RecordUnit.TABLE_REMOTE, RecordUnit.DEFAULT_PROFILE_ID);
         action.close();
 
         ListView listView = findViewById(R.id.whitelist);
@@ -95,7 +95,7 @@ public class Whitelist_Remote extends AppCompatActivity {
                 } else {
                     RecordAction action = new RecordAction(Whitelist_Remote.this);
                     action.open(true);
-                    if (action.checkDomain(domain, RecordUnit.TABLE_REMOTE)) {
+                    if (action.checkDomain(domain, RecordUnit.TABLE_REMOTE, RecordUnit.DEFAULT_PROFILE_ID)) {
                         NinjaToast.show(Whitelist_Remote.this, R.string.toast_domain_already_exists);
                     } else {
                         remote.addDomain(domain.trim());
