@@ -20,6 +20,7 @@ import android.webkit.WebView;
 
 import de.baumann.browser.browser.*;
 import de.baumann.browser.R;
+import de.baumann.browser.unit.BangQueryPolicy;
 import de.baumann.browser.unit.BrowserUnit;
 import de.baumann.browser.unit.DesktopModePolicy;
 import de.baumann.browser.unit.GpcPolicy;
@@ -261,7 +262,11 @@ public class NinjaWebView extends WebView implements AlbumController {
             webSettings.setAllowUniversalAccessFromFileURLs(false);
             webSettings.setDomStorageEnabled(false);
         }
-        String navigationUrl = BrowserUnit.queryWrapper(context, url.trim());
+        String trimmedUrl = url.trim();
+        String bangUrl = BangQueryPolicy.resolve(trimmedUrl);
+        String navigationUrl = bangUrl != null
+                ? bangUrl
+                : BrowserUnit.queryWrapper(context, trimmedUrl);
         if (sp.getBoolean("https_only", false)) {
             navigationUrl = HttpsOnlyPolicy.enforce(navigationUrl);
         }
