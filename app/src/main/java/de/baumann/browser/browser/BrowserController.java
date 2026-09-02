@@ -11,7 +11,6 @@ public interface BrowserController {
     void updateProgress(int progress);
     void showAlbum(AlbumController albumController);
     void removeAlbum(AlbumController albumController);
-    boolean moveAlbum(AlbumController albumController, int direction);
     void showFileChooser(ValueCallback<Uri[]> filePathCallback);
     void onShowCustomView(View view, WebChromeClient.CustomViewCallback callback);
     void onLongPress(String url);
