@@ -6,6 +6,7 @@ import android.content.res.AssetManager;
 import android.util.Log;
 
 import de.baumann.browser.database.RecordAction;
+import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileScopedWhitelist;
 import de.baumann.browser.unit.RecordUnit;
 
@@ -71,17 +72,14 @@ public class AdBlock {
     private final String profileId;
 
     public AdBlock(Context context) {
-        this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
+        this(context, ProfileIdentity.normalize(
+                androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+                        .getString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID)));
     }
 
     public AdBlock(Context context, String profileId) {
         this.context = context;
-        // Normalize null the same way ProfileScopedWhitelist does, so the
-        // in-memory list and the persisted rows are always keyed by the
-        // same non-null id (SQLite "COLUMN=?" with a null arg would bind
-        // NULL and never match, silently breaking legacy default-profile
-        // callers that pass null).
-        this.profileId = (profileId != null) ? profileId : ProfileScopedWhitelist.DEFAULT_PROFILE;
+        this.profileId = ProfileIdentity.normalize(profileId);
         this.whitelist = whitelists.forProfile(this.profileId);
 
         if (hosts.isEmpty()) {
