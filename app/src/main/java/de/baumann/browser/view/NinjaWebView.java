@@ -20,6 +20,7 @@ import android.webkit.WebView;
 import de.baumann.browser.browser.*;
 import de.baumann.browser.R;
 import de.baumann.browser.unit.BrowserUnit;
+import de.baumann.browser.unit.GpcPolicy;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.HttpsOnlyPolicy;
 
@@ -189,6 +190,9 @@ public class NinjaWebView extends WebView implements AlbumController {
         requestHeaders.put("DNT", "1");
         if (sp.getBoolean(context.getString(R.string.sp_savedata), false)) {
             requestHeaders.put("Save-Data", "on");
+        }
+        if (sp.getBoolean("gpc_enabled", false)) {
+            requestHeaders.put("Sec-GPC", GpcPolicy.HEADER_VALUE);
         }
         return requestHeaders;
     }
