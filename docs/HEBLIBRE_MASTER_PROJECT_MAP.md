@@ -36,8 +36,8 @@ Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.
 - P2.4 Desktop Mode — CI-VERIFIED.
 - P2.5 Screenshot Protection — CI-VERIFIED.
 - P2.6 built-in search bang routing — CI-VERIFIED.
-- P2.7 bounded WebView media permission privacy guard — source/test implemented; current feature-batch CI checkpoint.
-- P2.8 optional third-party cookie blocking — source/test implemented; current feature-batch CI checkpoint.
+- P2.7 bounded WebView media permission privacy guard — **CI-VERIFIED, run `33679583870`**.
+- P2.8 optional third-party cookie blocking — **CI-VERIFIED, run `33679583870`**.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -55,14 +55,14 @@ Profile-aware whitelist state and profile identity are implemented, but SharedPr
 ## WebLibre feature-pool direction
 Prefer local, dependency-free, deterministic features before architectural gaps. Architectural items remain deferred: multi-process/data-directory isolation, DoH, proxy/Tor routing, broad fingerprinting, full WebRTC engine changes, extension runtime/uBlock, large AI runtime, and similar subsystem replacements.
 
-## Next candidate after current CI
-Reader Mode is only a candidate and must be source-verified before implementation. If it is not a small bounded seam, select the next high-value local privacy/UX feature instead. Do not reselect Desktop Mode or other already-present features.
+## Next candidate
+Reader Mode remains only a candidate and must be source-verified before implementation. If it is not a small bounded seam, choose the next high-value local privacy/UX feature instead. Never reselect Desktop Mode or another already-present feature.
 
 ## Current checkpoint
-The P2.7/P2.8 feature batch remains the CI checkpoint represented by `aa5fdace59a746359870a09bfd43644c5e07aeb6`; subsequent documentation-only commits do not change its feature status. Android runtime remains reserved for final validation.
+P2.7/P2.8 feature work is CI-VERIFIED by Unit Tests run `33679583870` on feature-batch commit `aa5fdace59a746359870a09bfd43644c5e07aeb6`. Later documentation commits do not change that feature evidence. Android runtime remains reserved for final validation.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Last synchronized
-2026-09-02 — continuous autonomous execution, final-device validation, and concise checkpoint-reporting rules reinforced.
+2026-09-02 — P2.7/P2.8 CI success reconciled; autonomous execution, final-device validation, and concise checkpoint-reporting rules remain mandatory.
