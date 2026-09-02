@@ -21,6 +21,7 @@ import de.baumann.browser.browser.*;
 import de.baumann.browser.R;
 import de.baumann.browser.unit.BrowserUnit;
 import de.baumann.browser.unit.HelperUnit;
+import de.baumann.browser.unit.HttpsOnlyPolicy;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -217,7 +218,11 @@ public class NinjaWebView extends WebView implements AlbumController {
             webSettings.setAllowUniversalAccessFromFileURLs(false);
             webSettings.setDomStorageEnabled(false);
         }
-        super.loadUrl(BrowserUnit.queryWrapper(context, url.trim()), getRequestHeaders());
+        String navigationUrl = BrowserUnit.queryWrapper(context, url.trim());
+        if (sp.getBoolean("https_only", false)) {
+            navigationUrl = HttpsOnlyPolicy.enforce(navigationUrl);
+        }
+        super.loadUrl(navigationUrl, getRequestHeaders());
     }
 
     @Override
