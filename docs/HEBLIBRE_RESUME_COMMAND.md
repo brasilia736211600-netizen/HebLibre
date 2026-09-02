@@ -29,6 +29,12 @@ Continuous-work rule — IMPORTANT:
 - Do not artificially stop after one tiny feature, one search, one commit, or one CI submission when useful work remains.
 - User-facing messages are substantial checkpoints, not a streaming log of internal activity.
 
+User-facing checkpoint format — IMPORTANT:
+- After the 10-minute productive-work threshold, when a checkpoint message is appropriate, keep it short and useful.
+- Report exactly four items: (1) what is completed now, (2) any current problem/blocker or explicitly that none exists, (3) where the project stands overall, and (4) exactly ONE next execution step.
+- Never send an interim activity log or report a discovery merely because it was found; resolve or integrate it internally first.
+- Never invent a blocker.
+
 Tool policy:
 - GitHub is authoritative and the primary execution surface.
 - Apply Codex Engineering Guardrails: YAGNI, minimal scope, verification discipline, evidence-based claims.
@@ -76,4 +82,4 @@ The Android device test is the **last major validation step** as far as reasonab
 - P2.1–P2.6 are CI-VERIFIED.
 - P2.7 media permission guard and P2.8 third-party cookie blocking are source/test implemented; current feature-batch CI must be reconciled from GitHub before status is advanced.
 - Android runtime validation is deliberately reserved for the final device pass.
-- Continuous autonomous work and the 10-minute minimum before routine user-facing updates are mandatory workflow rules.
+- Continuous autonomous work, the 10-minute minimum before routine user-facing updates, and the concise four-part checkpoint format are mandatory workflow rules.
