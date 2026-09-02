@@ -29,7 +29,7 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - P2.8 optional third-party cookie blocking — CI-VERIFIED, run `33679583870`.
 - P2.9 geolocation privacy guard — CI-VERIFIED, run `33684710168`.
 - P2.10 Save-Data preference contract/fallback correction — CI-VERIFIED, run `33686256788`.
-- P2.11 global settings search — SOURCE-VERIFIED implementation with deterministic JVM contract; CI pending.
+- P2.11 global settings search — CI-VERIFIED by Unit Tests run `33688160810`.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -41,16 +41,16 @@ Profile-aware whitelist state and profile identity are implemented, but SharedPr
 Reader Mode is **NOT TARGETED in the current P2 cycle**. Source tracing found no bounded dependency-free reader-extraction seam; speculative HTML/JS injection is intentionally excluded.
 
 ## P2.11 — Global settings search
-`Fragment_settings` now places a search field above the existing `PreferenceFragmentCompat` list and recursively filters preferences by title/summary using `Preference#setVisible`. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract. The existing preference actions and stored values are not replaced. SOURCE-VERIFIED: complete. TEST-VERIFIED: code/test committed but not locally executed. CI-VERIFIED: pending.
+`Fragment_settings` places a search field above the existing `PreferenceFragmentCompat` list and recursively filters preferences by title/summary using `Preference#setVisible`. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract. Existing preference actions and stored values are not replaced. SOURCE-VERIFIED: complete. TEST-VERIFIED: source test committed; local execution unavailable in this tool surface. CI-VERIFIED: complete, Unit Tests run `33688160810` on HEAD `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.10 are CI-VERIFIED. P2.11 is implemented and awaiting CI verification. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred.
 
 ## Next execution
-**Reconcile CI for P2.11. Fix only concrete failures; on success record CI evidence and advance to the next bounded privacy/UX seam. Do not install the APK.**
+**Source-verify the next smallest high-value bounded privacy/UX seam from the gap matrix. Prefer a local, dependency-free change with deterministic JVM coverage. Do not install the APK.**
 
 ## Last synchronized
-2026-09-03 — P2.11 global settings search implementation recorded; CI pending.
+2026-09-03 — P2.11 CI reconciled successfully; checkpoint advanced.
