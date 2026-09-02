@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import de.baumann.browser.database.RecordAction;
+import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileScopedWhitelist;
 import de.baumann.browser.unit.RecordUnit;
 
@@ -57,12 +58,14 @@ public class Javascript {
     private final String profileId;
 
     public Javascript(Context context) {
-        this(context, ProfileScopedWhitelist.DEFAULT_PROFILE);
+        this(context, ProfileIdentity.normalize(
+                androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+                        .getString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID)));
     }
 
     public Javascript(Context context, String profileId) {
         this.context = context;
-        this.profileId = (profileId != null) ? profileId : ProfileScopedWhitelist.DEFAULT_PROFILE;
+        this.profileId = ProfileIdentity.normalize(profileId);
         this.whitelistJS = whitelists.forProfile(this.profileId);
 
         if (hostsJS.isEmpty()) {
