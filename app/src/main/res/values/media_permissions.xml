@@ -2,4 +2,6 @@
 <resources>
     <string name="setting_title_block_media_permissions">Block camera and microphone access</string>
     <string name="setting_summary_block_media_permissions">Block WebView camera and microphone permission requests.</string>
+    <string name="setting_title_block_third_party_cookies">Block third-party cookies</string>
+    <string name="setting_summary_block_third_party_cookies">Prevent WebView third-party cookies from being accepted.</string>
 </resources>
