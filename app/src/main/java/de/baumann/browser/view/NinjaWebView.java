@@ -2,6 +2,7 @@ package de.baumann.browser.view;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -84,6 +85,21 @@ public class NinjaWebView extends WebView implements AlbumController {
     private WebSettings webSettings;
     private String defaultUserAgent;
 
+    private final SharedPreferences.OnSharedPreferenceChangeListener securityPreferenceListener =
+            new SharedPreferences.OnSharedPreferenceChangeListener() {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                    if ("screenshot_protection".equals(key)) {
+                        post(new Runnable() {
+                            @Override
+                            public void run() {
+                                applyScreenshotProtection();
+                            }
+                        });
+                    }
+                }
+            };
+
     private boolean foreground;
 
     public boolean isForeground() {
@@ -165,11 +181,13 @@ public class NinjaWebView extends WebView implements AlbumController {
 
     public synchronized void initPreferences() {
         sp = PreferenceManager.getDefaultSharedPreferences(context);
+        sp.registerOnSharedPreferenceChangeListener(securityPreferenceListener);
         String userAgent = sp.getString("userAgent", "");
         webSettings = getSettings();
 
         webSettings.setUserAgentString(DesktopModePolicy.resolve(
                 sp.getBoolean("desktop_mode", false), userAgent, defaultUserAgent));
+        applyScreenshotProtection();
         webViewClient.enableAdBlock(sp.getBoolean(context.getString(R.string.sp_ad_block), true));
         webSettings = getSettings();
         webSettings.setTextZoom(Integer.parseInt(Objects.requireNonNull(sp.getString("sp_fontSize", "100"))));
@@ -186,6 +204,18 @@ public class NinjaWebView extends WebView implements AlbumController {
         String customUserAgent = sp.getString("userAgent", "");
         webSettings.setUserAgentString(DesktopModePolicy.resolve(
                 sp.getBoolean("desktop_mode", false), customUserAgent, defaultUserAgent));
+    }
+
+    private void applyScreenshotProtection() {
+        if (!(context instanceof Activity)) {
+            return;
+        }
+        Activity activity = (Activity) context;
+        if (sp.getBoolean("screenshot_protection", false)) {
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        } else {
+            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        }
     }
 
     private synchronized void initAlbum() {
@@ -276,6 +306,9 @@ public class NinjaWebView extends WebView implements AlbumController {
 
     @Override
     public synchronized void destroy() {
+        if (sp != null) {
+            sp.unregisterOnSharedPreferenceChangeListener(securityPreferenceListener);
+        }
         stopLoading();
         onPause();
         clearHistory();
