@@ -14,6 +14,13 @@
             android:summary="@string/setting_summary_fav"
             android:icon="@drawable/star_grey"/>
 
+        <EditTextPreference
+            android:defaultValue="default"
+            android:key="current_profile_id"
+            android:title="@string/setting_title_profile"
+            android:summary="@string/setting_summary_profile"
+            android:icon="@drawable/icon_useragent"/>
+
         <Preference
             android:key="settings_start"
             android:title="@string/setting_title_start_control"
