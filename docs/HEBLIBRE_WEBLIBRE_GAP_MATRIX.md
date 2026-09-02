@@ -24,14 +24,14 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | Third-party cookie blocking | **COMPLETE / CI-VERIFIED** | `ThirdPartyCookiePolicy`; CI run `33679583870`. |
 | Geolocation privacy guard | **COMPLETE / CI-VERIFIED** | Canonical preference key; CI run `33684710168`. |
 | Save-Data preference contract/fallback | **COMPLETE / CI-VERIFIED** | `SaveDataPolicy` + corrected fallback; CI run `33686256788`. |
+| Global settings search | **COMPLETE / CI-VERIFIED** | `SettingsSearchPolicy` + bounded `Fragment_settings` filtering; Unit Tests run `33688160810`. |
 
 ## Remaining feature pool
 | Feature | HebLibre status | Decision |
 |---|---|---|
 | Reader Mode | **NOT TARGETED** | Source-traced; no bounded dependency-free reader-extraction seam was established in the native WebView architecture. Do not add speculative HTML/JS injection. |
-| Global settings search | **MISSING → EASY/MEDIUM** | Next candidate; source-verify bounded UI seam before implementation. |
-| QR scanner | MISSING → MEDIUM | Lower priority; camera/scan UI and dependency decision. |
-| PWA support | MISSING → MEDIUM | Install/launch lifecycle and manifest handling. |
+| QR scanner | MISSING → MEDIUM | Candidate for source verification; first inspect existing camera/intent/dependency surface and prefer platform-only bounded integration. |
+| PWA support | MISSING → MEDIUM | Install/launch lifecycle and manifest handling; source verification required before scope commitment. |
 | Tab hierarchy | PARTIAL → MEDIUM | Existing tabs; no parent-child model. |
 | Tab stacking/advanced switcher | PARTIAL → MEDIUM | Existing overview; no stacking semantics. |
 | Container site assignment | MISSING → MEDIUM | Requires container metadata/routing. |
@@ -54,7 +54,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
 ## Current checkpoint
-P2.1–P2.10 are CI-VERIFIED. Android runtime remains deferred. Reader Mode is formally excluded from the current P2 cycle because its source seam is not bounded; global settings search is the next candidate pending source verification.
+P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred. Reader Mode is formally excluded from the current P2 cycle. Global settings search is complete. The next candidate is **QR scanner source verification**, with platform/dependency scope to be decided from repository evidence.
 
 ## Last synchronized
-2026-09-03 — P2.9/P2.10 evidence reconciled and Reader Mode decision closed.
+2026-09-03 — P2.11 CI reconciled; global settings search moved to complete and QR scanner selected as the next source-verification candidate.
