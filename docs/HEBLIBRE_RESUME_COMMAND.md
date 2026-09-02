@@ -71,7 +71,7 @@ At the end of each substantive step:
 8. verify remote HEAD.
 
 Current authoritative next step:
-Read the current workflow state and CI status from GitHub. Reconcile the P2.7/P2.8 feature batch result, fix any CI failure internally, and then continue autonomously into the next smallest high-value bounded feature. Do not install the APK yet.
+Read the current workflow state and CI status from GitHub. The P2.7/P2.8 feature batch is CI-VERIFIED on run `33679583870`; next, source-trace Reader Mode for a small bounded implementation, or select the next smallest high-value local privacy/UX seam if Reader Mode is not bounded. Do not install the APK yet.
 
 Final-device rule:
 The Android device test is the **last major validation step** as far as reasonably possible, not a per-feature loop. Perform source verification, implementation, JVM tests, CI, review, and documentation first. Only after the feature set is sufficiently complete should the agent build/install/run the APK on the phone. Any runtime problems found then should be fixed and the final device validation repeated as required.
@@ -79,7 +79,7 @@ The Android device test is the **last major validation step** as far as reasonab
 
 ## Current authoritative checkpoint
 - Active branch: `genspark-dev`.
-- P2.1–P2.6 are CI-VERIFIED.
-- P2.7 media permission guard and P2.8 third-party cookie blocking are source/test implemented; current feature-batch CI must be reconciled from GitHub before status is advanced.
+- P2.1–P2.8 are CI-VERIFIED; P2.7/P2.8 feature-batch evidence is Unit Tests run `33679583870` on `aa5fdace59a746359870a09bfd43644c5e07aeb6`.
 - Android runtime validation is deliberately reserved for the final device pass.
 - Continuous autonomous work, the 10-minute minimum before routine user-facing updates, and the concise four-part checkpoint format are mandatory workflow rules.
+- Next execution target: source-trace Reader Mode and implement it only if a small bounded seam exists; otherwise choose the next high-value local privacy/UX seam.
