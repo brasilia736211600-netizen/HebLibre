@@ -28,7 +28,8 @@ Legacy Android browser/WebView application based on the FOSS Browser codebase. T
 - P1 Steps 1–7: profile/identity groundwork and lifecycle/test-seam review complete within documented boundaries.
 - P1 Step 8 runtime verification: explicitly deferred because no Android runtime is available.
 - P1 Step 8A: created `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` to distinguish existing HebLibre functionality from the separate WebLibre feature pool.
-- P2 Step 1: conservative tracking/query-parameter cleanup implemented and CI-VERIFIED.
+- P2 Step 1: conservative tracking/query-parameter cleanup implemented.
+- P2 Step 2: HTTPS-only navigation policy implemented and CI-VERIFIED.
 
 ## HebLibre original baseline — already implemented
 HebLibre already provides substantial browser functionality, including multi-tab browsing/tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation/tool gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with domain whitelists, Safe Browsing, bookmark import/export, and custom User-Agent setting.
@@ -56,19 +57,24 @@ The full comparison remains in `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
 ### Completed selected gap: P2 Step 1
 **Conservative tracking/query-parameter cleanup**.
 
+Implementation is dependency-free and limited to an explicit tracking-parameter allowlist. `BrowserUnit.queryWrapper()` performs cleanup only for recognized URL inputs. No broad URL canonicalization or unrelated navigation rewrite was introduced.
+
+### Completed selected gap: P2 Step 2
+**HTTPS-only navigation policy**.
+
 Implementation:
-- `UrlTrackerCleaner` is dependency-free and plain Java.
-- TDD tests define removal of `utm_*`, `gclid`, `dclid`, `fbclid`, `msclkid`, and `yclid` while preserving meaningful parameters, path, fragment, and order.
-- `BrowserUnit.queryWrapper()` invokes the cleaner only for recognized URL inputs before navigation returns them.
-- Search-query generation and Google redirect unwrapping are otherwise unchanged.
+- `HttpsOnlyPolicy` is plain Java and dependency-free.
+- TDD covers HTTP upgrade, HTTPS preservation, non-HTTP preservation, and null/blank inputs.
+- `NinjaWebView.loadUrl()` applies the policy for direct/user-entered navigation when `https_only` is enabled.
+- `NinjaWebViewClient.handleUri()` applies the same policy to intercepted link navigation.
+- Existing settings UI now exposes `https_only`, default off.
+- No HTTP fallback, proxy layer, custom networking stack, or new dependency was added.
 
 Commits:
-- `0de51ef47591a1aa9c869bb7909906025662e726` — TDD contract.
-- `61795dbb75a22dcaa7a2ed8e6fc3d353358eedc4` — implementation.
-- `410b9ba9c8434228c9fac51a10a42e39091c9f35` — raw-component preservation fix.
-- `b592f8abb419826caa06b2ec254a299c942d9ac7` — navigation wiring.
+- `d1ed67d5b4edf2d842adae884daa525cefed8a6f` — direct-navigation enforcement.
+- `7c5285474324699d04daa5e67c107e26afbe90ae` — link-navigation enforcement completion.
 
-CI evidence: run `33648307698`, `test` job successful, including `Run unit tests`.
+CI evidence: run `33650164143`, job `test`, successful; `Run unit tests` completed successfully.
 
 ## Explicit YAGNI boundaries
 Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
@@ -76,13 +82,13 @@ Do not add without demonstrated need: multi-process architecture, WebView data-d
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
-P2 Step 1 is complete. Development continues with the next smallest evidence-backed privacy/navigation improvement rather than waiting for Android runtime validation.
+P2 Steps 1–2 are complete. Android runtime validation remains deferred and is not currently blocking source/test/CI engineering.
 
 ## Single next execution target
-**P2 Step 2 — source-verify HTTPS-only mode in the existing WebView navigation path. Implement only the smallest local policy seam that the current architecture can support; begin with a deterministic characterization test where possible.**
+**P2 Step 3 — source-verify Global Privacy Control (GPC) support in the existing WebView request-header path; implement only if a deterministic local seam exists without introducing networking architecture.**
 
 ## Continuity requirements
 Every substantive change must update `docs/HEBLIBRE_WORKFLOW_STATE.md` with exact HEAD, change summary, tests, CI/runtime evidence, diff scope, and exactly one next execution step. Update this map when phase/roadmap changes.
 
 ## Last synchronized
-2026-09-02 — P2 Step 1 completed and CI-VERIFIED; current next target is source verification of HTTPS-only mode.
+2026-09-02 — P2 Step 2 completed and CI-VERIFIED by run `33650164143`; next target is source verification of GPC.
