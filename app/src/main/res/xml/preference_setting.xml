@@ -74,6 +74,12 @@
             android:title="@string/setting_title_block_media_permissions"
             android:summary="@string/setting_summary_block_media_permissions"/>
 
+        <CheckBoxPreference
+            android:key="block_third_party_cookies"
+            android:defaultValue="false"
+            android:title="@string/setting_title_block_third_party_cookies"
+            android:summary="@string/setting_summary_block_third_party_cookies"/>
+
     </PreferenceCategory>
 
 
