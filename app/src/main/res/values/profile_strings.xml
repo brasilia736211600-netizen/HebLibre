@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setting_title_profile">Active profile ID</string>
+    <string name="setting_summary_profile">Choose the profile ID used by the profile-aware whitelist settings. This does not isolate cookies or WebView storage.</string>
+</resources>
