@@ -30,7 +30,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | Feature | HebLibre status | Decision |
 |---|---|---|
 | Reader Mode | **NOT TARGETED** | Source-traced; no bounded dependency-free reader-extraction seam was established in the native WebView architecture. Do not add speculative HTML/JS injection. |
-| QR scanner | MISSING → MEDIUM | Candidate for source verification; first inspect existing camera/intent/dependency surface and prefer platform-only bounded integration. |
+| QR scanner | **SOURCE-VERIFIED / MEDIUM** | No existing QR/barcode scanner, decoder, camera permission, scanner intent, or QR-specific dependency was found in the inspected repository surface. `AndroidManifest.xml` declares no `CAMERA` permission; `app/build.gradle` has no ZXing/ML Kit/camera scanning dependency. A complete scanner therefore requires a new decoding/camera integration rather than a dependency-free local seam. Defer implementation until a concrete library/platform decision is justified. |
 | PWA support | MISSING → MEDIUM | Install/launch lifecycle and manifest handling; source verification required before scope commitment. |
 | Tab hierarchy | PARTIAL → MEDIUM | Existing tabs; no parent-child model. |
 | Tab stacking/advanced switcher | PARTIAL → MEDIUM | Existing overview; no stacking semantics. |
@@ -54,7 +54,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred. Reader Mode is formally excluded from the current P2 cycle. Global settings search is complete. The next candidate is **QR scanner source verification**, with platform/dependency scope to be decided from repository evidence.
+P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred. Reader Mode is formally excluded from the current P2 cycle. Global settings search is complete. QR scanner source verification is complete: the current repository has no bounded dependency-free scanner seam, and implementation would require a new camera/decoder integration. The next candidate is **PWA support source verification**.
 
 ## Last synchronized
-2026-09-03 — P2.11 CI reconciled; global settings search moved to complete and QR scanner selected as the next source-verification candidate.
+2026-09-03 — QR scanner source verification completed; no dependency-free implementation seam established; PWA support selected as the next source-verification candidate.
