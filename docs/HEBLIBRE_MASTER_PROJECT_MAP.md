@@ -18,7 +18,7 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 
 ## Completed engineering
 - Build/toolchain recovery, minimal JUnit4 harness, CI workflow recovery.
-- P1 profile/identity groundwork and lifecycle/test-seam review; full storage isolation remains unimplemented.
+- P1 profile/identity groundwork; full WebView/storage isolation remains unimplemented.
 - P2.1 tracking/query cleanup — CI-VERIFIED.
 - P2.2 HTTPS-only — CI-VERIFIED.
 - P2.3 Global Privacy Control — CI-VERIFIED.
@@ -29,9 +29,9 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - P2.8 optional third-party cookie blocking — CI-VERIFIED, run `33679583870`.
 - P2.9 geolocation privacy guard — CI-VERIFIED, run `33684710168`.
 - P2.10 Save-Data preference contract/fallback correction — CI-VERIFIED, run `33686256788`.
-- P2.11 global settings search — CI-VERIFIED by Unit Tests run `33688160810`.
-- Download cookie privacy control — SOURCE-VERIFIED and TEST-VERIFIED at source level; CI reconciliation pending run `33692045747`.
-- BrowserContainer tab reorder integration tests — SOURCE-VERIFIED and TEST-VERIFIED; CI reconciliation pending run `33692092276`.
+- P2.11 global settings search — CI-VERIFIED, run `33688160810`.
+- Download cookie privacy control — SOURCE/TEST/CI-VERIFIED, run `33692045747`.
+- BrowserContainer tab reorder core + integration tests — SOURCE/TEST/CI-VERIFIED, run `33692092276`.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -39,38 +39,37 @@ Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete an
 ## Privacy/architecture boundary
 Profile-aware whitelist state and profile identity are implemented, but SharedPreferences, CookieManager, Chromium WebView disk storage, history, and bookmarks remain shared/unpartitioned. No multi-process profile isolation, data-directory switching, DoH, proxy/Tor routing, broad fingerprinting engine, extension runtime or on-device AI runtime has been introduced.
 
-## Reader Mode decision
-Reader Mode is **NOT TARGETED in the current P2 cycle**. Source tracing found no bounded dependency-free reader-extraction seam; speculative HTML/JS injection is intentionally excluded.
+## Reader Mode
+NOT TARGETED in the current P2 cycle; no bounded dependency-free extraction seam was established.
 
-## P2.11 — Global settings search
-`Fragment_settings` places a search field above the existing `PreferenceFragmentCompat` list and recursively filters preferences by title/summary using `Preference#setVisible`. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract. Existing preference actions and stored values are not replaced. SOURCE-VERIFIED: complete. TEST-VERIFIED: source test committed; local execution unavailable in this tool surface. CI-VERIFIED: complete, Unit Tests run `33688160810` on feature HEAD `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
+## QR scanner
+Not implemented. No native scanner/decoder, `CAMERA` permission, or ZXing/ML Kit dependency was found. Deferred as MEDIUM because a real implementation needs camera/decoder integration.
 
-## QR scanner source verification
-QR scanning is **not implemented**. Repository inspection found no QR/barcode scanner or decoder, no `CAMERA` permission in `app/src/main/AndroidManifest.xml`, and no ZXing/ML Kit/camera-scanning dependency in `app/build.gradle`. The current WebView camera permission guard is for web-origin media requests and does not provide a native QR capture/decode path. A complete QR scanner would therefore require a new camera/decoder integration and is not a YAGNI/dependency-free bounded change at this checkpoint.
+## PWA
+Not implemented. No Web App Manifest parser, install bridge, standalone launch metadata, or service-worker lifecycle integration was found. Deferred as MEDIUM.
 
-## PWA support source verification
-PWA support is **not implemented**. `AndroidManifest.xml` exposes `BrowserActivity` as a conventional `http`/`https` VIEW handler and `BrowserActivity` dispatches incoming VIEW intents into ordinary browser tabs. `NinjaWebViewClient` keeps `http`/`https` navigation inside the WebView and routes non-http schemes externally when possible. No Web App Manifest parsing, install-prompt bridge, PWA install metadata, standalone PWA launch intent, or service-worker lifecycle integration was found. A real installable/standalone PWA feature is therefore MEDIUM and requires a new install/launch lifecycle seam; no bounded dependency-free JVM contract was established. No implementation was made.
+## Tab hierarchy
+Current model is flat (`List<AlbumController>`) with no parent/opener metadata. Deferred as MEDIUM/architectural work.
 
-## Tab hierarchy source verification
-The tab model is flat: `BrowserContainer` stores a `List<AlbumController>` with add/remove/get/index operations, while `BrowserActivity` inserts new tabs relative to the current tab without parent/opener metadata. No parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy exists. Implementing true tab hierarchy would require a new model contract and corresponding tab-creation/UI lifecycle changes, so it is SOURCE-VERIFIED as MEDIUM rather than an immediate YAGNI implementation. No code was changed.
+## Multi-window
+Current `BrowserActivity` uses `singleInstance`; independent browser windows would require lifecycle/state-ownership changes. Deferred as MEDIUM/architectural work.
 
 ## Tab stacking / advanced switcher core slice
-A bounded reorder primitive is implemented: `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping, and `BrowserContainer.move()` reorders an existing tab without destroying its WebView state. Policy tests plus `BrowserContainerMoveTest` verify movement and preservation of controller identity. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete at source level. CI-VERIFIED: pending run `33692092276`. UI wiring into the tab overview has not been claimed because the existing long-press affordance closes tabs and changing it would be a non-trivial UX contract change.
+`TabOrderPolicy` provides deterministic one-step left/right targets with boundary clamping, and `BrowserContainer.move()` reorders an existing tab without destroying WebView state. `BrowserContainerMoveTest` verifies left/right movement and controller identity preservation. SOURCE-VERIFIED, TEST-VERIFIED, and CI-VERIFIED via run `33692092276`.
+
+The tab overview is a `ScrollView` containing a `LinearLayout`. `AlbumItem` currently uses normal click for tab selection and long-click for tab removal. Therefore the safe UI follow-up is a separate reorder affordance; long-click must remain close-tab behavior until an explicit replacement contract exists.
 
 ## Download cookie privacy control
-`BrowserUnit.download()` now consults the existing settings layer through `send_download_cookies`, defaulting to enabled for compatibility. Enabled mode forwards a non-empty WebView cookie; disabled mode omits the `Cookie` request header. No new dependency or authenticated-download behavior change is introduced by default. A deterministic `DownloadCookiePolicyTest` covers the default-compatible and disabled contracts. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete at source level. CI-VERIFIED: pending run `33692045747`.
-
-## Multi-window source verification
-`BrowserActivity` is declared with `android:launchMode="singleInstance"`, so the current design does not provide independent concurrent browser windows. True multi-window support would alter activity/task lifecycle and state ownership and is therefore deferred as MEDIUM/architectural work.
+`BrowserUnit.download()` consults `send_download_cookies`; enabled mode forwards a non-empty WebView cookie, disabled mode omits the `Cookie` header, with the compatibility-preserving default enabled. SOURCE-VERIFIED, TEST-VERIFIED, and CI-VERIFIED via run `33692045747`.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Download cookie privacy control and tab reorder core tests are implemented and awaiting CI reconciliation. QR scanner, PWA support, tab hierarchy, and multi-window remain deferred MEDIUM/architectural integrations. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. Download cookie privacy and tab reorder core are CI-VERIFIED. The remaining immediate engineering target is the smallest non-breaking tab-overview reorder UI. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
 
 ## Next execution
-**Reconcile Unit Tests runs `33692045747` and `33692092276`. After CI is clean, inspect the existing tab overview for the smallest non-breaking UI affordance for the already-tested reorder primitive. Do not change the current long-press close behavior without a clear replacement interaction. Continue parallel source verification on independent small privacy/UX seams, and do not install the APK.**
+**Continue parallel source verification on independent bounded privacy/UX seams while designing the smallest dedicated reorder affordance. Implement only when the complete mutation path can be updated safely; preserve long-click close behavior. Then run deterministic tests, reconcile CI, review the diff, and synchronize state. Do not install the APK yet.**
 
 ## Last synchronized
-2026-09-03 — download cookie privacy control integrated, tab reorder container tests added, workflow state synchronized, and CI reconciliation is pending.
+2026-09-03 — CI reconciled for download-cookie and tab-reorder work; tab-overview and `AlbumItem` interaction boundary source-verified; documentation synchronized.
