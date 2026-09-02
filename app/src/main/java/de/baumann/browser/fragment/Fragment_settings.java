@@ -23,6 +23,7 @@ import de.baumann.browser.activity.Settings_GestureActivity;
 import de.baumann.browser.activity.Settings_StartActivity;
 import de.baumann.browser.activity.Settings_UIActivity;
 import de.baumann.browser.unit.HelperUnit;
+import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.R;
 
 public class Fragment_settings extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -120,7 +121,8 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
 
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sp, String key) {
-        if (key.equals("userAgent") || key.equals("sp_search_engine_custom") || key.equals("@string/sp_search_engine")) {
+        if (key.equals("userAgent") || key.equals("sp_search_engine_custom") || key.equals("@string/sp_search_engine")
+                || key.equals(ProfileIdentity.PREFERENCE_KEY)) {
             sp.edit().putInt("restart_changed", 1).apply();
         }
     }
