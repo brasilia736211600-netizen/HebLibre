@@ -39,12 +39,12 @@ Legacy Android browser/WebView application based on the FOSS Browser codebase. T
 - Build/toolchain recovery: complete; debug build verified locally.
 - Minimal JUnit4 harness: complete; `BrowserUnit.isURL` characterization tests.
 - CI workflow recovery: complete; JDK 17 for SDK tooling and JDK 11 for Gradle.
-- P1 Steps 1–7: profile/identity groundwork and lifecycle/test-seam review complete within documented boundaries.
-- P1 Step 8 runtime verification: explicitly deferred because no Android runtime is available.
-- P1 Step 8A: created `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` to distinguish existing HebLibre functionality from the separate WebLibre feature pool.
-- P2 Step 1: conservative tracking/query-parameter cleanup implemented.
-- P2 Step 2: HTTPS-only navigation policy implemented and CI-VERIFIED.
-- P2 Step 3: GPC policy, tests, and existing request-header wiring implemented; CI verification is pending for the current HEAD.
+- P1 profile/identity groundwork: complete within documented boundary; runtime validation deferred.
+- P1 lifecycle/test-seam review: complete.
+- P1 WebLibre/HebLibre feature gap matrix: complete and persisted.
+- P2 Step 1: conservative tracking/query-parameter cleanup complete.
+- P2 Step 2: HTTPS-only navigation policy complete and CI-VERIFIED.
+- P2 Step 3: GPC policy, tests, request-header wiring complete and CI-VERIFIED.
 
 ## HebLibre original baseline — already implemented
 HebLibre already provides substantial browser functionality, including multi-tab browsing/tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation/tool gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with domain whitelists, Safe Browsing, bookmark import/export, and custom User-Agent setting.
@@ -73,12 +73,10 @@ The full comparison remains in `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`. WebLibre 
 Conservative dependency-free cleaner. Removes only an explicit allowlist of common analytics/click identifiers plus `utm_*`, while preserving meaningful parameters, path, fragment, and order.
 
 ### P2 Step 2 — HTTPS-only navigation policy
-`HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` on both direct and intercepted-link navigation when enabled. Existing settings UI exposes `https_only`. No HTTP fallback or new networking architecture was introduced.
+`HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` on both direct and intercepted-link navigation when enabled. Existing settings UI exposes `https_only`. No HTTP fallback or new networking architecture was introduced. CI run `33650164143` was successful.
 
-CI evidence: run `33650164143` was successful for the HTTPS-only completion commit.
-
-### P2 Step 3 — Global Privacy Control (current checkpoint)
-A dependency-free `GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true. The existing `NinjaWebView.getRequestHeaders()` path carries the signal for direct navigation, and intercepted HTTP(S) link navigation passes the same headers. Deterministic `GpcPolicyTest` is committed. Current HEAD is not yet CI-VERIFIED.
+### P2 Step 3 — Global Privacy Control
+A dependency-free `GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true. The existing `NinjaWebView.getRequestHeaders()` path carries the signal for direct navigation, and intercepted HTTP(S) link navigation passes the same headers. Deterministic `GpcPolicyTest` is committed. CI run `33668540065` succeeded for commit `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`.
 
 ## Explicit YAGNI boundaries
 Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
@@ -86,13 +84,13 @@ Do not add without demonstrated need: multi-process architecture, WebView data-d
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
-P2 Steps 1–2 are complete. P2 Step 3 implementation/test work is complete at source level; CI verification is the immediate checkpoint. Android runtime validation remains deferred.
+P2 Steps 1–3 are complete and CI-VERIFIED. Android runtime validation remains deferred.
 
 ## Single next execution target
-**CI-verify the GPC implementation at current HEAD; inspect the workflow result and only then select P2 Step 4.**
+**Read the current gap matrix and source-verify the top smallest high-value P2 candidate. If deterministic/dependency-free, write its TDD contract first; otherwise perform a bounded source trace and record the decision before implementation.**
 
 ## Continuity requirements
 Every substantive change must update `docs/HEBLIBRE_WORKFLOW_STATE.md` with exact HEAD, change summary, tests, CI/runtime evidence, diff scope, and exactly one next execution step. Update this map when the phase/roadmap changes.
 
 ## Last synchronized
-2026-09-02 — workflow/tooling protocol updated; current HEAD `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`; GPC source/test complete, CI pending.
+2026-09-02 — GPC CI verification completed; P2 Step 4 candidate selection is the sole next action.
