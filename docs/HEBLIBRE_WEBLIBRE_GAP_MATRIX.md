@@ -36,7 +36,7 @@ These are treated as **ALREADY**, not migration targets.
 | Feature from WebLibre pool | HebLibre status | Scope / decision |
 |---|---|---|
 | Tracking/query-parameter cleanup | **COMPLETE / EASY** | Implemented as conservative dependency-free URL cleanup with JVM coverage. |
-| Desktop mode | **MISSING → MEDIUM** | Requires a user-facing toggle and `WebSettings` UA/viewport behavior. Existing UA infrastructure can be reused. |
+| Desktop mode | **COMPLETE / CI-VERIFIED** | Added a desktop-mode preference and stable desktop user-agent policy, preserving custom UA behavior when desktop mode is off. CI run `33677771905` succeeded for the desktop-mode feature HEAD `c5c9e77...`. |
 | Reader Mode | **MISSING → MEDIUM** | Requires content extraction/rendering path; larger than URL cleanup. |
 | QR scanner | **MISSING → MEDIUM** | Camera/scan UI and dependency decision required. Not first target. |
 | PWA support | **MISSING → MEDIUM** | Requires install/launch lifecycle and manifest handling. |
@@ -55,7 +55,7 @@ These are treated as **ALREADY**, not migration targets.
 | Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
 | WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
 | Screenshot protection | **PARTIAL/VERIFY** | Existing screenshot/fullscreen-related handling exists; exact prevention semantics need source verification before claiming parity. |
-| Clear-on-exit | **MISSING → MEDIUM** | Requires lifecycle/data-clearing policy; possible without replacing the browser engine. |
+| Clear-on-exit | **ALREADY / SOURCE-VERIFIED** | Existing `sp_clear_quit` preference and `BrowserActivity.onDestroy()` → `ClearService` path already implement clear-on-exit. Do not reimplement. |
 | Extensions | **MISSING → ARCHITECTURAL** | Current Android WebView architecture is not a Firefox-extension runtime. Not a near-term port. |
 | uBlock Origin | **MISSING → ARCHITECTURAL** | Depends on extension/engine capabilities absent here. Existing AdBlock remains separate. |
 | On-device AI | **MISSING → ARCHITECTURAL** | Requires model/runtime/storage/UI architecture. Not a near-term target. |
@@ -65,7 +65,7 @@ These are treated as **ALREADY**, not migration targets.
 | Download manager enhancements | **PARTIAL** | Download handling exists; external manager/advanced controls are additional. |
 | Multi-window | **PARTIAL/VERIFY** | Some Android/system integration exists, but full WebLibre-style multi-window behavior needs explicit source verification. |
 | Tab gestures | **ALREADY** | Gesture infrastructure already exists in HebLibre. |
-| OLED/pure-black theme | **VERIFY** | Must inspect current theme resources before adding anything. |
+| OLED/pure-black theme | **ALREADY / SOURCE-VERIFIED** | `AppTheme_amoled` already exists with black window/background/navigation colors and white primary/secondary text. Do not reimplement. |
 | Global settings search | **MISSING → EASY/MEDIUM** | UI-only indexing/search over existing preferences; useful but lower priority than navigation/privacy. |
 | Container/backup migration | **MISSING → MEDIUM/ARCHITECTURAL** | Depends on actual container/profile data model. |
 
@@ -79,6 +79,9 @@ Conservative dependency-free cleaner with JVM coverage.
 ### P2 Step 3 — Global Privacy Control
 `GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true through the existing WebView request-header path. Deterministic JVM tests and CI verification are complete; CI run `33668540065` succeeded for commit `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`.
 
+### P2 Step 4 — Desktop mode (COMPLETE)
+A dependency-free `DesktopModePolicy` selects a stable desktop user-agent when `desktop_mode` is enabled, otherwise preserving a user-supplied custom UA or the WebView default UA. The preference is exposed in browser settings and applied before each navigation. Deterministic JVM tests are committed and CI run `33677771905` completed successfully on feature HEAD `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`.
+
 ## P2 Step 4 selection rule
 Prefer the smallest high-value feature that is local, dependency-free, and has a deterministic JVM seam. Avoid architectural gaps until there is a demonstrated product need. Do not reimplement anything already present in HebLibre.
 
@@ -89,4 +92,4 @@ Do not add without demonstrated need: multi-process architecture, WebView data-d
 This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own verification records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
 
 ## Last synchronized
-2026-09-02 — P2 Steps 1–3 complete and CI-VERIFIED; P2 Step 4 selection is next.
+2026-09-02 — P2 Step 4 Desktop Mode complete and CI-VERIFIED; Clear-on-exit and AMOLED/pure-black support independently confirmed as existing HebLibre functionality.
