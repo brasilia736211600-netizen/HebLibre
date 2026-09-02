@@ -25,7 +25,7 @@ Rules:
 - Keep SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, and DOCUMENTED distinct.
 - Apply YAGNI: do not add architecture, dependencies, abstractions, or features without a demonstrated need.
 - TDD first for new behavior whenever a deterministic non-device test is possible.
-- Android runtime testing is optional until the code path is otherwise prepared; do not block development on phone availability.
+- Android runtime verification may be deferred; do not block otherwise-ready engineering work on phone/emulator availability.
 - Do not touch unrelated files.
 - This repository is HebLibre. Do not resurrect or use old WebLibre project state documents.
 - Genspark credits are exhausted. Continue using available GitHub/local capabilities; do not wait for Genspark and do not claim Genspark execution.
@@ -45,4 +45,4 @@ Start from the current state recorded in docs/HEBLIBRE_WORKFLOW_STATE.md and con
 ```
 
 ## Current resume target
-P1 Step 5 identity contract is implemented and CI-verified successfully. The current single next execution step is **P1 Step 6 — implement the smallest user-facing profile selector using the existing SharedPreferences path, reuse `ProfileIdentity.PREFERENCE_KEY`, preserve the default profile, and wire the selected id into the existing profile-aware whitelist constructors.** Do not expand into cookies, WebView storage, history/bookmarks, multi-process architecture, or unrelated settings without new evidence.
+P1 Steps 1–7 are completed to their documented verification boundary. P1 Step 8 (Android runtime verification of active-profile switching) is **DEFERRED**, not failed and not a blocker for continued engineering. Do not add emulator/instrumentation infrastructure solely to manufacture this verification. When an Android runtime becomes available, perform the focused profile-switching runtime check and then update the verification level. Until then, continue only with evidence-backed engineering work that does not depend on device execution.
