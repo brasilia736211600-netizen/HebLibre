@@ -12,9 +12,10 @@ Active branch: genspark-dev
 
 Read first, in this order:
 1. docs/HEBLIBRE_WORKFLOW_STATE.md
-2. docs/HEBLIBRE_MASTER_PROJECT_MAP.md (only if present; if absent, do not invent it)
-3. The current HEAD and branch directly from GitHub
-4. The latest relevant commits, open PRs, and CI/check status for the current branch
+2. docs/HEBLIBRE_MASTER_PROJECT_MAP.md
+3. docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md
+4. The current HEAD and branch directly from GitHub
+5. The latest relevant commits and CI/check status for the current branch
 
 Then execute exactly:
 READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → COMMIT → SAVE STATE
@@ -27,22 +28,25 @@ Rules:
 - TDD first for new behavior whenever a deterministic non-device test is possible.
 - Android runtime verification may be deferred; do not block otherwise-ready engineering work on phone/emulator availability.
 - Do not touch unrelated files.
-- This repository is HebLibre. Do not resurrect or use old WebLibre project state documents.
-- Genspark credits are exhausted. Continue using available GitHub/local capabilities; do not wait for Genspark and do not claim Genspark execution.
-- Use available GitHub/local capabilities for repository inspection, deterministic implementation, tests, CI verification, and continuity updates.
-- When a long task is running, continue independent non-conflicting verification/work instead of waiting idle.
+- HebLibre is separate from the old WebLibre project state. Use the WebLibre repository only as a feature/design source pool, not as HebLibre continuity state.
+- Genspark credits are exhausted. Continue using available GitHub/local capabilities; do not wait for Genspark.
+- Before implementing a feature, confirm from source whether HebLibre already has it; do not reimplement existing functionality.
+- Keep each substantive step small and independently resumable.
 
 At the end of every completed substantive step:
 1. verify the exact branch and HEAD,
 2. record tests and CI evidence,
 3. update docs/HEBLIBRE_WORKFLOW_STATE.md,
-4. record exactly ONE NEXT EXECUTION STEP,
-5. stop before starting an unrelated phase.
+4. update docs/HEBLIBRE_MASTER_PROJECT_MAP.md when the phase/roadmap changes,
+5. record exactly ONE NEXT EXECUTION STEP,
+6. verify remote HEAD.
 
-Current verified project state must always be taken from GitHub, not from this resume command itself. If the state document conflicts with GitHub, reconcile the document before implementation.
-
-Start from the current state recorded in docs/HEBLIBRE_WORKFLOW_STATE.md and continue from its SINGLE NEXT EXECUTION STEP. If that next step is stale, first perform READ/VERIFY/RECONCILE and replace it with the smallest evidence-backed next step.
+Current authoritative next step: read docs/HEBLIBRE_WORKFLOW_STATE.md and follow its SINGLE NEXT EXECUTION STEP. The current planned implementation target is P2 Step 1: conservative tracking/query-parameter cleanup.
 ```
 
-## Current resume target
-P1 Steps 1–7 are completed to their documented verification boundary. P1 Step 8 (Android runtime verification of active-profile switching) is **DEFERRED**, not failed and not a blocker for continued engineering. Do not add emulator/instrumentation infrastructure solely to manufacture this verification. When an Android runtime becomes available, perform the focused profile-switching runtime check and then update the verification level. Until then, continue only with evidence-backed engineering work that does not depend on device execution.
+## Current authoritative state
+- Active branch: `genspark-dev`.
+- Latest verified continuity state is maintained in `docs/HEBLIBRE_WORKFLOW_STATE.md` and `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`.
+- P1 profile/identity implementation reached its documented boundary; Android profile-switch runtime validation is deferred and is not a blocker.
+- `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` now records the comparison between existing HebLibre functionality and the separate WebLibre feature pool.
+- The sole next implementation target is **P2 Step 1 — conservative tracking/query-parameter cleanup**: add a pure-Java cleaner with focused JVM tests, then wire it through the existing `BrowserUnit.queryWrapper()` path without unrelated behavior changes.
