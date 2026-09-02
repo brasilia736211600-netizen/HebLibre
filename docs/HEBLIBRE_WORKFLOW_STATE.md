@@ -25,12 +25,12 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 - Do not introduce architecture, dependencies, or subsystem replacements without demonstrated need.
 
 ## Current repository state
-- Remote `genspark-dev` HEAD verified directly from GitHub: `9c9b68cc1b12c289e4251c07a2318eefffa287f1`.
+- Remote `genspark-dev` HEAD verified directly from GitHub: `99be1bab71f2baf82e4e16d0208e6202d2ef0284`.
 - P2.1–P2.11 are CI-VERIFIED.
 - P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
 - P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
 - P2.11 Global settings search CI evidence: Unit Tests run `33688160810`, success, head `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
-- Current tab reorder commits have no workflow runs attached; CI status is pending for this new slice.
+- Tab reorder core slice has deterministic JVM source tests committed but no CI run is currently attached to the new commits.
 - Android runtime verification remains intentionally deferred to the final device pass.
 
 ## Completed engineering
@@ -63,7 +63,7 @@ Repository inspection found no native QR/barcode scanner or decoder, no `CAMERA`
 `app/src/main/AndroidManifest.xml` exposes `BrowserActivity` as a conventional `http`/`https` VIEW handler. `BrowserActivity` dispatches incoming VIEW intents into ordinary browser tabs, while `NinjaWebViewClient` keeps `http`/`https` navigation inside the WebView and routes non-http schemes externally when possible. The inspected repository has no Web App Manifest parser, PWA install metadata, install-prompt bridge, standalone PWA launch intent, or service-worker lifecycle integration. `app/build.gradle` also contains only the existing AndroidX WebKit dependency and no PWA framework. A real installable/standalone PWA feature is therefore SOURCE-VERIFIED as MEDIUM: it requires a new install/launch lifecycle seam, and no bounded dependency-free JVM test contract was established. No implementation was made.
 
 ## Tab hierarchy source verification
-`BrowserContainer` stores a flat `List<AlbumController>` with add/remove/get/index operations. `AlbumController` exposes only view activation/deactivation, and `BrowserActivity` inserts new tabs relative to the current tab without parent/opener metadata. No parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy exists. A true tab hierarchy therefore requires a new model contract and tab-creation/UI lifecycle integration. It is SOURCE-VERIFIED as MEDIUM and remains deferred under YAGNI.
+`BrowserContainer` stores a flat `List<AlbumController>` with add/remove/get/index operations, and `BrowserActivity` inserts new tabs relative to the current tab without parent/opener metadata. No parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy exists. A true tab hierarchy therefore requires a new model contract and tab-creation/UI lifecycle integration. It is SOURCE-VERIFIED as MEDIUM and remains deferred under YAGNI.
 
 ## Tab stacking / advanced switcher core slice
 Source review showed `BrowserContainer.add(controller, index)` already supports indexed insertion, so a minimal non-architectural reorder primitive was viable. `TabOrderPolicy` defines deterministic left/right target-index semantics with stable boundary handling; `BrowserContainer.move()` applies the operation without destroying the moved `NinjaWebView`. SOURCE-VERIFIED: complete. TEST-VERIFIED: JUnit source committed; local execution unavailable. CI-VERIFIED: pending. UI wiring into `BrowserActivity`/tab overview is intentionally not yet claimed.
@@ -83,7 +83,7 @@ No multi-process profile isolation, WebView data-directory switching, extension 
 Reader Mode was source-traced against the current native WebView architecture. No bounded dependency-free `evaluateJavascript`/reader-extraction seam was established; ad-hoc HTML/JS extraction would be invasive and insufficiently deterministic. Reader Mode is therefore NOT TARGETED in the current P2 cycle.
 
 ## Next execution step
-**Inspect the smallest remaining bounded slice: Download manager privacy/controls, starting with the existing `BrowserUnit.download()` cookie-header behavior and settings surface. Add a deterministic policy test before any integration. Do not install the APK.**
+**Source-verify the smallest remaining bounded download privacy/control seam. Start from `BrowserUnit.download()` and determine whether cookie forwarding can be made preference-controlled without duplicating download logic or altering authenticated downloads by default. Create the deterministic policy test first; do not install the APK.**
 
 ## Last updated
-2026-09-03 — tab hierarchy verified as non-bounded; deterministic tab reorder core slice added; multi-window source verification completed; next candidate is bounded download privacy/control work.
+2026-09-03 — tab reorder core slice committed; unintegrated download-cookie experiment was removed; canonical state synchronized to current branch HEAD.
