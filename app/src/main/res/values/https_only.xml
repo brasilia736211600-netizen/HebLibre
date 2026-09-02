@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setting_title_https_only">HTTPS-only mode</string>
+    <string name="setting_summary_https_only">Upgrade HTTP navigations to HTTPS. HTTPS and non-HTTP schemes are unchanged.</string>
+</resources>
