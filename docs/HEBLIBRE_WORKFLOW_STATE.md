@@ -17,11 +17,14 @@ When the user says `استمر` / `continue`, the agent must keep working intern
 ## Final Android validation rule
 Do not build, install, or repeatedly test the Android APK after each feature. Continue source/JVM/CI work first and reserve Android build/install/runtime verification for the **final validation phase** as far as reasonably possible. Perform one consolidated device validation pass after the planned feature set is mature. Collect all runtime regressions found there, fix them together, then rerun the final device validation as needed. Never block otherwise-ready engineering work merely because device validation is deferred.
 
+## User-facing checkpoint rule
+When the minimum 10-minute productive-work threshold has been satisfied and a user-facing update is appropriate, keep the report short and useful. It must state only: (1) what has been completed so far, (2) any current problem/blocker discovered, (3) where the project currently stands overall, and (4) the single next execution step. Do not stream discoveries, warnings, intermediate CI state, or routine activity before that checkpoint. If no new blocker exists, state that explicitly rather than inventing one.
+
 ## Tool-assisted workflow
 - **GitHub** is the operational source of truth and primary execution surface.
 - **Codex Engineering Guardrails**: apply YAGNI, scope control, verification discipline, and evidence-based claims.
 - **Codex Process Jobs**: use only for genuinely independent work units; do not decompose small tasks unnecessarily.
-- **Codex Coordinator**: use only when multiple workstreams are active or dependencies must be coordinated.
+- **Codex Coordinator**: only when multiple workstreams are active or dependencies must be coordinated.
 - **CodeRabbit**: use for substantive review when its local CLI/repository surface is available; never substitute it for tests. No CodeRabbit result is claimed in the current environment.
 - **Codex Advisor**: only at non-trivial engineering decision points.
 - **AI DevKit / Develoop**: optional only when adding concrete capability beyond current tools.
@@ -32,7 +35,7 @@ Do not build, install, or repeatedly test the Android APK after each feature. Co
 Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
 
 ## Current repository state
-- Current branch HEAD: `ba1bffe00da3e08550c9d25aba5059cf853ff204`.
+- Current branch HEAD: `7fe126e6abc9927a4f8bc728390836bbdbf00cbb` at the start of this rule update; this document update advances the remote HEAD again.
 - P2 Steps 1–6 are complete and CI-VERIFIED.
 - P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are source/test implemented. Their feature batch remains the CI checkpoint until its result is directly reconciled from GitHub.
 - Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
@@ -88,4 +91,4 @@ No multi-process profile isolation, WebView data-directory switching, extension 
 **Reconcile the P2.7/P2.8 CI checkpoint from GitHub; if it is green, source-trace the next smallest high-value bounded feature (Reader Mode is only a candidate) and execute it without Android installation.**
 
 ## Last updated
-2026-09-02 — reconciled workflow state to remote `genspark-dev` HEAD `ba1bffe00da3e08550c9d25aba5059cf853ff204`; continuous-work and final-device-validation rules remain mandatory.
+2026-09-02 — user-directed continuous autonomous-work, final-device, and concise-checkpoint reporting rules reinforced in the canonical workflow.
