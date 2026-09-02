@@ -62,6 +62,12 @@
             android:title="@string/setting_title_desktop_mode"
             android:summary="@string/setting_summary_desktop_mode"/>
 
+        <CheckBoxPreference
+            android:key="screenshot_protection"
+            android:defaultValue="false"
+            android:title="@string/setting_title_screenshot_protection"
+            android:summary="@string/setting_summary_screenshot_protection"/>
+
 
     </PreferenceCategory>
 
