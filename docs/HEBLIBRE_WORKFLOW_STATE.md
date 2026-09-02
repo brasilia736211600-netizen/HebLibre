@@ -32,9 +32,9 @@ Do not build, install, or repeatedly test the Android APK after each feature. Co
 Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
 
 ## Current repository state
-- Current branch HEAD: `aa5fdace59a746359870a09bfd43644c5e07aeb6`.
+- Current branch HEAD: `ba1bffe00da3e08550c9d25aba5059cf853ff204`.
 - P2 Steps 1–6 are complete and CI-VERIFIED.
-- P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are source/test implemented. Their feature batch is the current CI checkpoint.
+- P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are source/test implemented. Their feature batch remains the CI checkpoint until its result is directly reconciled from GitHub.
 - Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
 - Do not build/install/test the APK after each feature. Use JVM tests and GitHub Actions first; perform Android build/install/runtime verification as the final validation phase, then fix any runtime regressions discovered.
 - Canonical continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
@@ -79,12 +79,13 @@ Objective: minimum user intervention. `استمر` should resume from GitHub sta
 ## Existing-feature corrections
 - Clear-on-exit is already implemented; do not reimplement.
 - OLED/AMOLED pure-black support is already implemented; do not reimplement.
+- Desktop Mode is already implemented and must not be selected again as a new feature merely because it appears in an older candidate list.
 
 ## Architecture boundary
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
 ## Next execution step
-**CI-verify current feature batch `aa5fdace59a746359870a09bfd43644c5e07aeb6`; then reconcile the result and continue autonomously into the next smallest high-value bounded feature. Keep Android installation deferred until final validation.**
+**Reconcile the P2.7/P2.8 CI checkpoint from GitHub; if it is green, source-trace the next smallest high-value bounded feature (Reader Mode is only a candidate) and execute it without Android installation.**
 
 ## Last updated
-2026-09-02 — continuous-work and final-device-validation rules added to the canonical workflow state; current feature batch remains the CI checkpoint.
+2026-09-02 — reconciled workflow state to remote `genspark-dev` HEAD `ba1bffe00da3e08550c9d25aba5059cf853ff204`; continuous-work and final-device-validation rules remain mandatory.
