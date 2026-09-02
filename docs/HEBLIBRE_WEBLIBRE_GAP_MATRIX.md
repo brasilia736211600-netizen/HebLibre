@@ -32,8 +32,8 @@ Multi-tab browsing/tab overview, Home/Bookmarks/History, search/autocomplete and
 | Desktop mode | **COMPLETE / CI-VERIFIED** | Stable desktop UA policy; custom UA preserved when off. |
 | Screenshot protection | **COMPLETE / CI-VERIFIED** | Opt-in `FLAG_SECURE` with live preference handling. |
 | Search bangs | **COMPLETE / CI-VERIFIED** | Built-in routing for supported search engines. |
-| WebView camera/microphone permission guard | **IMPLEMENTED / CI-PENDING** | `WebRtcPermissionPolicy` + `NinjaWebChromeClient.onPermissionRequest()`; blocks camera/microphone capture when `block_media_permissions` is enabled. Full WebRTC engine privacy remains architectural. |
-| Third-party cookie blocking | **IMPLEMENTED / CI-PENDING** | `ThirdPartyCookiePolicy` + `CookieManager.setAcceptThirdPartyCookies()`; opt-in setting, compatibility default off. |
+| WebView camera/microphone permission guard | **COMPLETE / CI-VERIFIED** | `WebRtcPermissionPolicy` + `NinjaWebChromeClient.onPermissionRequest()`; blocks camera/microphone capture when `block_media_permissions` is enabled. Full WebRTC engine privacy remains architectural. |
+| Third-party cookie blocking | **COMPLETE / CI-VERIFIED** | `ThirdPartyCookiePolicy` + `CookieManager.setAcceptThirdPartyCookies()`; opt-in setting, compatibility default off. |
 | Reader Mode | **MISSING → MEDIUM** | Candidate only after source-verifying a bounded implementation. |
 | QR scanner | **MISSING → MEDIUM** | Camera/scan UI and dependency decision. Lower priority than current privacy/navigation work. |
 | PWA support | **MISSING → MEDIUM** | Install/launch lifecycle and manifest handling. |
@@ -60,10 +60,10 @@ Multi-tab browsing/tab overview, Home/Bookmarks/History, search/autocomplete and
 Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
 ## Current checkpoint
-P2 Steps 1–6 are CI-VERIFIED. P2.7 media permission guard and P2.8 third-party cookie blocking are source/test implemented. Their feature batch at `aa5fdace59a746359870a09bfd43644c5e07aeb6` remains the CI checkpoint until its result is directly reconciled from GitHub; later documentation commits do not change feature status. Android runtime remains deferred.
+P2.1–P2.8 are now CI-VERIFIED; the P2.7/P2.8 feature batch is proven by Unit Tests run `33679583870` on `aa5fdace59a746359870a09bfd43644c5e07aeb6`. Later documentation commits do not change that feature evidence. Android runtime remains deferred.
 
-## Next candidate after CI
+## Next candidate
 Reader Mode remains only a candidate and must be source-verified before implementation. If it is not a small bounded seam, choose the next high-value local privacy/UX feature instead. Never reselect Desktop Mode or another feature already implemented.
 
 ## Last synchronized
-2026-09-02 — continuous autonomous execution, final-device validation, and concise four-part checkpoint reporting rules reinforced.
+2026-09-02 — P2.7/P2.8 CI success reconciled and continuous execution/final-device/checkpoint-reporting rules reinforced.
