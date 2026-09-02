@@ -54,14 +54,14 @@ These are treated as **ALREADY**, not migration targets.
 | Global Privacy Control | **COMPLETE / CI-VERIFIED** | `Sec-GPC: 1` is implemented through the existing request-header path with a dependency-free policy, JVM contract tests, and successful CI run `33668540065`. |
 | Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
 | WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
-| Screenshot protection | **IMPLEMENTED / CI-PENDING** | Bounded source trace found no existing `FLAG_SECURE`/equivalent path. Added opt-in `screenshot_protection` and live window-flag application/clearing through `NinjaWebView`; CI run `33678212417` is the verification checkpoint. |
+| Screenshot protection | **COMPLETE / CI-VERIFIED** | Bounded source trace found no existing `FLAG_SECURE`/equivalent path. Added opt-in `screenshot_protection` with live flag application/clearing through `NinjaWebView`; CI run `33678212417` succeeded on feature HEAD `5190186cbd68a55a4fb9aec7b70a03d0a0878e10`. |
 | Clear-on-exit | **ALREADY / SOURCE-VERIFIED** | Existing `sp_clear_quit` preference and `BrowserActivity.onDestroy()` → `ClearService` path already implement clear-on-exit. Do not reimplement. |
 | Extensions | **MISSING → ARCHITECTURAL** | Current Android WebView architecture is not a Firefox-extension runtime. Not a near-term port. |
 | uBlock Origin | **MISSING → ARCHITECTURAL** | Depends on extension/engine capabilities absent here. Existing AdBlock remains separate. |
 | On-device AI | **MISSING → ARCHITECTURAL** | Requires model/runtime/storage/UI architecture. Not a near-term target. |
 | Translation | **MISSING → MEDIUM/ARCHITECTURAL** | Requires translation service/engine choice. Not first target. |
 | PDF/Markdown/full-page export | **PARTIAL** | PDF/print already exists; Markdown/full-page export is additional functionality. |
-| Custom search engines / bangs | **PARTIAL** | Configurable search engines exist; WebLibre-style bang routing is additional. |
+| Custom search engines / bangs | **PARTIAL** | Configurable search engines exist; WebLibre-style bang routing is additional. Candidate for the next deterministic policy, subject to source/seam verification. |
 | Download manager enhancements | **PARTIAL** | Download handling exists; external manager/advanced controls are additional. |
 | Multi-window | **PARTIAL/VERIFY** | Some Android/system integration exists, but full WebLibre-style multi-window behavior needs explicit source verification. |
 | Tab gestures | **ALREADY** | Gesture infrastructure already exists in HebLibre. |
@@ -83,10 +83,10 @@ Conservative dependency-free cleaner with JVM coverage.
 `DesktopModePolicy` selects a stable desktop user-agent when `desktop_mode` is enabled, otherwise preserving an explicit custom UA or the WebView default UA. The preference is exposed in browser settings and the policy is applied during initialization and immediately before navigation. Deterministic JVM tests pass and CI run `33677771905` succeeded.
 
 ### P2 Step 5 — Screenshot Protection
-Bounded source trace found no existing screenshot protection. `screenshot_protection` is now an opt-in setting. `NinjaWebView` applies or clears `WindowManager.LayoutParams.FLAG_SECURE` through the existing hosting Activity and listens for preference changes so the protection takes effect without a restart. No synthetic JVM wrapper was added because the value is Android-window API state. CI verification is pending at feature HEAD `5190186cbd68a55a4fb9aec7b70a03d0a0878e10`.
+Bounded source trace found no existing screenshot protection. `screenshot_protection` is an opt-in setting. `NinjaWebView` applies or clears `WindowManager.LayoutParams.FLAG_SECURE` through the existing hosting Activity and listens for preference changes so the protection takes effect without a restart. No synthetic JVM wrapper was added because the behavior is Android-window API state. CI run `33678212417` succeeded on feature HEAD `5190186cbd68a55a4fb9aec7b70a03d0a0878e10`.
 
-## P2 Step 5 selection rule
-After CI verification of Screenshot Protection, select the smallest remaining high-value feature with bounded scope and strong product/privacy payoff. Prefer deterministic JVM seams; for Android-only features perform bounded source tracing first. Do not start architectural features merely because they appear in the WebLibre feature pool.
+## P2 Step 6 selection rule
+Select the smallest remaining high-value feature with a deterministic seam where possible. Current preferred candidate is **WebLibre-style bang routing for the already-supported search engines**; source-verify the exact `BrowserUnit.queryWrapper()` insertion point before implementing. If its required wiring would demand a broad/fragile rewrite, choose the next bounded privacy/UX feature instead.
 
 ## Explicit YAGNI boundaries
 Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
@@ -95,4 +95,4 @@ Do not add without demonstrated need: multi-process architecture, WebView data-d
 This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own verification records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
 
 ## Last synchronized
-2026-09-02 — Desktop Mode complete and CI-VERIFIED; Screenshot Protection source implementation complete with CI pending; Clear-on-exit and AMOLED support source-verified as existing functionality.
+2026-09-02 — P2 Steps 1–4 CI-VERIFIED; P2 Step 5 Screenshot Protection is CI-VERIFIED; existing Clear-on-exit and AMOLED support remain source-verified as already present.
