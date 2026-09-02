@@ -18,7 +18,7 @@ When the user says `استمر` / `continue`, the agent must keep working intern
 Do not build, install, or repeatedly test the Android APK after each feature. Continue source/JVM/CI work first and reserve Android build/install/runtime verification for the **final validation phase** as far as reasonably possible. Perform one consolidated device validation pass after the planned feature set is mature. Collect all runtime regressions found there, fix them together, then rerun the final device validation as needed. Never block otherwise-ready engineering work merely because device validation is deferred.
 
 ## User-facing checkpoint rule
-When the minimum 10-minute productive-work threshold has been satisfied and a user-facing update is appropriate, keep the report short and useful. It must state only: (1) what has been completed so far, (2) any current problem/blocker discovered, (3) where the project currently stands overall, and (4) the single next execution step. Do not stream discoveries, warnings, intermediate CI state, or routine activity before that checkpoint. If no new blocker exists, state that explicitly rather than inventing one.
+When the minimum 10-minute productive-work threshold has been satisfied and a user-facing update is appropriate, keep the report short and useful. It must state only: (1) what has been completed so far, (2) any current problem/blocker discovered, (3) where the project stands overall, and (4) the single next execution step. Do not stream discoveries, warnings, intermediate CI state, or routine activity before that checkpoint. If no new blocker exists, state that explicitly rather than inventing one.
 
 ## Tool-assisted workflow
 - **GitHub** is the operational source of truth and primary execution surface.
@@ -35,7 +35,7 @@ When the minimum 10-minute productive-work threshold has been satisfied and a us
 Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
 
 ## Current repository state
-- Current branch HEAD: `7fe126e6abc9927a4f8bc728390836bbdbf00cbb` at the start of this rule update; this document update advances the remote HEAD again.
+- Current branch HEAD: `a6719c0fe63e7386dab0eb4030a6c9f9487083ef`.
 - P2 Steps 1–6 are complete and CI-VERIFIED.
 - P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are source/test implemented. Their feature batch remains the CI checkpoint until its result is directly reconciled from GitHub.
 - Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
@@ -91,4 +91,4 @@ No multi-process profile isolation, WebView data-directory switching, extension 
 **Reconcile the P2.7/P2.8 CI checkpoint from GitHub; if it is green, source-trace the next smallest high-value bounded feature (Reader Mode is only a candidate) and execute it without Android installation.**
 
 ## Last updated
-2026-09-02 — user-directed continuous autonomous-work, final-device, and concise-checkpoint reporting rules reinforced in the canonical workflow.
+2026-09-02 — autonomous execution, final-device validation, and concise checkpoint-reporting rules reinforced; HEAD reconciled to `a6719c0fe63e7386dab0eb4030a6c9f9487083ef`.
