@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setting_title_block_media_permissions">Block camera and microphone access</string>
+    <string name="setting_summary_block_media_permissions">Block WebView camera and microphone permission requests.</string>
+</resources>
