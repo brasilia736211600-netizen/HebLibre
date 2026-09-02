@@ -28,7 +28,7 @@ Legacy Android browser/WebView application based on the FOSS Browser codebase. C
 - P1 Step 2: made `BrowserContainer` instance-scoped and added isolation tests.
 - P1 Step 3: added `ProfileScopedWhitelist` keyed by profile id and tests; existing default behavior preserved.
 - P1 Step 4: migrated the four whitelist SQLite tables to `PROFILE_ID`, profile-scoped CRUD, and version 4→5 migration; full JVM suite reached 17/17 and main Java compilation passed.
-- Continuity recovery: created the canonical master map and hardened the resume/state documents for operation without Genspark.
+- Continuity recovery: created and synchronized the canonical master map, workflow state, and resume command for operation without Genspark.
 
 ## Current architecture boundary
 ### Already profile-capable
@@ -62,7 +62,7 @@ Do not add without demonstrated product need:
 P1 Steps 1–4 are complete. The persistence and in-memory whitelist boundaries exist, but there is no user-facing profile selection yet.
 
 ## Single next execution target
-**P1 Step 5 — create a real, minimal profile identity contract that has an immediate consumer.** Use the existing SharedPreferences convention only if it creates actual selection/storage behavior; otherwise stop at evidence-gathering rather than adding no-op plumbing. Any profile UI must explicitly avoid claiming full cookie/WebView storage isolation.
+**P1 Step 5 — verify whether an immediately useful profile-selection surface exists in the current UI.** Inspect the existing overflow/bottom-sheet menu and preference conventions first. Only implement a selector when it can produce observable behavior immediately by choosing the profile id used by the existing whitelist infrastructure. Do not imply that this selects a separate cookie/WebView-storage identity.
 
 ## Continuity requirements
 Every substantive change must update `docs/HEBLIBRE_WORKFLOW_STATE.md` with:
@@ -80,4 +80,4 @@ Every new agent must read the state file and this map before acting. If they con
 Genspark credits are exhausted. The project must continue using available GitHub/local capabilities. Do not wait for Genspark, do not claim work was performed by Genspark, and do not spend effort reproducing work already verified in GitHub.
 
 ## Last synchronized
-2026-09-02 — map aligned with the reconciled workflow state; engineering parent remains `4f0f97b955ce1e8b3dd039b365f056e48b4c00de` and current branch HEAD includes documentation-only continuity commits.
+2026-09-02 — synchronized with the reconciled workflow state; branch currently contains documentation-only continuity commits after engineering HEAD `4f0f97b...`.
