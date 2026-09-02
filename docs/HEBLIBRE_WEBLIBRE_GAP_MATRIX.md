@@ -1,98 +1,60 @@
 # HebLibre ↔ WebLibre Feature Gap Matrix
 
 ## Purpose
-This document is a planning artifact only. It compares the existing HebLibre baseline with the feature pool from the separate personal WebLibre project and upstream WebLibre work. It does **not** claim that every WebLibre feature should be ported.
-
-GitHub remains the source of truth. Existing HebLibre functionality must not be reimplemented merely because the same capability exists in WebLibre.
+Planning artifact comparing current HebLibre with the separate WebLibre feature pool. It does not imply every WebLibre feature should be ported. Current source verification supersedes stale matrix entries.
 
 ## Status vocabulary
-- **ALREADY** — HebLibre already provides the capability in its current architecture.
-- **PARTIAL** — HebLibre has part of the capability, but the WebLibre-level behavior is broader.
-- **EASY** — can be added with a small, local, dependency-free change and deterministic JVM coverage.
-- **MEDIUM** — requires several coordinated source/UI changes but no new platform architecture.
-- **ARCHITECTURAL** — would require a new storage, networking, engine, or process architecture and is not a near-term target under YAGNI.
-- **NOT TARGETED** — intentionally excluded until a demonstrated product need exists.
+- **ALREADY** — already present in HebLibre.
+- **PARTIAL** — partly present; broader behavior remains.
+- **EASY** — small local change with deterministic JVM coverage.
+- **MEDIUM** — several source/UI changes without new platform architecture.
+- **ARCHITECTURAL** — requires new storage/network/engine/process architecture.
+- **NOT TARGETED** — intentionally deferred.
 
-## HebLibre baseline already present
-The current HebLibre source already contains, among other things:
-- multi-tab browsing through an instance-scoped `BrowserContainer`;
-- tab preview/overview;
-- Home, Bookmarks, and History;
-- search/autocomplete and configurable search engines;
-- navigation/tool gestures;
-- find-in-page;
-- PDF/print flow;
-- downloads/download handling;
-- fullscreen/video-related handling;
-- JavaScript, Cookie, Remote, and AdBlock controls with domain whitelists;
-- Safe Browsing;
-- bookmark import/export;
-- custom User-Agent setting.
+## Baseline already present
+Multi-tab browsing/tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present. Do not reimplement them merely because WebLibre also provides them.
 
-These are treated as **ALREADY**, not migration targets.
-
-## Gap matrix — high-value WebLibre pool
-
-| Feature from WebLibre pool | HebLibre status | Scope / decision |
+## Feature pool
+| Feature | HebLibre status | Decision |
 |---|---|---|
-| Tracking/query-parameter cleanup | **COMPLETE / EASY** | Implemented as conservative dependency-free URL cleanup with JVM coverage. |
-| Desktop mode | **COMPLETE / CI-VERIFIED** | Added a desktop-mode preference and stable desktop user-agent policy, preserving custom UA behavior when desktop mode is off. CI run `33677771905` succeeded for feature HEAD `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`. |
-| Reader Mode | **MISSING → MEDIUM** | Requires content extraction/rendering path; larger than URL cleanup. |
-| QR scanner | **MISSING → MEDIUM** | Camera/scan UI and dependency decision required. Not first target. |
-| PWA support | **MISSING → MEDIUM** | Requires install/launch lifecycle and manifest handling. |
-| Local full-text search | **MISSING → ARCHITECTURAL** | Requires an index and lifecycle/storage design. Not first target. |
-| Tab hierarchy / parent-child tree | **PARTIAL → MEDIUM** | Existing tab container exists, but hierarchy semantics and UI are absent. |
-| Tab stacking / advanced switcher views | **PARTIAL → MEDIUM** | Existing tab overview is present; stacking/accordion/two-row behavior is not. |
-| Isolated tabs | **MISSING → ARCHITECTURAL** | True isolation requires WebView/storage architecture beyond current process-global Chromium storage. |
-| Multi-profile complete storage separation | **PARTIAL → ARCHITECTURAL** | Current P1 only isolates profile-aware whitelist state; CookieManager/WebView storage/history/bookmarks remain shared. |
-| Container site assignment | **MISSING → MEDIUM** | Requires container metadata and navigation routing model. |
-| Container strict mode/history exclusion | **MISSING → MEDIUM** | Builds on container metadata and history routing; not needed before basic containers exist. |
-| Per-container proxy/Tor routing | **MISSING → ARCHITECTURAL** | Requires proxy/Tor networking architecture; outside immediate YAGNI boundary. |
-| Tracking Protection engine / larger filter DB | **PARTIAL → MEDIUM/ARCHITECTURAL** | Basic AdBlock exists; WebLibre-grade tracking protection requires engine/filter-data expansion. |
-| HTTPS-only mode | **COMPLETE / CI-VERIFIED** | Implemented in direct and intercepted-link navigation with deterministic JVM tests and CI verification. |
-| DNS over HTTPS | **MISSING → ARCHITECTURAL** | Requires resolver/network integration not present in WebView architecture. |
-| Global Privacy Control | **COMPLETE / CI-VERIFIED** | `Sec-GPC: 1` is implemented through the existing request-header path with a dependency-free policy, JVM contract tests, and successful CI run `33668540065`. |
-| Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
-| WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
-| Screenshot protection | **COMPLETE / CI-VERIFIED** | Bounded source trace found no existing `FLAG_SECURE`/equivalent path. Added opt-in `screenshot_protection` with live flag application/clearing through `NinjaWebView`; CI run `33678212417` succeeded on feature HEAD `5190186cbd68a55a4fb9aec7b70a03d0a0878e10`. |
-| Clear-on-exit | **ALREADY / SOURCE-VERIFIED** | Existing `sp_clear_quit` preference and `BrowserActivity.onDestroy()` → `ClearService` path already implement clear-on-exit. Do not reimplement. |
-| Extensions | **MISSING → ARCHITECTURAL** | Current Android WebView architecture is not a Firefox-extension runtime. Not a near-term port. |
-| uBlock Origin | **MISSING → ARCHITECTURAL** | Depends on extension/engine capabilities absent here. Existing AdBlock remains separate. |
-| On-device AI | **MISSING → ARCHITECTURAL** | Requires model/runtime/storage/UI architecture. Not a near-term target. |
-| Translation | **MISSING → MEDIUM/ARCHITECTURAL** | Requires translation service/engine choice. Not first target. |
-| PDF/Markdown/full-page export | **PARTIAL** | PDF/print already exists; Markdown/full-page export is additional functionality. |
-| Custom search engines / bangs | **PARTIAL** | Configurable search engines exist; WebLibre-style bang routing is additional. Candidate for the next deterministic policy, subject to source/seam verification. |
-| Download manager enhancements | **PARTIAL** | Download handling exists; external manager/advanced controls are additional. |
-| Multi-window | **PARTIAL/VERIFY** | Some Android/system integration exists, but full WebLibre-style multi-window behavior needs explicit source verification. |
-| Tab gestures | **ALREADY** | Gesture infrastructure already exists in HebLibre. |
-| OLED/pure-black theme | **ALREADY / SOURCE-VERIFIED** | `AppTheme_amoled` already exists with black window/background/navigation colors and white primary/secondary text. Do not reimplement. |
-| Global settings search | **MISSING → EASY/MEDIUM** | UI-only indexing/search over existing preferences; useful but lower priority than navigation/privacy. |
-| Container/backup migration | **MISSING → MEDIUM/ARCHITECTURAL** | Depends on actual container/profile data model. |
+| Tracking/query-parameter cleanup | **COMPLETE / CI-VERIFIED** | Conservative dependency-free cleaner with JVM tests. |
+| HTTPS-only mode | **COMPLETE / CI-VERIFIED** | Direct and link navigation policy. |
+| Global Privacy Control | **COMPLETE / CI-VERIFIED** | `Sec-GPC: 1` through existing request-header path. |
+| Desktop mode | **COMPLETE / CI-VERIFIED** | Stable desktop UA policy; custom UA preserved when off. |
+| Screenshot protection | **COMPLETE / CI-VERIFIED** | Opt-in `FLAG_SECURE` with live preference handling. |
+| Search bangs | **COMPLETE / CI-VERIFIED** | Built-in routing for supported search engines. |
+| WebView camera/microphone permission guard | **IMPLEMENTED / CI-PENDING** | `WebRtcPermissionPolicy` + `NinjaWebChromeClient.onPermissionRequest()`; blocks camera/microphone capture when `block_media_permissions` is enabled. Full WebRTC engine privacy remains architectural. |
+| Third-party cookie blocking | **IMPLEMENTED / CI-PENDING** | `ThirdPartyCookiePolicy` + `CookieManager.setAcceptThirdPartyCookies()`; opt-in setting, compatibility default off. |
+| Reader Mode | **MISSING → MEDIUM** | Next candidate only after source-verifying a bounded implementation. |
+| QR scanner | **MISSING → MEDIUM** | Camera/scan UI and dependency decision. Lower priority than current privacy work. |
+| PWA support | **MISSING → MEDIUM** | Install/launch lifecycle and manifest handling. |
+| Tab hierarchy | **PARTIAL → MEDIUM** | Existing tabs, no parent-child model. |
+| Tab stacking/advanced switcher | **PARTIAL → MEDIUM** | Existing overview, no stacking semantics. |
+| Container site assignment | **MISSING → MEDIUM** | Requires container metadata/routing. |
+| Container strict/history exclusion | **MISSING → MEDIUM** | Depends on containers. |
+| Tracking Protection engine | **PARTIAL → MEDIUM/ARCHITECTURAL** | Existing AdBlock; broader engine/filter expansion deferred. |
+| DNS over HTTPS | **MISSING → ARCHITECTURAL** | New resolver/network architecture required. |
+| Broad fingerprinting defenses | **MISSING → ARCHITECTURAL** | Engine-level privacy architecture required. |
+| Full WebRTC engine privacy | **PARTIAL → ARCHITECTURAL** | Only bounded media permission guard is implemented. |
+| Complete profile storage isolation | **PARTIAL → ARCHITECTURAL** | CookieManager/WebView storage/history/bookmarks remain shared. |
+| Isolated tabs | **MISSING → ARCHITECTURAL** | Storage/process isolation required. |
+| Per-container proxy/Tor | **MISSING → ARCHITECTURAL** | Networking architecture required. |
+| Extensions/uBlock | **MISSING → ARCHITECTURAL** | Current Android WebView is not a Firefox extension runtime. |
+| On-device AI | **MISSING → ARCHITECTURAL** | New model/runtime/storage architecture. |
+| Translation | **MISSING → MEDIUM/ARCHITECTURAL** | Service/engine decision required. |
+| PDF/Markdown/full-page export | **PARTIAL** | PDF/print exists; Markdown/full-page export remains. |
+| Download manager enhancements | **PARTIAL** | Download handling exists; advanced controls remain. |
+| Multi-window | **PARTIAL/VERIFY** | Needs explicit source verification before parity claims. |
+| Global settings search | **MISSING → EASY/MEDIUM** | Useful but lower priority than privacy/navigation. |
 
-## Completed P2 targets
-### P2 Step 1 — tracking/query-parameter cleanup
-Conservative dependency-free cleaner with JVM coverage.
+## Selection rule
+Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
-### P2 Step 2 — HTTPS-only navigation
-`HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` on direct and intercepted-link navigation when enabled. CI-VERIFIED.
+## Current checkpoint
+P2 Steps 1–6 are CI-VERIFIED. P2.7 media permission guard and P2.8 third-party cookie blocking are source/test implemented. The feature batch at `aa5fdace59a746359870a09bfd43644c5e07aeb6` awaits CI verification; subsequent commits are documentation-only.
 
-### P2 Step 3 — Global Privacy Control
-`GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true through the existing WebView request-header path. Deterministic JVM tests and CI verification are complete; CI run `33668540065` succeeded.
-
-### P2 Step 4 — Desktop mode
-`DesktopModePolicy` selects a stable desktop user-agent when `desktop_mode` is enabled, otherwise preserving an explicit custom UA or the WebView default UA. The preference is exposed in browser settings and the policy is applied during initialization and immediately before navigation. Deterministic JVM tests pass and CI run `33677771905` succeeded.
-
-### P2 Step 5 — Screenshot Protection
-Bounded source trace found no existing screenshot protection. `screenshot_protection` is an opt-in setting. `NinjaWebView` applies or clears `WindowManager.LayoutParams.FLAG_SECURE` through the existing hosting Activity and listens for preference changes so the protection takes effect without a restart. No synthetic JVM wrapper was added because the behavior is Android-window API state. CI run `33678212417` succeeded on feature HEAD `5190186cbd68a55a4fb9aec7b70a03d0a0878e10`.
-
-## P2 Step 6 selection rule
-Select the smallest remaining high-value feature with a deterministic seam where possible. Current preferred candidate is **WebLibre-style bang routing for the already-supported search engines**; source-verify the exact `BrowserUnit.queryWrapper()` insertion point before implementing. If its required wiring would demand a broad/fragile rewrite, choose the next bounded privacy/UX feature instead.
-
-## Explicit YAGNI boundaries
-Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
-
-## Verification boundary
-This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own verification records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
+## Next candidate after CI
+Prefer **Reader Mode** only after source-verifying a small bounded implementation. Otherwise choose the next high-value local privacy/UX seam.
 
 ## Last synchronized
-2026-09-02 — P2 Steps 1–4 CI-VERIFIED; P2 Step 5 Screenshot Protection is CI-VERIFIED; existing Clear-on-exit and AMOLED support remain source-verified as already present.
+2026-09-02 — privacy control batch added; Android runtime validation remains deferred.
