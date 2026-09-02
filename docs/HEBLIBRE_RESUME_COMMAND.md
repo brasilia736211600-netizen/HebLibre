@@ -30,17 +30,20 @@ Rules:
 
 Current verified state:
 - P2.1–P2.11 are CI-VERIFIED.
-- P2.9 Geolocation: Unit Tests run `33684710168` success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
-- P2.10 Save-Data: Unit Tests run `33686256788` success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
-- P2.11 Global settings search: Unit Tests run `33688160810` success, head `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
-- Tab reorder core: `TabOrderPolicy` + `BrowserContainer.move()` committed; deterministic JUnit source test committed; CI still pending.
-- QR scanner, PWA, true tab hierarchy, and true multi-window are deferred because they require larger camera/lifecycle/model architecture.
-- Android runtime remains deferred to final consolidated device validation.
+- P2.9 Geolocation: Unit Tests run `33684710168` success.
+- P2.10 Save-Data: Unit Tests run `33686256788` success.
+- P2.11 Global settings search: Unit Tests run `33688160810` success.
+- Download cookie control: `DownloadCookiePolicy` + integrated `BrowserUnit.download()` path; CI run `33692045747` success.
+- Tab reorder core: `TabOrderPolicy` + `BrowserContainer.move()` + controller-identity JVM tests; CI run `33692092276` success.
+- Remote-content default consistency: `sp_remote` fallback aligned across preference/navigation/init paths; CI run `33694722442` success.
+- Tab reorder UI is intentionally PARTIAL: source tracing confirms `BrowserActivity` owns both the container/model and tab view container, while `AlbumItem` owns the tab item and long-click close behavior. A temporary incomplete controller seam was reverted and must not be resurrected without the full mutation path.
+- QR scanner, PWA, true tab hierarchy, and true multi-window are deferred.
 - Reader Mode remains NOT TARGETED for the current P2 cycle.
+- Android runtime remains deferred to final consolidated device validation.
 
 Next execution:
-Source-verify the smallest bounded download privacy/control seam starting from `BrowserUnit.download()` cookie forwarding. Do not duplicate download logic or change authenticated-download behavior by default. Add a deterministic policy test first; integrate only if the existing call structure permits a minimal, correct change. Do not install the APK.
+Continue parallel source verification on independent bounded privacy/UX seams while keeping tab reorder UI deferred until a complete non-breaking mutation path can be edited safely. Preserve long-click close behavior. Prefer deterministic JVM coverage and CI before any Android runtime work. Do not install the APK.
 ```
 
 ## Current authoritative checkpoint
-P2.1–P2.11 are CI-VERIFIED. Tab reorder has a deterministic core slice but is not yet UI-complete or CI-verified. QR/PWA/hierarchy/multi-window remain deferred medium/architectural seams. The next source-verification target is bounded download privacy/control work.
+P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency are CI-VERIFIED. Tab reorder UI remains PARTIAL because its complete BrowserActivity/AlbumItem mutation path has not yet been safely implemented. QR/PWA/hierarchy/multi-window remain deferred. Android runtime remains deferred.
