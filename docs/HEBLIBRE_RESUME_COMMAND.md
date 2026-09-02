@@ -41,12 +41,12 @@ At the end of every completed substantive step:
 5. record exactly ONE NEXT EXECUTION STEP,
 6. verify remote HEAD.
 
-Current authoritative next step: read docs/HEBLIBRE_WORKFLOW_STATE.md and follow its SINGLE NEXT EXECUTION STEP. The current planned implementation target is P2 Step 1: conservative tracking/query-parameter cleanup.
+Current authoritative next step: read docs/HEBLIBRE_WORKFLOW_STATE.md and follow its SINGLE NEXT EXECUTION STEP. Current target: P2 Step 2 — source-verify HTTPS-only mode and implement only the smallest evidence-backed local navigation policy seam if supported by the existing WebView architecture.
 ```
 
 ## Current authoritative state
 - Active branch: `genspark-dev`.
-- Latest verified continuity state is maintained in `docs/HEBLIBRE_WORKFLOW_STATE.md` and `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`.
 - P1 profile/identity implementation reached its documented boundary; Android profile-switch runtime validation is deferred and is not a blocker.
-- `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` now records the comparison between existing HebLibre functionality and the separate WebLibre feature pool.
-- The sole next implementation target is **P2 Step 1 — conservative tracking/query-parameter cleanup**: add a pure-Java cleaner with focused JVM tests, then wire it through the existing `BrowserUnit.queryWrapper()` path without unrelated behavior changes.
+- `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` records the comparison between existing HebLibre functionality and the separate WebLibre feature pool.
+- P2 Step 1 conservative tracking/query-parameter cleanup is implemented and CI-VERIFIED by run `33648307698` on the feature HEAD.
+- Current next implementation target: **P2 Step 2 — source verification of HTTPS-only mode in the existing WebView navigation path; make the smallest deterministic TDD-backed change only if the architecture supports it without new networking architecture.**
