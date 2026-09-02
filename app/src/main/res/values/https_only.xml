@@ -6,4 +6,6 @@
     <string name="setting_summary_gpc">Send the GPC privacy signal with browser navigation requests.</string>
     <string name="setting_title_desktop_mode">Desktop mode</string>
     <string name="setting_summary_desktop_mode">Use a stable desktop browser user agent for website navigation.</string>
+    <string name="setting_title_screenshot_protection">Screenshot protection</string>
+    <string name="setting_summary_screenshot_protection">Prevent screenshots and screen capture while browsing.</string>
 </resources>
