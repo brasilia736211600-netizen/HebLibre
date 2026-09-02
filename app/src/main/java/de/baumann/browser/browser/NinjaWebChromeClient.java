@@ -6,7 +6,11 @@ import android.os.Message;
 import android.view.View;
 import android.webkit.*;
 
+import androidx.preference.PreferenceManager;
+import android.content.SharedPreferences;
+
 import de.baumann.browser.unit.HelperUnit;
+import de.baumann.browser.unit.WebRtcPermissionPolicy;
 import de.baumann.browser.view.NinjaWebView;
 
 public class NinjaWebChromeClient extends WebChromeClient {
@@ -46,6 +50,20 @@ public class NinjaWebChromeClient extends WebChromeClient {
     public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
         ninjaWebView.getBrowserController().showFileChooser(filePathCallback);
         return true;
+    }
+
+    @Override
+    public void onPermissionRequest(final PermissionRequest request) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ninjaWebView.getContext());
+        if (preferences.getBoolean("block_media_permissions", true)) {
+            for (String resource : request.getResources()) {
+                if (WebRtcPermissionPolicy.shouldBlock(true, resource)) {
+                    request.deny();
+                    return;
+                }
+            }
+        }
+        super.onPermissionRequest(request);
     }
 
     @Override
