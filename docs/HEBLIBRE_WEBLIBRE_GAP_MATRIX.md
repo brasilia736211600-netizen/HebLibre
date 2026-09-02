@@ -36,7 +36,7 @@ These are treated as **ALREADY**, not migration targets.
 | Feature from WebLibre pool | HebLibre status | Scope / decision |
 |---|---|---|
 | Tracking/query-parameter cleanup | **COMPLETE / EASY** | Implemented as conservative dependency-free URL cleanup with JVM coverage. |
-| Desktop mode | **COMPLETE / CI-VERIFIED** | Added a desktop-mode preference and stable desktop user-agent policy, preserving custom UA behavior when desktop mode is off. CI run `33677771905` succeeded for the desktop-mode feature HEAD `c5c9e77...`. |
+| Desktop mode | **COMPLETE / CI-VERIFIED** | Added a desktop-mode preference and stable desktop user-agent policy, preserving custom UA behavior when desktop mode is off. CI run `33677771905` succeeded for feature HEAD `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`. |
 | Reader Mode | **MISSING → MEDIUM** | Requires content extraction/rendering path; larger than URL cleanup. |
 | QR scanner | **MISSING → MEDIUM** | Camera/scan UI and dependency decision required. Not first target. |
 | PWA support | **MISSING → MEDIUM** | Requires install/launch lifecycle and manifest handling. |
@@ -54,7 +54,7 @@ These are treated as **ALREADY**, not migration targets.
 | Global Privacy Control | **COMPLETE / CI-VERIFIED** | `Sec-GPC: 1` is implemented through the existing request-header path with a dependency-free policy, JVM contract tests, and successful CI run `33668540065`. |
 | Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
 | WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
-| Screenshot protection | **PARTIAL/VERIFY** | Existing screenshot/fullscreen-related handling exists; exact prevention semantics need source verification before claiming parity. |
+| Screenshot protection | **IMPLEMENTED / CI-PENDING** | Bounded source trace found no existing `FLAG_SECURE`/equivalent path. Added opt-in `screenshot_protection` and live window-flag application/clearing through `NinjaWebView`; CI run `33678212417` is the verification checkpoint. |
 | Clear-on-exit | **ALREADY / SOURCE-VERIFIED** | Existing `sp_clear_quit` preference and `BrowserActivity.onDestroy()` → `ClearService` path already implement clear-on-exit. Do not reimplement. |
 | Extensions | **MISSING → ARCHITECTURAL** | Current Android WebView architecture is not a Firefox-extension runtime. Not a near-term port. |
 | uBlock Origin | **MISSING → ARCHITECTURAL** | Depends on extension/engine capabilities absent here. Existing AdBlock remains separate. |
@@ -77,13 +77,16 @@ Conservative dependency-free cleaner with JVM coverage.
 `HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` on direct and intercepted-link navigation when enabled. CI-VERIFIED.
 
 ### P2 Step 3 — Global Privacy Control
-`GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true through the existing WebView request-header path. Deterministic JVM tests and CI verification are complete; CI run `33668540065` succeeded for commit `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`.
+`GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true through the existing WebView request-header path. Deterministic JVM tests and CI verification are complete; CI run `33668540065` succeeded.
 
-### P2 Step 4 — Desktop mode (COMPLETE)
-A dependency-free `DesktopModePolicy` selects a stable desktop user-agent when `desktop_mode` is enabled, otherwise preserving a user-supplied custom UA or the WebView default UA. The preference is exposed in browser settings and applied before each navigation. Deterministic JVM tests are committed and CI run `33677771905` completed successfully on feature HEAD `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`.
+### P2 Step 4 — Desktop mode
+`DesktopModePolicy` selects a stable desktop user-agent when `desktop_mode` is enabled, otherwise preserving an explicit custom UA or the WebView default UA. The preference is exposed in browser settings and the policy is applied during initialization and immediately before navigation. Deterministic JVM tests pass and CI run `33677771905` succeeded.
 
-## P2 Step 4 selection rule
-Prefer the smallest high-value feature that is local, dependency-free, and has a deterministic JVM seam. Avoid architectural gaps until there is a demonstrated product need. Do not reimplement anything already present in HebLibre.
+### P2 Step 5 — Screenshot Protection
+Bounded source trace found no existing screenshot protection. `screenshot_protection` is now an opt-in setting. `NinjaWebView` applies or clears `WindowManager.LayoutParams.FLAG_SECURE` through the existing hosting Activity and listens for preference changes so the protection takes effect without a restart. No synthetic JVM wrapper was added because the value is Android-window API state. CI verification is pending at feature HEAD `5190186cbd68a55a4fb9aec7b70a03d0a0878e10`.
+
+## P2 Step 5 selection rule
+After CI verification of Screenshot Protection, select the smallest remaining high-value feature with bounded scope and strong product/privacy payoff. Prefer deterministic JVM seams; for Android-only features perform bounded source tracing first. Do not start architectural features merely because they appear in the WebLibre feature pool.
 
 ## Explicit YAGNI boundaries
 Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
@@ -92,4 +95,4 @@ Do not add without demonstrated need: multi-process architecture, WebView data-d
 This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own verification records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
 
 ## Last synchronized
-2026-09-02 — P2 Step 4 Desktop Mode complete and CI-VERIFIED; Clear-on-exit and AMOLED/pure-black support independently confirmed as existing HebLibre functionality.
+2026-09-02 — Desktop Mode complete and CI-VERIFIED; Screenshot Protection source implementation complete with CI pending; Clear-on-exit and AMOLED support source-verified as existing functionality.
