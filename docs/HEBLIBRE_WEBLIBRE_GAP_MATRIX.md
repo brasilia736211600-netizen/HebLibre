@@ -35,7 +35,7 @@ These are treated as **ALREADY**, not migration targets.
 
 | Feature from WebLibre pool | HebLibre status | Scope / decision |
 |---|---|---|
-| Tracking/query-parameter cleanup | **MISSING → EASY** | No generic tracker-parameter cleaner is present in `BrowserUnit`; current `queryWrapper()` only unwraps a small set of Google redirect forms. Candidate for first new feature. |
+| Tracking/query-parameter cleanup | **COMPLETE / EASY** | Implemented as conservative dependency-free URL cleanup with JVM coverage. |
 | Desktop mode | **MISSING → MEDIUM** | Requires a user-facing toggle and `WebSettings` UA/viewport behavior. Existing UA infrastructure can be reused. |
 | Reader Mode | **MISSING → MEDIUM** | Requires content extraction/rendering path; larger than URL cleanup. |
 | QR scanner | **MISSING → MEDIUM** | Camera/scan UI and dependency decision required. Not first target. |
@@ -49,9 +49,9 @@ These are treated as **ALREADY**, not migration targets.
 | Container strict mode/history exclusion | **MISSING → MEDIUM** | Builds on container metadata and history routing; not needed before basic containers exist. |
 | Per-container proxy/Tor routing | **MISSING → ARCHITECTURAL** | Requires proxy/Tor networking architecture; outside immediate YAGNI boundary. |
 | Tracking Protection engine / larger filter DB | **PARTIAL → MEDIUM/ARCHITECTURAL** | Basic AdBlock exists; WebLibre-grade tracking protection requires engine/filter-data expansion. |
-| HTTPS-only mode | **MISSING → EASY/MEDIUM** | Navigation policy can potentially be enforced locally without new architecture. Needs careful compatibility behavior. |
+| HTTPS-only mode | **COMPLETE / EASY-MEDIUM** | Implemented locally in both direct navigation and intercepted link navigation, with deterministic JVM policy tests and no new networking stack. |
 | DNS over HTTPS | **MISSING → ARCHITECTURAL** | Requires resolver/network integration not present in WebView architecture. |
-| Global Privacy Control | **MISSING → EASY/MEDIUM** | Request-header support may be locally implementable, but WebView API limitations must be respected. |
+| Global Privacy Control | **MISSING → EASY/MEDIUM** | Request-header support may be locally implementable; next source-verification target. |
 | Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
 | WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
 | Screenshot protection | **PARTIAL/VERIFY** | Existing screenshot/fullscreen-related handling exists; exact prevention semantics need source verification before claiming parity. |
@@ -69,26 +69,22 @@ These are treated as **ALREADY**, not migration targets.
 | Global settings search | **MISSING → EASY/MEDIUM** | UI-only indexing/search over existing preferences; useful but lower priority than navigation/privacy. |
 | Container/backup migration | **MISSING → MEDIUM/ARCHITECTURAL** | Depends on actual container/profile data model. |
 
-## First implementation candidate
-**Tracking/query-parameter cleanup** is the current first target because:
-1. HebLibre does not currently perform generic tracking-query cleanup in its URL normalization path.
-2. `BrowserUnit.queryWrapper()` already centralizes the transition from user-entered URL/query text to the URL sent to `NinjaWebView`.
-3. `NinjaWebView.loadUrl()` already routes navigation through `BrowserUnit.queryWrapper()`.
-4. A pure-Java cleaner can be tested independently before Android wiring.
-5. The change can remain intentionally conservative: remove only a small allowlisted set of well-known tracking parameters and `utm_*`, preserving path, meaningful query parameters, and fragments.
+## Completed P2 targets
 
-## Explicit non-goals for the first URL-cleanup implementation
-- no full URL canonicalization;
-- no arbitrary parameter deletion;
-- no network requests;
-- no new dependency;
-- no navigation-policy rewrite;
-- no attempt to solve fingerprinting, cookies, WebRTC, proxy, or DNS privacy in the same change.
+### P2 Step 1 — tracking/query-parameter cleanup
+Conservative dependency-free cleaner. Removes only an explicit allowlist of common analytics/click identifiers plus `utm_*`, while preserving meaningful parameters, path, fragment, and order. TDD contract committed before implementation; Android wiring occurs in the existing URL normalization path.
 
-## Evidence anchors
-Current HebLibre navigation source shows `NinjaWebView.loadUrl()` passes URLs through `BrowserUnit.queryWrapper()` before `super.loadUrl(...)`. Current `BrowserUnit` contains Google redirect unwrapping but no generic tracker-parameter filtering. Existing URL behavior is covered by a plain-JVM `BrowserUnitTest` characterization suite.
+### P2 Step 2 — HTTPS-only navigation
+A plain-Java `HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` and leaves HTTPS, non-HTTP schemes, null, and blank input unchanged. The policy is applied to direct navigation in `NinjaWebView.loadUrl()` and intercepted link navigation in `NinjaWebViewClient.handleUri()`. The existing start-settings UI exposes `https_only`, default off. No HTTP fallback or networking architecture is introduced.
 
-The separate WebLibre feature pool includes tracking-parameter stripping/query cleanup alongside many larger privacy, container, networking, extension, local-search, and AI capabilities. Those features remain a source pool rather than an automatic HebLibre roadmap.
+## Explicit YAGNI boundaries
+Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
+
+## Next candidate
+**Global Privacy Control (GPC)** — source-verify the existing request-header seam first. Implement only a small deterministic header-policy change if current WebView APIs permit it without a new networking layer.
 
 ## Verification boundary
-This matrix is **DOCUMENTED / SOURCE-INFORMED**. It is not an Android-runtime feature verification record.
+This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own SOURCE-VERIFIED / TEST-VERIFIED / CI-VERIFIED records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
+
+## Last synchronized
+2026-09-02 — P2 Steps 1–2 complete; next candidate is GPC source verification.
