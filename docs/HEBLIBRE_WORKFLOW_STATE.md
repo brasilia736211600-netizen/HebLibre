@@ -25,8 +25,8 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 - Do not introduce architecture, dependencies, or subsystem replacements without demonstrated need.
 
 ## Current repository state
-- Exact remote branch HEAD: `1a71cd2eb358bfd57f3209d141fc40253183dff1` (`fix: align Save-Data fallback with setting default`).
-- P2.1–P2.10 are now CI-VERIFIED.
+- Exact remote branch HEAD: `fa1eef7d6579c1a26d8719aefd681a1cd1b266e4` was the implementation commit when this state update began; subsequent commits are documentation/resource synchronization. Verify exact HEAD on every resume.
+- P2.1–P2.10 are CI-VERIFIED.
 - P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
 - P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
 - Android runtime verification remains intentionally deferred to the final device pass.
@@ -45,12 +45,16 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 11. P2.8 optional third-party cookie blocking — CI-VERIFIED by run `33679583870`.
 12. P2.9 geolocation privacy guard — CI-VERIFIED by run `33684710168`.
 13. P2.10 Save-Data preference contract/fallback correction — CI-VERIFIED by run `33686256788`.
+14. P2.11 global settings search — implementation committed; deterministic JVM contract added. CI verification pending.
 
 ## P2.9 — Geolocation privacy guard
 `GeolocationPermissionPolicy` and its JVM tests are complete. `NinjaWebChromeClient.onGeolocationPermissionsShowPrompt()` reads the canonical geolocation preference key; disabled invokes `callback.invoke(origin, false, false)` and enabled preserves the existing runtime-permission flow. Android runtime verification is deferred.
 
 ## P2.10 — Save-Data
 `SaveDataPolicy` and JVM tests define the preference contract. `NinjaWebView.getRequestHeaders()` now uses `SaveDataPolicy.DEFAULT_ENABLED` as the fallback, matching the actual `preference_start.xml` default of true. Explicit false still suppresses `Save-Data: on`. CI run `33686256788` is successful.
+
+## P2.11 — Global settings search
+A source-verified bounded UI seam exists in `Fragment_settings`: a search field is added above the existing `PreferenceFragmentCompat` list, and recursive visibility filtering searches preference title and summary without changing stored values or navigation wiring. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract with JVM tests. SOURCE-VERIFIED: complete. TEST-VERIFIED: not yet locally executed. CI-VERIFIED: pending.
 
 ## Existing-feature corrections
 - Clear-on-exit is already implemented; do not reimplement.
@@ -61,10 +65,10 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
 ## Reader Mode decision
-Reader Mode was source-traced against the current native WebView architecture. No bounded dependency-free `evaluateJavascript`/reader-extraction seam was established; ad-hoc HTML/JS extraction would be invasive and insufficiently deterministic. Reader Mode is therefore **NOT TARGETED in the current P2 cycle** rather than being implemented speculatively.
+Reader Mode was source-traced against the current native WebView architecture. No bounded dependency-free `evaluateJavascript`/reader-extraction seam was established; ad-hoc HTML/JS extraction would be invasive and insufficiently deterministic. Reader Mode is therefore NOT TARGETED in the current P2 cycle.
 
 ## Next execution step
-**Source-verify the smallest remaining high-value local privacy/UX seam (starting with global settings search); implement only if it has a bounded deterministic seam, otherwise advance to the next candidate. Do not install the APK.**
+**Reconcile CI for P2.11 global settings search. If CI fails, fix the smallest concrete issue and rerun; if CI succeeds, record it and advance to the next bounded privacy/UX seam. Do not install the APK.**
 
 ## Last updated
-2026-09-03 — Save-Data CI success reconciled, Reader Mode source-trace closed as non-bounded, and remote HEAD synchronized to `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
+2026-09-03 — P2.11 settings-search implementation recorded; CI still pending.
