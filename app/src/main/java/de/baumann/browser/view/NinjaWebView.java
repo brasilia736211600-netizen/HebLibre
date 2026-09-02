@@ -27,6 +27,7 @@ import de.baumann.browser.unit.DesktopModePolicy;
 import de.baumann.browser.unit.GpcPolicy;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.HttpsOnlyPolicy;
+import de.baumann.browser.unit.SaveDataPolicy;
 import de.baumann.browser.unit.ThirdPartyCookiePolicy;
 
 import java.util.HashMap;
@@ -245,7 +246,8 @@ public class NinjaWebView extends WebView implements AlbumController {
     public synchronized HashMap<String, String> getRequestHeaders() {
         HashMap<String, String> requestHeaders = new HashMap<>();
         requestHeaders.put("DNT", "1");
-        if (sp.getBoolean(context.getString(R.string.sp_savedata), false)) {
+        if (SaveDataPolicy.isEnabled(sp.getBoolean(
+                context.getString(R.string.sp_savedata), SaveDataPolicy.DEFAULT_ENABLED))) {
             requestHeaders.put("Save-Data", "on");
         }
         if (sp.getBoolean("gpc_enabled", false)) {
