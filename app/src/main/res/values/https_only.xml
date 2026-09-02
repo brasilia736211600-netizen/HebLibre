@@ -4,4 +4,6 @@
     <string name="setting_summary_https_only">Upgrade HTTP navigations to HTTPS. HTTPS and non-HTTP schemes are unchanged.</string>
     <string name="setting_title_gpc">Global Privacy Control</string>
     <string name="setting_summary_gpc">Send the GPC privacy signal with browser navigation requests.</string>
+    <string name="setting_title_desktop_mode">Desktop mode</string>
+    <string name="setting_summary_desktop_mode">Use a stable desktop browser user agent for website navigation.</string>
 </resources>
