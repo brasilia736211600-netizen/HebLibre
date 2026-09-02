@@ -29,16 +29,17 @@ Rules:
 - Use CodeRabbit only when its required local CLI/repository surface is actually available; never claim a result when unavailable.
 
 Current verified state:
-- P2.1–P2.10 are CI-VERIFIED.
+- P2.1–P2.11 are CI-VERIFIED.
 - P2.9 Geolocation: Unit Tests run `33684710168` success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
 - P2.10 Save-Data: Unit Tests run `33686256788` success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
-- Current branch HEAD after documentation reconciliation is advanced beyond the feature HEAD; verify it directly on resume.
+- P2.11 Global settings search: Unit Tests run `33688160810` success, head `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
+- Current documentation synchronization advances HEAD beyond that feature commit; verify exact branch HEAD directly on every resume.
 - Android runtime is deferred to final validation.
 - Reader Mode is NOT TARGETED for the current P2 cycle: source tracing found no bounded dependency-free reader-extraction seam in the native WebView architecture, so speculative HTML/JS injection is intentionally excluded.
 
 Next execution:
-Source-verify global settings search as the smallest remaining high-value local UX seam. Implement only if the existing settings architecture supports a bounded deterministic change; otherwise choose the next smallest bounded privacy/UX feature. Do not install the APK.
+Source-verify the next smallest high-value bounded privacy/UX seam from the gap matrix, currently QR scanner. First inspect existing camera permissions, intent handling, and dependency surface. Prefer platform-only deterministic implementation; do not add a library unless repository evidence requires it. Implement only after a bounded seam and test contract are established. Do not install the APK.
 ```
 
 ## Current authoritative checkpoint
-P2.1–P2.10 are CI-VERIFIED; Reader Mode has been closed as non-bounded for this cycle; global settings search is the next source-verification target; Android runtime remains reserved for the final device pass.
+P2.1–P2.11 are CI-VERIFIED; Reader Mode has been closed as non-bounded for this cycle; global settings search is complete; QR scanner is the next source-verification target; Android runtime remains reserved for the final device pass.
