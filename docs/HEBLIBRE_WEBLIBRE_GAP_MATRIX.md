@@ -32,7 +32,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | Reader Mode | **NOT TARGETED** | Source-traced; no bounded dependency-free reader-extraction seam was established in the native WebView architecture. Do not add speculative HTML/JS injection. |
 | QR scanner | **SOURCE-VERIFIED / MEDIUM** | No existing QR/barcode scanner, decoder, camera permission, scanner intent, or QR-specific dependency was found in the inspected repository surface. `AndroidManifest.xml` declares no `CAMERA` permission; `app/build.gradle` has no ZXing/ML Kit/camera scanning dependency. A complete scanner therefore requires a new decoding/camera integration rather than a dependency-free local seam. Defer implementation until a concrete library/platform decision is justified. |
 | PWA support | **SOURCE-VERIFIED / MEDIUM** | Existing app is a conventional Android WebView: `BrowserActivity` handles normal `http`/`https` intents and `NinjaWebViewClient` keeps web navigation inside the WebView. No Web App Manifest parsing, `WebChromeClient` install-prompt bridge, PWA install metadata, standalone launch intent, or service-worker lifecycle integration was found. A real installable/standalone PWA feature therefore needs a new manifest/install lifecycle seam; no bounded dependency-free JVM contract was established. Defer implementation until the lifecycle contract is explicitly scoped. |
-| Tab hierarchy | PARTIAL → MEDIUM | Existing tabs; no parent-child model. |
+| Tab hierarchy | **SOURCE-VERIFIED / MEDIUM** | `BrowserContainer` is a flat `List<AlbumController>` with index-based add/remove/get; `AlbumController` exposes only view activation/deactivation; `AlbumItem` switches/removes tabs without parent metadata. No parent/child relation, opener identity, hierarchy model, or deterministic hierarchy policy exists. Implementing true tab hierarchy would require a new tab model contract plus UI/lifecycle integration. Defer until the parent-child semantics are explicitly defined. |
 | Tab stacking/advanced switcher | PARTIAL → MEDIUM | Existing overview; no stacking semantics. |
 | Container site assignment | MISSING → MEDIUM | Requires container metadata/routing. |
 | Container strict/history exclusion | MISSING → MEDIUM | Depends on containers. |
@@ -48,13 +48,13 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | Translation | MISSING → MEDIUM/ARCHITECTURAL | Service/engine decision. |
 | PDF/Markdown/full-page export | PARTIAL | PDF/print exists; Markdown/full-page export remains. |
 | Download manager enhancements | PARTIAL | Download handling exists; advanced controls remain. |
-| Multi-window | PARTIAL/VERIFY | Needs explicit source verification. |
+| Multi-window | PARTIAL/VERIFY | `WebSettings.setSupportMultipleWindows(true)` and `BrowserController.onCreateView(Message)` exist, so this needs targeted source verification before any change. |
 
 ## Selection rule
 Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred. Reader Mode is formally excluded from the current P2 cycle. Global settings search is complete. QR scanner source verification is complete and classified MEDIUM because it needs a new camera/decoder integration. PWA support source verification is complete and classified MEDIUM because the current WebView has no manifest/install/standalone lifecycle seam or deterministic dependency-free contract. The next candidate is **Tab hierarchy source verification**.
+P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred. Reader Mode is formally excluded from the current P2 cycle. Global settings search is complete. QR scanner, PWA support, and tab hierarchy source verification are complete and classified MEDIUM. The next candidate is **Tab stacking/advanced switcher source verification**, unless multi-window source verification reveals a smaller bounded seam.
 
 ## Last synchronized
-2026-09-03 — PWA support source verification completed; implementation deferred pending an explicit install/standalone lifecycle contract; Tab hierarchy selected as the next source-verification candidate.
+2026-09-03 — Tab hierarchy source verification completed; existing model is flat and lacks parent-child semantics; no implementation made; next candidate is tab stacking/advanced switcher source verification.
