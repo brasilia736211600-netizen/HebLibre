@@ -25,14 +25,14 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 - Do not introduce architecture, dependencies, or subsystem replacements without demonstrated need.
 
 ## Current repository state
-- Active branch `genspark-dev` HEAD: `3e8a6c94f27adfe2ed866844246dd73ad9ce2640` before this documentation checkpoint.
+- Active branch `genspark-dev` HEAD: `71558fc7aca3fd86e683bd1d59ad1eb618bf5135` at this checkpoint.
 - P2.1–P2.11 remain CI-VERIFIED from their recorded successful runs.
 - P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success.
 - P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success.
 - P2.11 Global settings search CI evidence: Unit Tests run `33688160810`, success.
 - Download-cookie integration CI run `33692045747`: completed success; unit-test job completed success.
 - BrowserContainer reorder integration-test CI run `33692092276`: completed success; unit-test job completed success.
-- Latest docs-synchronized CI run `33692188936`: completed success.
+- Remote-content default consistency correction CI run `33694722442`: completed success; unit-test job completed success.
 - Android runtime verification remains intentionally deferred to the final device pass.
 
 ## Completed engineering
@@ -56,12 +56,19 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 18. Tab reorder core model slice — deterministic `TabOrderPolicy` plus `BrowserContainer.move()` that reorders an existing tab without destroying its WebView state.
 19. Download cookie privacy control — added a default-compatible `send_download_cookies` preference, deterministic policy/test contract, and integrated the policy into `BrowserUnit.download()`.
 20. BrowserContainer move tests — added JVM-level tests using fake `AlbumController` instances to verify left/right reordering preserves controller identity.
+21. Remote-content default consistency — aligned `sp_remote` fallback behavior with the declared preference default and existing navigation fallback; CI-VERIFIED by run `33694722442`.
 
 ## Tab stacking / advanced switcher core slice
 Source review showed indexed insertion was already available, making a small reorder primitive viable. `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping; `BrowserContainer.move()` applies the reorder without destroying the moved WebView. The committed policy and container tests cover movement, boundaries, invalid inputs, and controller identity. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete. CI-VERIFIED: complete via run `33692092276`. UI wiring remains deferred: `dialog_overview.xml` uses a `ScrollView` containing a `LinearLayout`, while `AlbumItem` maps normal click to selection and long-click to tab removal. A reorder control must be added without stealing the existing long-click close contract.
 
 ## Download privacy seam
 `BrowserUnit.download()` consults `send_download_cookies`, defaulting to enabled for compatibility. When enabled it forwards a non-empty WebView cookie; when disabled it omits the `Cookie` request header. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete. CI-VERIFIED: complete via run `33692045747`.
+
+## Remote-content default seam
+`preference_start.xml` declares `sp_remote` default `true`; `NinjaWebView.loadUrl()` already used `true`; `NinjaWebView.initPreferences()` was corrected from `false` to `true`. Direct Actions evidence for Unit Tests run `33694722442` shows the test job and unit-test step completed successfully. SOURCE-VERIFIED, TEST/CI-VERIFIED, and DOCUMENTED.
+
+## Reorder UI seam reconciliation
+A direct source trace found the actual mutation boundary: `BrowserActivity` owns the `BrowserContainer` and `tab_container`, while `AlbumItem` owns each tab view and currently exposes normal-click selection plus long-click removal. A temporary `BrowserController.moveAlbum(...)` seam was tested conceptually but immediately reverted because it was incomplete without the corresponding `BrowserActivity` mutation path. The revert left the source tree without that incomplete API. Therefore the UI remains intentionally PARTIAL rather than being falsely marked implemented.
 
 ## Remaining bounded-source decisions
 QR scanner, PWA support, tab hierarchy, multi-window, and Reader Mode remain deferred because no smaller dependency-free seam has been established. Continue source verification on genuinely independent privacy/UX seams rather than introducing speculative architecture.
@@ -70,7 +77,7 @@ QR scanner, PWA support, tab hierarchy, multi-window, and Reader Mode remain def
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
 ## Next execution step
-**Continue parallel source verification. For tab reorder, the next implementation candidate is a dedicated non-long-press reorder affordance that invokes the existing tested `BrowserContainer.move()` path and keeps the tab overview view order synchronized. Do not change long-press close behavior. Keep deferred architectural features deferred and do not install the APK.**
+**Continue parallel source verification on independent bounded privacy/UX seams while keeping tab reorder UI deferred until a complete non-breaking mutation path can be edited safely. Preserve long-click close behavior. Keep deferred architectural features deferred and do not install the APK yet.**
 
 ## Last updated
-2026-09-03 — reconciled download-cookie and BrowserContainer reorder CI successfully; verified the tab-overview/AlbumItem interaction boundary and preserved the non-breaking UX constraint.
+2026-09-03 — reconciled current branch HEAD, remote-content CI evidence, and the temporary/reverted reorder-controller seam; documentation remains synchronized with the actual source boundary.
