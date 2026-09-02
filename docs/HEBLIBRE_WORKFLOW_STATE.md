@@ -12,7 +12,7 @@ Execution protocol:
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
 ## Current repository state
-- Exact current branch HEAD after this save-state commit: `b5f4a42e6e5ee3e5b73dbf2911e16dca6a0b98c9`.
+- Exact current branch HEAD verified remotely: `b5473771a71cb9cd23a46348953bace140dab295`.
 - Previous documentation reconciliation commit: `957f3fc3c7cd49702cac50fad056426d6c6d1e29`.
 - Engineering HEAD for P1 Step 6 remains `37f0e8d0232ee4e80da74ce66adade7d6917668c`.
 - GitHub Actions run `33643362798` for that engineering HEAD completed successfully.
@@ -25,7 +25,7 @@ Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIM
 2. Minimal JUnit4 harness: `BrowserUnit.isURL` characterization; 4 tests green. `6211fc57cc5589f24106df0c1aa2a4e7b6ae2058`.
 3. CI workflow: JDK 17 for SDK tooling, JDK 11 for Gradle. Successful run `33459477325` for `9aca596d6361104d7982563c3784512caab98cfa`.
 4. P1 Step 1: pure-Java `UrlMatcher.containsAnyDomain`; 9/9 tests.
-5. P1 Step 2: instance-scoped `BrowserContainer`; 11/11 tests.
+5. P1 Step 2: `BrowserContainer` instance-scoped; 11/11 tests.
 6. P1 Step 3: `ProfileScopedWhitelist` keyed by profile id; 14/14 tests.
 7. P1 Step 4: `Ninja4.db` whitelist `PROFILE_ID` migration v4→v5, profile-aware CRUD and callers; 17/17 JVM tests plus main-source compilation. Implementation `4f0f97b955ce1e8b3dd039b365f056e48b4c00de`.
 8. P1 Step 5: dependency-free `ProfileIdentity` contract with four JVM tests; CI-VERIFIED by run `33641035094` on `c4b6b3a244ae9f036ce3869306d391635085640d`.
@@ -57,4 +57,4 @@ No multi-process architecture or `WebView.setDataDirectorySuffix` solution has b
 After every substantive step: verify branch + exact HEAD; record tests, CI and runtime evidence; record diff scope; update this file; commit/push; verify remote HEAD; record exactly ONE next execution step.
 
 ## Last updated
-2026-09-02 — P1 Step 6 CI completed successfully; canonical map and workflow state reconciled; Android runtime verification remains outstanding.
+2026-09-02 — P1 Step 6 CI completed successfully; master map reconciled; remote branch HEAD verified as `b5473771...`; Android runtime verification remains outstanding.
