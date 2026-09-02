@@ -15,6 +15,7 @@ import androidx.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.*;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -26,6 +27,7 @@ import de.baumann.browser.unit.DesktopModePolicy;
 import de.baumann.browser.unit.GpcPolicy;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.HttpsOnlyPolicy;
+import de.baumann.browser.unit.ThirdPartyCookiePolicy;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -95,6 +97,13 @@ public class NinjaWebView extends WebView implements AlbumController {
                             @Override
                             public void run() {
                                 applyScreenshotProtection();
+                            }
+                        });
+                    } else if ("block_third_party_cookies".equals(key)) {
+                        post(new Runnable() {
+                            @Override
+                            public void run() {
+                                applyThirdPartyCookiePolicy();
                             }
                         });
                     }
@@ -189,6 +198,7 @@ public class NinjaWebView extends WebView implements AlbumController {
         webSettings.setUserAgentString(DesktopModePolicy.resolve(
                 sp.getBoolean("desktop_mode", false), userAgent, defaultUserAgent));
         applyScreenshotProtection();
+        applyThirdPartyCookiePolicy();
         webViewClient.enableAdBlock(sp.getBoolean(context.getString(R.string.sp_ad_block), true));
         webSettings = getSettings();
         webSettings.setTextZoom(Integer.parseInt(Objects.requireNonNull(sp.getString("sp_fontSize", "100"))));
@@ -219,6 +229,14 @@ public class NinjaWebView extends WebView implements AlbumController {
         }
     }
 
+    private void applyThirdPartyCookiePolicy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            boolean block = sp.getBoolean("block_third_party_cookies", false);
+            CookieManager.getInstance().setAcceptThirdPartyCookies(
+                    this, ThirdPartyCookiePolicy.acceptThirdPartyCookies(block));
+        }
+    }
+
     private synchronized void initAlbum() {
         album.setAlbumTitle(context.getString(R.string.app_name));
         album.setBrowserController(browserController);
@@ -245,6 +263,7 @@ public class NinjaWebView extends WebView implements AlbumController {
         }
         HelperUnit.initRendering(this);
         applyUserAgentPreference();
+        applyThirdPartyCookiePolicy();
 
         if (javaHosts.isWhite(url) || sp.getBoolean(context.getString(R.string.sp_javascript), true)) {
             webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
