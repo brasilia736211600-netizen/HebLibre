@@ -80,6 +80,12 @@
             android:title="@string/setting_title_block_third_party_cookies"
             android:summary="@string/setting_summary_block_third_party_cookies"/>
 
+        <CheckBoxPreference
+            android:key="send_download_cookies"
+            android:defaultValue="true"
+            android:title="@string/setting_title_download_cookies"
+            android:summary="@string/setting_summary_download_cookies"/>
+
     </PreferenceCategory>
 
 
