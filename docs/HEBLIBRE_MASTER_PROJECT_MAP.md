@@ -2,103 +2,61 @@
 
 ## Authority
 - Repository: `brasilia736211600-netizen/HebLibre`
-- Active development branch: `genspark-dev`
+- Active branch: `genspark-dev`
 - Default branch: `l10n_crowdin`
-- GitHub is the source of truth; chat history and agent memory are non-authoritative.
-- Canonical execution protocol: `READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE`.
-- Canonical handoff state: `docs/HEBLIBRE_WORKFLOW_STATE.md`.
-- Canonical resume command: `docs/HEBLIBRE_RESUME_COMMAND.md`.
-- Feature gap record: `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
+- GitHub is the source of truth.
+- Canonical workflow: `READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE`.
+- Continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
 
-## Tooling roles
-- **GitHub**: primary source of truth and execution surface.
-- **Codex Engineering Guardrails**: always enforce scope, YAGNI, verification discipline, and evidence-based claims.
-- **Codex Process Jobs**: only for genuinely independent parallelizable work.
-- **Codex Coordinator**: only when multiple active workstreams need orchestration.
-- **CodeRabbit**: substantive diff/PR review and security/code-quality second pass after tests; no CodeRabbit result is claimed when the required local CLI/repository surface is unavailable.
-- **Codex Advisor**: non-trivial engineering decisions only.
-- **AI DevKit / Develoop**: optional, only when they add a concrete capability beyond the existing toolchain.
-- **Plugin Autopilot**: optional orchestration for plugin selection, not part of every code change.
-- **Yaps Memory**: convenience only; never a continuity authority.
-- **Prompt Optimizer**: optional and event-driven, not a normal pipeline stage.
-
-The intended operating mode is low-intervention: `استمر` should be sufficient to resume and advance work from repository state without unnecessary user prompts.
+## Tooling policy
+GitHub is primary. Codex Engineering Guardrails enforce YAGNI and evidence-based verification. Process Jobs and Coordinator are used only for genuinely independent/parallel work. CodeRabbit is a second-pass review when its required local CLI/repository surface is available; no CodeRabbit result is claimed in the current environment. Advisor is for non-trivial decisions. AI DevKit/Develoop and Plugin Autopilot are optional capability-specific tools. Yaps Memory is non-authoritative. Prompt Optimizer is event-driven only.
 
 ## Verification ladder
-Never collapse these levels:
-1. SOURCE-VERIFIED
-2. TEST-VERIFIED
-3. CI-VERIFIED
-4. ANDROID-RUNTIME-VERIFIED
-5. DOCUMENTED
+SOURCE-VERIFIED → TEST-VERIFIED → CI-VERIFIED → ANDROID-RUNTIME-VERIFIED → DOCUMENTED. Do not conflate levels.
 
-## Project baseline
-Legacy Android browser/WebView application based on the FOSS Browser codebase. Toolchain baseline: Gradle 5.4.1 / AGP 3.5.2, compile SDK 29, build-tools 28.0.3, JDK 11 for Gradle, JDK 17 for Android SDK tooling in CI.
+## Final device-validation policy
+Do not install/test the APK after each feature. Continue source/JVM/CI work first. Perform Android build/install/runtime verification once the planned feature set is mature; fix any runtime regressions discovered then and rerun the final device validation.
 
-## Completed engineering sequence
-- Build/toolchain recovery: complete; debug build verified locally.
-- Minimal JUnit4 harness: complete; `BrowserUnit.isURL` characterization tests.
-- CI workflow recovery: complete; JDK 17 for SDK tooling and JDK 11 for Gradle.
-- P1 profile/identity groundwork: complete within documented boundary; runtime validation deferred.
-- P1 lifecycle/test-seam review: complete.
-- P1 WebLibre/HebLibre feature gap matrix: complete and persisted.
-- P2 Step 1: conservative tracking/query-parameter cleanup complete.
-- P2 Step 2: HTTPS-only navigation policy complete and CI-VERIFIED.
-- P2 Step 3: GPC policy, tests, request-header wiring complete and CI-VERIFIED.
-- P2 Step 4: Desktop Mode policy, setting, wiring, deterministic JVM tests, and CI verification complete.
+## Baseline
+Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.2, compile SDK 29, build-tools 28.0.3, JDK 11 for Gradle, JDK 17 for Android SDK tooling in CI.
 
-## HebLibre original baseline — already implemented
-HebLibre already provides substantial browser functionality, including multi-tab browsing/tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation/tool gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with domain whitelists, Safe Browsing, bookmark import/export, and custom User-Agent setting.
+## Completed engineering
+- Build/toolchain recovery, minimal JUnit4 harness, and CI workflow.
+- P1 profile/identity groundwork and lifecycle/test-seam review; runtime validation deferred.
+- P1 WebLibre/HebLibre feature gap matrix.
+- P2.1 tracking/query cleanup — CI-VERIFIED.
+- P2.2 HTTPS-only navigation — CI-VERIFIED.
+- P2.3 GPC — CI-VERIFIED.
+- P2.4 Desktop Mode — CI-VERIFIED.
+- P2.5 Screenshot Protection — CI-VERIFIED.
+- P2.6 built-in search bang routing — CI-VERIFIED.
+- P2.7 bounded WebView media permission privacy guard — source/test implemented; CI pending at current checkpoint.
+- P2.8 optional third-party cookie blocking — source/test implemented; CI pending at current checkpoint.
 
-These are not migration targets merely because WebLibre also provides them.
+## Existing HebLibre baseline — do not reimplement
+Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
 
-## Current profile boundary
-### Profile-capable
-- In-memory whitelist state: `ProfileScopedWhitelist`.
-- Persisted whitelist tables have `PROFILE_ID`.
-- Four whitelist classes accept and normalize profile ids.
-- Active profile id preference is `current_profile_id`.
-- Profile changes use the existing activity restart path.
+## Profile boundary
+Profile-aware whitelist state and profile identity are implemented, but SharedPreferences, CookieManager, Chromium WebView disk storage, history, and bookmarks remain shared/unpartitioned. Full profile isolation is not claimed.
 
-### Still process/global scoped
-- Default SharedPreferences store remains shared.
-- `CookieManager` remains process-wide.
-- Chromium WebView disk storage remains shared.
-- History/bookmarks remain unpartitioned.
-- No multi-process profile architecture.
+## Privacy controls just added
+### Media permissions
+`WebRtcPermissionPolicy` blocks WebView camera/microphone capture resources when `block_media_permissions` is enabled. `NinjaWebChromeClient.onPermissionRequest()` enforces the guard. This is intentionally narrower than full WebRTC engine privacy control. Default is enabled.
 
-## WebLibre feature-pool decisions
-The full comparison remains in `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`. WebLibre is a separate project and is used only as a feature/design source pool.
+### Third-party cookies
+`ThirdPartyCookiePolicy` controls `CookieManager.setAcceptThirdPartyCookies()` through `block_third_party_cookies`. `NinjaWebView` applies it at initialization, before navigation, and live on preference changes. Default is off for compatibility.
 
-### P2 Step 1 — tracking/query-parameter cleanup
-Conservative dependency-free cleaner. Removes only an explicit allowlist of common analytics/click identifiers plus `utm_*`, while preserving meaningful parameters, path, fragment, and order.
+## WebLibre feature-pool direction
+Prefer local, dependency-free, deterministic features before architectural gaps. Architectural items remain deferred: multi-process/data-directory isolation, DoH, proxy/Tor routing, broad fingerprinting, full WebRTC engine changes, extension runtime/uBlock, large AI runtime, and similar subsystem replacements.
 
-### P2 Step 2 — HTTPS-only navigation policy
-`HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` on both direct and intercepted-link navigation when enabled. Existing settings UI exposes `https_only`. No HTTP fallback or new networking architecture was introduced. CI run `33650164143` was successful.
+## Next candidate after current CI
+Prefer Reader Mode only after source-verifying a small bounded implementation. Otherwise select the next high-value local privacy/UX seam. Do not start an architectural feature merely because it appears in WebLibre.
 
-### P2 Step 3 — Global Privacy Control
-A dependency-free `GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true. The existing `NinjaWebView.getRequestHeaders()` path carries the signal for direct navigation, and intercepted HTTP(S) link navigation passes the same headers. Deterministic `GpcPolicyTest` is committed. CI run `33668540065` succeeded for commit `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`.
-
-### P2 Step 4 — Desktop Mode
-`DesktopModePolicy` selects a stable desktop user-agent when `desktop_mode` is enabled, otherwise preserving an explicit custom UA or the WebView default UA. The setting is exposed in browser settings and the policy is applied during initialization and immediately before navigation. Deterministic JVM tests pass and Actions run `33677771905` succeeded on feature HEAD `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`.
-
-## Corrected existing-feature findings
-- **Clear-on-exit** is already implemented: `sp_clear_quit` exists and `BrowserActivity.onDestroy()` starts `ClearService` when enabled.
-- **OLED/AMOLED pure-black theme** already exists as `AppTheme_amoled` with black window/background/navigation colors and white text.
-
-## Explicit YAGNI boundaries
-Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
+## Current checkpoint
+Branch checkpoint after source/test implementation of P2.7 and P2.8: `aa5fdace59a746359870a09bfd43644c5e07aeb6`. Documentation checkpoint currently moves the branch ahead while preserving that feature batch as the verification target.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
-P2 Steps 1–4 are complete and CI-VERIFIED. Android runtime validation remains deferred.
-
-## Single next execution target
-**Source-verify Screenshot Protection as the next high-value bounded feature; confirm there is no existing `FLAG_SECURE`/equivalent path, then implement only the smallest preference + activity-window change that meets the defined product behavior.**
-
-## Continuity requirements
-Every substantive change must update `docs/HEBLIBRE_WORKFLOW_STATE.md` with exact HEAD, change summary, tests, CI/runtime evidence, diff scope, and exactly one next execution step. Update this map when the phase/roadmap changes.
-
 ## Last synchronized
-2026-09-02 — Desktop Mode complete and CI-VERIFIED; Clear-on-exit and AMOLED support source-verified as existing functionality; Screenshot Protection is the next bounded source-verification target.
+2026-09-02 — media-permission and third-party-cookie controls added; Android runtime remains reserved for final validation.
