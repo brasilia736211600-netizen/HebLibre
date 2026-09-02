@@ -12,13 +12,9 @@ Execution protocol:
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
 ## Current repository state
-- Exact current branch HEAD verified before this save-state commit: `5a297dcbe4661f9779dd0b78250a1cecc529cd9d`.
-- Previous resume-command reconciliation commit: `5995b23db06f07540eaf162c8bf90bae5116eea1`.
-- Previous master-map reconciliation commit: `5a297dcbe4661f9779dd0b78250a1cecc529cd9d`.
-- Engineering HEAD for P1 Step 6 remains `37f0e8d0232ee4e80da74ce66adade7d6917668c`.
-- GitHub Actions run `33643362798` for that engineering HEAD completed successfully.
-- The run's `test` job completed successfully, including `Run unit tests`.
-- `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, this state file, and `docs/HEBLIBRE_RESUME_COMMAND.md` are the canonical continuity set.
+- Exact current branch HEAD verified before this save-state update: `bbbe60ef2850f3098e8d2fbcd0ec4306c0939a37`.
+- The previous engineering continuity HEAD was `93087837a331ab99af121c61273d9df9587698a4`.
+- `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, this state file, `docs/HEBLIBRE_RESUME_COMMAND.md`, and `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` are the canonical continuity set.
 - Genspark credits are exhausted; all work continues through available GitHub/local capabilities.
 
 ## Completed engineering
@@ -29,10 +25,11 @@ Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIM
 5. P1 Step 2: `BrowserContainer` instance-scoped; 11/11 tests.
 6. P1 Step 3: `ProfileScopedWhitelist` keyed by profile id; 14/14 tests.
 7. P1 Step 4: `Ninja4.db` whitelist `PROFILE_ID` migration v4→v5, profile-aware CRUD and callers; 17/17 JVM tests plus main-source compilation. Implementation `4f0f97b955ce1e8b3dd039b365f056e48b4c00de`.
-8. P1 Step 5: dependency-free `ProfileIdentity` contract with four JVM tests; CI-VERIFIED by run `33641035094` on `c4b6b3a244ae9f036ce3869306d391635085640d`.
+8. P1 Step 5: dependency-free `ProfileIdentity` contract with four JVM tests; CI-VERIFIED by run `33641035094`.
 9. P1 Step 6: active profile id setting, active-profile binding for the four whitelist classes, and restart marker when profile id changes; CI-VERIFIED by run `33643362798` on engineering HEAD `37f0e8d0232ee4e80da74ce66adade7d6917668c`.
-10. P1 Step 7: browser/profile lifecycle and JVM test tree inspected. No deterministic dependency-free seam exists for end-to-end Settings → restart → WebView/profile construction, so no synthetic test and no new test framework/dependency were added.
-11. Continuity reconciliation: resume command and master map were corrected; Android runtime verification was explicitly moved to DEFERRED status and removed as a development blocker.
+10. P1 Step 7: browser/profile lifecycle and JVM test tree inspected. No deterministic dependency-free seam exists for end-to-end Settings → restart → WebView/profile construction, so no synthetic test or new test framework was added.
+11. Continuity reconciliation: runtime verification was explicitly moved to DEFERRED status and removed as a development blocker.
+12. P1 Step 8A: built and persisted a source-based HebLibre ↔ WebLibre feature gap matrix. It explicitly distinguishes HebLibre functionality that already exists from genuinely missing/partial features and records the YAGNI/architectural boundaries. The matrix selects conservative tracking/query-parameter cleanup as the next implementation candidate.
 
 ## P1 Step 7 — lifecycle/test-seam review
 ### Result
@@ -57,16 +54,31 @@ Purpose when an Android runtime is available: execute one focused test of active
 
 This is a validation task, not a prerequisite for continued engineering work. No emulator/instrumentation framework is being introduced solely to close this item. No failure is inferred from the absence of runtime evidence.
 
+## P1 Step 8A — gap analysis
+Status: **COMPLETED / DOCUMENTED**.
+
+The feature gap matrix was added as:
+`docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`
+
+It records:
+- HebLibre functionality already present before WebLibre feature-pool work;
+- partial capabilities that should not be mistaken for complete parity;
+- easy/medium/architectural candidates;
+- explicit YAGNI exclusions;
+- the first implementation candidate: conservative tracking/query-parameter cleanup.
+
+This step is documentation/source analysis, not Android-runtime verification.
+
 ## Architecture boundary
 The selected profile id controls the profile-aware whitelist persistence/in-memory layers for newly constructed whitelist instances and after the existing restart path. It does not isolate the process-wide `CookieManager`, Chromium WebView disk storage, SharedPreferences as a whole, history, or bookmarks. No full browser-storage identity isolation is claimed.
 
 No multi-process architecture or `WebView.setDataDirectorySuffix` solution has been introduced. No account system, fingerprinting controls, proxy/WebRTC/UA spoofing, or unrelated dependency/refactor work is included.
 
-## Current single next execution step
-**P1 Step 8A — identify the smallest evidence-backed engineering task that can be completed without Android runtime and without inventing a new profile-isolation architecture; execute only that task. The deferred Step 8 runtime check remains queued as validation when a device/emulator becomes available.**
+## Next execution step
+**P2 Step 1 — implement the conservative tracking/query-parameter cleanup selected by the gap matrix: first add a pure-Java URL-cleaner contract plus focused JVM tests, then wire it into the existing `BrowserUnit.queryWrapper()` navigation path without changing unrelated behavior.**
 
 ## Save-state contract
 After every substantive step: verify branch + exact HEAD; record tests, CI and runtime evidence; record diff scope; update this file; commit/push; verify remote HEAD; record exactly ONE next execution step.
 
 ## Last updated
-2026-09-02 — P1 Step 7 boundary documented, Android runtime verification explicitly deferred, resume command corrected, and continuity state synchronized to remote branch HEAD `5a297dcbe4661f9779dd0b78250a1cecc529cd9d` before this save-state commit.
+2026-09-02 — verified current branch HEAD `bbbe60ef2850f3098e8d2fbcd0ec4306c0939a37`; completed and persisted the HebLibre/WebLibre gap matrix; selected conservative tracking/query cleanup as the next implementation step.
