@@ -37,6 +37,7 @@ import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.R;
 import de.baumann.browser.unit.BrowserUnit;
 import de.baumann.browser.unit.HelperUnit;
+import de.baumann.browser.unit.HttpsOnlyPolicy;
 import de.baumann.browser.unit.RecordUnit;
 import de.baumann.browser.view.NinjaToast;
 import de.baumann.browser.view.NinjaWebView;
@@ -105,6 +106,14 @@ public class NinjaWebViewClient extends WebViewClient {
     private boolean handleUri(WebView webView, final Uri uri) {
 
         String url = uri.toString();
+        if (sp.getBoolean("https_only", false)) {
+            String httpsUrl = HttpsOnlyPolicy.enforce(url);
+            if (!httpsUrl.equals(url)) {
+                webView.loadUrl(httpsUrl, ninjaWebView.getRequestHeaders());
+                return true;
+            }
+        }
+
         Uri parsedUri = Uri.parse(url);
         PackageManager packageManager = context.getPackageManager();
         Intent browseIntent = new Intent(Intent.ACTION_VIEW).setData(parsedUri);
