@@ -41,19 +41,22 @@ Profile-aware whitelist state and profile identity are implemented, but SharedPr
 Reader Mode is **NOT TARGETED in the current P2 cycle**. Source tracing found no bounded dependency-free reader-extraction seam; speculative HTML/JS injection is intentionally excluded.
 
 ## P2.11 — Global settings search
-`Fragment_settings` places a search field above the existing `PreferenceFragmentCompat` list and recursively filters preferences by title/summary using `Preference#setVisible`. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract. Existing preference actions and stored values are not replaced. SOURCE-VERIFIED: complete. TEST-VERIFIED: source test committed; local execution unavailable in this tool surface. CI-VERIFIED: complete, Unit Tests run `33688160810` on HEAD `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
+`Fragment_settings` places a search field above the existing `PreferenceFragmentCompat` list and recursively filters preferences by title/summary using `Preference#setVisible`. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract. Existing preference actions and stored values are not replaced. SOURCE-VERIFIED: complete. TEST-VERIFIED: source test committed; local execution unavailable in this tool surface. CI-VERIFIED: complete, Unit Tests run `33688160810` on feature HEAD `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
 
 ## QR scanner source verification
 QR scanning is **not implemented**. Repository inspection found no QR/barcode scanner or decoder, no `CAMERA` permission in `app/src/main/AndroidManifest.xml`, and no ZXing/ML Kit/camera-scanning dependency in `app/build.gradle`. The current WebView camera permission guard is for web-origin media requests and does not provide a native QR capture/decode path. A complete QR scanner would therefore require a new camera/decoder integration and is not a YAGNI/dependency-free bounded change at this checkpoint.
+
+## PWA support source verification
+PWA support is **not implemented**. `AndroidManifest.xml` exposes the browser as a normal `http`/`https` VIEW handler and `BrowserActivity` dispatches those intents into ordinary browser tabs. `NinjaWebViewClient` keeps `http`/`https` navigation inside the WebView and routes non-http schemes externally when possible. No Web App Manifest parsing, install-prompt bridge, PWA install metadata, standalone launch intent, or service-worker lifecycle integration was found. Therefore a real installable/standalone PWA feature is a MEDIUM integration requiring a new install/launch lifecycle seam; no bounded dependency-free JVM contract was established. No implementation was made.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. QR scanner is SOURCE-VERIFIED as a MEDIUM integration requiring a new camera/decoder choice. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. QR scanner and PWA support are SOURCE-VERIFIED as MEDIUM integrations requiring new platform/lifecycle decisions. Android runtime remains deferred.
 
 ## Next execution
-**Source-verify PWA support as the next smallest high-value bounded privacy/UX seam. Inspect existing WebView manifest/launch handling first; do not commit to implementation until a bounded seam and deterministic test contract are established. Do not install the APK.**
+**Source-verify Tab hierarchy as the next smallest bounded feature. Inspect the existing tab/album model and lifecycle first; do not implement until a minimal parent-child contract and deterministic JVM test seam are established. Do not install the APK.**
 
 ## Last synchronized
-2026-09-03 — QR scanner source verification completed; no dependency-free implementation seam established; PWA support selected as the next source-verification candidate.
+2026-09-03 — PWA support source verification completed; implementation deferred because the current WebView has no manifest/install/standalone lifecycle seam; Tab hierarchy selected as the next source-verification candidate.
