@@ -35,9 +35,9 @@ When the minimum 10-minute productive-work threshold has been satisfied and a us
 Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
 
 ## Current repository state
-- Current branch HEAD: `a6719c0fe63e7386dab0eb4030a6c9f9487083ef`.
+- Current branch HEAD: `e46e37d206320481e024b6783ad8845e3a363c8a` at the prior workflow synchronization; this state update advances the remote HEAD again.
 - P2 Steps 1–6 are complete and CI-VERIFIED.
-- P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are source/test implemented. Their feature batch remains the CI checkpoint until its result is directly reconciled from GitHub.
+- P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are now **CI-VERIFIED** by Unit Tests run `33679583870` on feature-batch commit `aa5fdace59a746359870a09bfd43644c5e07aeb6`.
 - Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
 - Do not build/install/test the APK after each feature. Use JVM tests and GitHub Actions first; perform Android build/install/runtime verification as the final validation phase, then fix any runtime regressions discovered.
 - Canonical continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
@@ -55,8 +55,8 @@ Objective: minimum user intervention. `استمر` should resume from GitHub sta
 10. P2 Step 4: Desktop Mode.
 11. P2 Step 5: Screenshot Protection.
 12. P2 Step 6: built-in search bang routing.
-13. P2 Step 7: bounded WebView media permission privacy guard.
-14. P2 Step 8: optional third-party cookie blocking.
+13. P2 Step 7: bounded WebView media permission privacy guard — CI-VERIFIED.
+14. P2 Step 8: optional third-party cookie blocking — CI-VERIFIED.
 
 ## P2 Step 7 — Media permission privacy guard
 - Test: `app/src/test/java/de/baumann/browser/unit/WebRtcPermissionPolicyTest.java`.
@@ -65,7 +65,7 @@ Objective: minimum user intervention. `استمر` should resume from GitHub sta
 - `NinjaWebChromeClient.onPermissionRequest()` denies camera/microphone resources when enabled.
 - SOURCE-VERIFIED: complete.
 - TEST-VERIFIED: complete.
-- CI-VERIFIED: pending for current feature batch.
+- CI-VERIFIED: **run `33679583870` — success**.
 - ANDROID-RUNTIME-VERIFIED: deferred to final device pass.
 
 ## P2 Step 8 — Third-party cookie blocking
@@ -76,7 +76,7 @@ Objective: minimum user intervention. `استمر` should resume from GitHub sta
 - Project minSdk is 21, matching the guarded API usage.
 - SOURCE-VERIFIED: complete.
 - TEST-VERIFIED: complete.
-- CI-VERIFIED: pending for current feature batch.
+- CI-VERIFIED: **run `33679583870` — success**.
 - ANDROID-RUNTIME-VERIFIED: deferred to final device pass.
 
 ## Existing-feature corrections
@@ -88,7 +88,7 @@ Objective: minimum user intervention. `استمر` should resume from GitHub sta
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
 ## Next execution step
-**Reconcile the P2.7/P2.8 CI checkpoint from GitHub; if it is green, source-trace the next smallest high-value bounded feature (Reader Mode is only a candidate) and execute it without Android installation.**
+**Source-trace Reader Mode for a small bounded implementation. If the existing WebView architecture does not expose a safe, dependency-free seam, select the next smallest high-value local privacy/UX feature instead; do not install the APK.**
 
 ## Last updated
-2026-09-02 — autonomous execution, final-device validation, and concise checkpoint-reporting rules reinforced; HEAD reconciled to `a6719c0fe63e7386dab0eb4030a6c9f9487083ef`.
+2026-09-02 — P2.7/P2.8 CI reconciled as successful; autonomous-work, final-device, and concise-checkpoint rules remain mandatory.
