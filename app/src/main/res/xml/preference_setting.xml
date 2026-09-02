@@ -56,6 +56,12 @@
             android:summary="@string/setting_summary_userAgent"
             android:icon="@drawable/icon_useragent"/>
 
+        <CheckBoxPreference
+            android:key="desktop_mode"
+            android:defaultValue="false"
+            android:title="@string/setting_title_desktop_mode"
+            android:summary="@string/setting_summary_desktop_mode"/>
+
 
     </PreferenceCategory>
 
