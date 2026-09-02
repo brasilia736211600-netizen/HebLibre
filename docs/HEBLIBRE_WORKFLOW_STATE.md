@@ -12,83 +12,59 @@ Execution protocol:
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
 ## Continuous autonomous-work rule
-When the user says `استمر` / `continue`, the agent must keep working internally for as long as useful and must not interrupt the workstream with routine progress messages. Investigate, verify, diagnose, prioritize, implement, test, review, reconcile CI results, and fix discovered problems autonomously. When a new problem, better priority, or required follow-up is discovered, handle it internally and continue from the new priority instead of sending an interim message. Use parallel investigation/execution for genuinely independent work units where the tool surface permits; serialize only dependent branch mutations. Before sending any user-facing progress/update message, complete at least **10 minutes of productive project work** in the current continuation cycle whenever tool/runtime conditions permit. Do not artificially stop after one small feature or one CI submission. The user-facing message is a checkpoint after a substantial work interval, not a streaming log.
+When the user says `استمر` / `continue`, keep working internally for as long as useful and do not interrupt the workstream with routine progress messages. Investigate, verify, diagnose, prioritize, implement, test, review, reconcile CI, and fix discovered problems. Use parallel work only for genuinely independent units; serialize dependent branch mutations. Before a routine user-facing update, complete at least 10 minutes of productive work when tool/runtime conditions permit. Do not stop after one tiny feature or one CI submission while useful work remains.
 
 ## Final Android validation rule
-Do not build, install, or repeatedly test the Android APK after each feature. Continue source/JVM/CI work first and reserve Android build/install/runtime verification for the **final validation phase** as far as reasonably possible. Perform one consolidated device validation pass after the planned feature set is mature. Collect all runtime regressions found there, fix them together, then rerun the final device validation as needed. Never block otherwise-ready engineering work merely because device validation is deferred.
+Do not build, install, or repeatedly test the APK after each feature. Complete source review, deterministic JVM tests, CI, review, and documentation first. Reserve Android build/install/runtime verification for one consolidated final device-validation phase; collect runtime regressions, fix them together, and rerun final validation only as needed.
 
-## User-facing checkpoint rule
-When the minimum 10-minute productive-work threshold has been satisfied and a user-facing update is appropriate, keep the report short and useful. It must state only: (1) what has been completed so far, (2) any current problem/blocker discovered, (3) where the project stands overall, and (4) the single next execution step. Do not stream discoveries, warnings, intermediate CI state, or routine activity before that checkpoint. If no new blocker exists, state that explicitly rather than inventing one.
-
-## Tool-assisted workflow
-- **GitHub** is the operational source of truth and primary execution surface.
-- **Codex Engineering Guardrails**: apply YAGNI, scope control, verification discipline, and evidence-based claims.
-- **Codex Process Jobs**: use only for genuinely independent work units; do not decompose small tasks unnecessarily.
-- **Codex Coordinator**: only when multiple workstreams are active or dependencies must be coordinated.
-- **CodeRabbit**: use for substantive review when its local CLI/repository surface is available; never substitute it for tests. No CodeRabbit result is claimed in the current environment.
-- **Codex Advisor**: only at non-trivial engineering decision points.
-- **AI DevKit / Develoop**: optional only when adding concrete capability beyond current tools.
-- **Plugin Autopilot**: only for plugin selection/orchestration tasks.
-- **Yaps Memory**: convenience only; never continuity authority.
-- **Prompt Optimizer**: only when a real prompt-quality bottleneck exists.
-
-Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
+## Tooling policy
+- GitHub is the operational source of truth.
+- Apply YAGNI, minimal scope, deterministic tests, and evidence-based claims.
+- CodeRabbit is used only when its required local CLI/repository surface is actually available; no CodeRabbit result is claimed here.
+- WebLibre is a separate project and only a feature/design source pool.
+- Do not introduce architecture, dependencies, or subsystem replacements without demonstrated need.
 
 ## Current repository state
-- Last verified branch HEAD before the documentation synchronization commits: `e46e37d206320481e024b6783ad8845e3a363c8a`. On every resume, verify the exact remote HEAD directly from GitHub rather than treating this recorded SHA as immutable.
-- P2 Steps 1–6 are complete and CI-VERIFIED.
-- P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are now **CI-VERIFIED** by Unit Tests run `33679583870` on feature-batch commit `aa5fdace59a746359870a09bfd43644c5e07aeb6`.
-- Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
-- Do not build/install/test the APK after each feature. Use JVM tests and GitHub Actions first; perform Android build/install/runtime verification as the final validation phase, then fix any runtime regressions discovered.
-- Canonical continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
+- Exact remote branch HEAD: `1a71cd2eb358bfd57f3209d141fc40253183dff1` (`fix: align Save-Data fallback with setting default`).
+- P2.1–P2.10 are now CI-VERIFIED.
+- P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
+- P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
+- Android runtime verification remains intentionally deferred to the final device pass.
 
 ## Completed engineering
 1. Build/toolchain recovery: Gradle 5.4.1 / AGP 3.5.2, compile SDK 29, build-tools 28.0.3, JDK 11 for Gradle, JDK 17 for CI SDK tooling.
-2. Minimal JUnit4 harness.
-3. CI workflow recovery.
-4. P1 profile/identity groundwork; runtime validation deferred.
-5. P1 lifecycle/test-seam review.
-6. P1 WebLibre/HebLibre feature gap matrix.
-7. P2 Step 1: conservative tracking/query-parameter cleanup.
-8. P2 Step 2: HTTPS-only navigation.
-9. P2 Step 3: Global Privacy Control.
-10. P2 Step 4: Desktop Mode.
-11. P2 Step 5: Screenshot Protection.
-12. P2 Step 6: built-in search bang routing.
-13. P2 Step 7: bounded WebView media permission privacy guard — CI-VERIFIED.
-14. P2 Step 8: optional third-party cookie blocking — CI-VERIFIED.
+2. Minimal JUnit4 harness and CI workflow recovery.
+3. P1 profile/identity groundwork and lifecycle/test-seam review; full profile storage isolation remains unimplemented.
+4. P2.1 tracking/query-parameter cleanup — CI-VERIFIED.
+5. P2.2 HTTPS-only navigation — CI-VERIFIED.
+6. P2.3 Global Privacy Control — CI-VERIFIED.
+7. P2.4 Desktop Mode — CI-VERIFIED.
+8. P2.5 Screenshot Protection — CI-VERIFIED.
+9. P2.6 built-in search bang routing — CI-VERIFIED.
+10. P2.7 bounded WebView media permission privacy guard — CI-VERIFIED by run `33679583870`.
+11. P2.8 optional third-party cookie blocking — CI-VERIFIED by run `33679583870`.
+12. P2.9 geolocation privacy guard — CI-VERIFIED by run `33684710168`.
+13. P2.10 Save-Data preference contract/fallback correction — CI-VERIFIED by run `33686256788`.
 
-## P2 Step 7 — Media permission privacy guard
-- Test: `app/src/test/java/de/baumann/browser/unit/WebRtcPermissionPolicyTest.java`.
-- Policy: `app/src/main/java/de/baumann/browser/unit/WebRtcPermissionPolicy.java`.
-- Preference: `block_media_permissions`, default `true`.
-- `NinjaWebChromeClient.onPermissionRequest()` denies camera/microphone resources when enabled.
-- SOURCE-VERIFIED: complete.
-- TEST-VERIFIED: complete.
-- CI-VERIFIED: **run `33679583870` — success**.
-- ANDROID-RUNTIME-VERIFIED: deferred to final device pass.
+## P2.9 — Geolocation privacy guard
+`GeolocationPermissionPolicy` and its JVM tests are complete. `NinjaWebChromeClient.onGeolocationPermissionsShowPrompt()` reads the canonical geolocation preference key; disabled invokes `callback.invoke(origin, false, false)` and enabled preserves the existing runtime-permission flow. Android runtime verification is deferred.
 
-## P2 Step 8 — Third-party cookie blocking
-- Test: `app/src/test/java/de/baumann/browser/unit/ThirdPartyCookiePolicyTest.java`.
-- Policy: `app/src/main/java/de/baumann/browser/unit/ThirdPartyCookiePolicy.java`.
-- Preference: `block_third_party_cookies`, default `false` for compatibility.
-- `NinjaWebView` applies the policy at initialization, before navigation, and on preference change using `CookieManager.setAcceptThirdPartyCookies()`.
-- Project minSdk is 21, matching the guarded API usage.
-- SOURCE-VERIFIED: complete.
-- TEST-VERIFIED: complete.
-- CI-VERIFIED: **run `33679583870` — success**.
-- ANDROID-RUNTIME-VERIFIED: deferred to final device pass.
+## P2.10 — Save-Data
+`SaveDataPolicy` and JVM tests define the preference contract. `NinjaWebView.getRequestHeaders()` now uses `SaveDataPolicy.DEFAULT_ENABLED` as the fallback, matching the actual `preference_start.xml` default of true. Explicit false still suppresses `Save-Data: on`. CI run `33686256788` is successful.
 
 ## Existing-feature corrections
 - Clear-on-exit is already implemented; do not reimplement.
-- OLED/AMOLED pure-black support is already implemented; do not reimplement.
-- Desktop Mode is already implemented and must not be selected again as a new feature merely because it appears in an older candidate list.
+- AMOLED/pure-black support is already implemented; do not reimplement.
+- Desktop Mode is already implemented; do not reselect it.
 
 ## Architecture boundary
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
+## Reader Mode decision
+Reader Mode was source-traced against the current native WebView architecture. No bounded dependency-free `evaluateJavascript`/reader-extraction seam was established; ad-hoc HTML/JS extraction would be invasive and insufficiently deterministic. Reader Mode is therefore **NOT TARGETED in the current P2 cycle** rather than being implemented speculatively.
+
 ## Next execution step
-**Source-trace Reader Mode for a small bounded implementation. If the existing WebView architecture does not expose a safe, dependency-free seam, select the next smallest high-value local privacy/UX feature instead; do not install the APK.**
+**Source-verify the smallest remaining high-value local privacy/UX seam (starting with global settings search); implement only if it has a bounded deterministic seam, otherwise advance to the next candidate. Do not install the APK.**
 
 ## Last updated
-2026-09-02 — P2.7/P2.8 CI success reconciled and the continuous autonomous-work, final-device, and concise checkpoint-reporting rules are canonical.
+2026-09-03 — Save-Data CI success reconciled, Reader Mode source-trace closed as non-bounded, and remote HEAD synchronized to `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
