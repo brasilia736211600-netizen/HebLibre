@@ -27,7 +27,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | Global settings search | **COMPLETE / CI-VERIFIED** | `SettingsSearchPolicy` + bounded `Fragment_settings` filtering; Unit Tests run `33688160810`. |
 | Download cookie control | **COMPLETE / CI-VERIFIED** | `DownloadCookiePolicy` integrated into `BrowserUnit.download()`; CI run `33692045747`. |
 | Tab reorder core | **COMPLETE CORE / CI-VERIFIED** | `TabOrderPolicy` + `BrowserContainer.move()` and controller-identity JVM tests; CI run `33692092276`. |
-| Remote-content default consistency | **SOURCE-VERIFIED** | `NinjaWebView.initPreferences()` fallback for `sp_remote` aligned with declared preference default and existing navigation fallback; current commit has no CI result established yet. |
+| Remote-content default consistency | **COMPLETE / CI-VERIFIED** | `NinjaWebView.initPreferences()` fallback for `sp_remote` aligned with declared preference default and existing navigation fallback; Unit Tests run `33694722442` completed successfully. |
 
 ## Remaining feature pool
 | Feature | HebLibre status | Decision |
@@ -57,7 +57,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Download-cookie integration and tab reorder core are CI-VERIFIED. Remote-content default consistency is SOURCE-VERIFIED only. Tab reorder UI remains the next bounded implementation candidate. QR, PWA, hierarchy and multi-window remain deferred. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. Download-cookie integration, tab reorder core, and remote-content default consistency are CI-VERIFIED. Tab reorder UI remains the next bounded implementation candidate, but its complete mutation path is not yet safely exposed without a BrowserActivity/BrowserController change. QR, PWA, hierarchy and multi-window remain deferred. Android runtime remains deferred.
 
 ## Last synchronized
-2026-09-03 — reconciled current `genspark-dev` source, recorded the download-cookie and reorder-core evidence, and added the remote-content default consistency correction as SOURCE-VERIFIED pending CI evidence.
+2026-09-03 — reconciled current `genspark-dev` source and direct CI evidence; remote-content default correction is now CI-VERIFIED. The attempted reorder controller seam was reverted because it was incomplete and left no source mutation behind.
