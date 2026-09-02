@@ -7,13 +7,28 @@ Branch: `genspark-dev`
 Default branch: `l10n_crowdin`
 
 Execution protocol:
-`READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → COMMIT → SAVE STATE`
+`READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE`
 
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
+## Tool-assisted workflow
+- **GitHub** is the operational source of truth and the primary execution surface.
+- **Codex Engineering Guardrails**: apply YAGNI, scope control, verification-level discipline, and no unsupported claims.
+- **Codex Process Jobs**: use only when a task has genuinely independent work units; do not decompose small tasks unnecessarily.
+- **Codex Coordinator**: use when multiple workstreams are active or dependencies must be coordinated; do not add coordination overhead to a single local change.
+- **CodeRabbit**: use for substantive diff/PR review and security/code-quality review after implementation; do not substitute it for tests or source verification.
+- **Codex Advisor**: use only at non-trivial engineering decision points.
+- **AI DevKit / Develoop**: optional accelerators when they provide a concrete capability not already available through GitHub/Codex; do not make them mandatory layers.
+- **Plugin Autopilot**: use only when selecting/combining external plugin capabilities is itself the task.
+- **Yaps Memory**: optional convenience only; never authoritative over GitHub continuity files.
+- **Prompt Optimizer**: not part of the normal development loop; optimize prompts only when a real prompt-quality bottleneck is demonstrated.
+
+The objective is minimum user intervention: the user can say `استمر` / `continue`, and the agent should resume from GitHub state, choose the smallest valid next action, execute, verify, save state, and continue without asking for unnecessary manual steps.
+
 ## Current repository state
-- Exact current branch HEAD: `7c5285474324699d04daa5e67c107e26afbe90ae`.
-- This HEAD contains completed P2 Step 1 tracking cleanup and completed P2 Step 2 HTTPS-only navigation policy.
+- Exact current branch HEAD: `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`.
+- This HEAD contains completed P2 Step 1 tracking cleanup, completed P2 Step 2 HTTPS-only navigation policy, and the current P2 Step 3 GPC implementation through deterministic policy tests and request-header wiring.
+- No CI workflow run is currently associated with HEAD `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`; therefore the current GPC change is not yet CI-VERIFIED.
 - Canonical continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
 - Genspark credits are exhausted; all work continues through available GitHub/local capabilities.
 
@@ -26,48 +41,34 @@ Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIM
 6. P1 Step 8 runtime validation: DEFERRED because no Android runtime is available; not a development blocker.
 7. P1 Step 8A: WebLibre/HebLibre feature gap matrix completed and persisted.
 8. P2 Step 1: conservative tracking/query-parameter cleanup completed.
-9. P2 Step 2: local HTTPS-only navigation policy completed.
+9. P2 Step 2: local HTTPS-only navigation policy completed and CI-VERIFIED.
+10. P2 Step 3: GPC request signal implementation completed through deterministic unit contract and existing WebView request-header wiring; CI verification is the remaining checkpoint.
 
-## P2 Step 1 — conservative tracking/query-parameter cleanup
-- TDD contract: `UrlTrackerCleanerTest.java`.
-- Implementation: dependency-free `UrlTrackerCleaner.java`.
-- Removes only `utm_*`, `gclid`, `dclid`, `fbclid`, `msclkid`, and `yclid` while preserving meaningful query data, order, path, and fragment.
-- Wired through the existing URL-normalization/navigation path.
-- Commits: `0de51ef47591a1aa9c869bb7909906025662e726`, `61795dbb75a22dcaa7a2ed8e6fc3d353358eedc4`, `410b9ba9c8434228c9fac51a10a42e39091c9f35`, `b592f8abb419826caa06b2ec254a299c942d9ac7`.
-- P2 Step 1 source scope is limited to the cleaner, its tests, and `BrowserUnit.java` wiring.
-
-### P2 Step 1 verification
-- SOURCE-VERIFIED: complete.
-- TEST-VERIFIED: TDD contract committed.
-- CI-VERIFIED: earlier successful unit-test evidence exists, but no longer using the incorrect `33648307698` reference as feature-HEAD evidence.
-- ANDROID-RUNTIME-VERIFIED: not performed.
-- DOCUMENTED: superseded by this state record.
-
-## P2 Step 2 — HTTPS-only navigation policy
+## P2 Step 3 — Global Privacy Control (GPC)
 ### Source verification
-The existing architecture has two relevant navigation paths. Direct/user-entered navigation flows through `NinjaWebView.loadUrl()`, which already calls `BrowserUnit.queryWrapper(...)` before `super.loadUrl(...)`. Link navigation is intercepted by `NinjaWebViewClient.handleUri(...)`, where HTTP(S) links are loaded through the same WebView. No separate networking stack is present. fileciteturn543file0 fileciteturn544file0
-
-The start-settings screen is backed by `preference_start.xml`, so the feature can be exposed through the existing preferences UI without introducing a new settings architecture. fileciteturn535file0 fileciteturn542file0
+The existing `NinjaWebView.getRequestHeaders()` path already carries local navigation headers such as `DNT` and `Save-Data`, so GPC can be added without a networking stack. The current source imports `GpcPolicy` and adds `Sec-GPC: 1` when the `gpc_enabled` preference is true. Direct navigation in `NinjaWebView.loadUrl()` continues to use the existing request-header path, and intercepted link navigation in `NinjaWebViewClient.handleUri()` also passes the same header map when loading HTTP(S) URLs.
 
 ### TDD / implementation
-- Added `app/src/test/java/de/baumann/browser/unit/HttpsOnlyPolicyTest.java` first as the deterministic contract.
-- Added `app/src/main/java/de/baumann/browser/unit/HttpsOnlyPolicy.java` as a plain-Java, dependency-free policy seam.
-- Policy behavior: absolute `http://` URLs are upgraded to `https://`; existing HTTPS URLs and non-HTTP schemes remain unchanged; null/blank input remains unchanged. fileciteturn539file0turn540file0
-- Added the existing preference UI entry `https_only`, default `false`, with localized title/summary resources. fileciteturn541file0turn542file0
-- `NinjaWebView.loadUrl()` enforces the policy only when `https_only` is enabled, after existing URL wrapping. fileciteturn543file0
-- `NinjaWebViewClient.handleUri()` applies the policy to intercepted link navigation before loading an upgraded URL. fileciteturn544file0
-- No HTTP fallback is attempted after upgrading; no new networking architecture or dependency was introduced.
+- TDD contract: `app/src/test/java/de/baumann/browser/unit/GpcPolicyTest.java`.
+- Policy: `app/src/main/java/de/baumann/browser/unit/GpcPolicy.java`.
+- Header name: `Sec-GPC`.
+- Enabled value: `1`.
+- Disabled state: no GPC header value.
+- Existing preference key: `gpc_enabled`.
+- No networking architecture, interceptor, dependency, or new transport layer was introduced.
 
-### Commit sequence
-- `d1ed67d5b4edf2d842adae884daa525cefed8a6f` — first HTTPS-only direct-navigation implementation.
-- `7c5285474324699d04daa5e67c107e26afbe90ae` — link-navigation enforcement completion.
+Commit sequence:
+- `a764a4e3cdcea92aa4a1ef483257f314205b32b9` — GPC setting labels.
+- `966c578f7f6a790b2e2980245adac242a70f89f0` — TDD contract.
+- `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f` — GPC policy implementation.
+- The preceding branch commits also wired the GPC signal into navigation headers.
 
 ### Verification
-- SOURCE-VERIFIED: complete for the direct and intercepted-link navigation paths.
-- TEST-VERIFIED: `HttpsOnlyPolicyTest` is committed and the CI job completed its `Run unit tests` step successfully.
-- CI-VERIFIED: GitHub Actions run `33650164143`, job `test`, completed with conclusion `success`; all workflow steps including `Run unit tests` completed successfully.
+- SOURCE-VERIFIED: complete for the policy and current request-header wiring.
+- TEST-VERIFIED: complete for the deterministic `GpcPolicyTest` contract.
+- CI-VERIFIED: **pending** for current HEAD `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`; no associated Actions run was returned when checked.
 - ANDROID-RUNTIME-VERIFIED: not performed; no Android runtime is available.
-- DOCUMENTED: complete.
+- DOCUMENTED: this state record and the master map/resume command are synchronized in the next documentation checkpoint commit.
 
 ## Architecture boundary
 The P1 profile mechanism still does not isolate process-wide `CookieManager`, Chromium WebView disk storage, the default SharedPreferences store as a whole, history, or bookmarks. No full browser-storage isolation is claimed.
@@ -75,7 +76,7 @@ The P1 profile mechanism still does not isolate process-wide `CookieManager`, Ch
 No multi-process architecture, WebView data-directory switching, extension runtime, proxy/Tor stack, WebRTC subsystem, DNS-over-HTTPS stack, fingerprinting subsystem, or AI runtime has been added.
 
 ## Next execution step
-**P2 Step 3 — source-verify the next smallest high-value WebLibre gap, Global Privacy Control (GPC), and implement it only if current WebView request-header APIs provide a deterministic local seam without introducing networking architecture.**
+**CI-verify the current GPC implementation at HEAD `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`; inspect the resulting unit-test workflow before selecting P2 Step 4.**
 
 ## Last updated
-2026-09-02 — P2 Step 2 completed and CI-VERIFIED on run `33650164143`; current HEAD `7c5285474324699d04daa5e67c107e26afbe90ae`; Android runtime remains deferred.
+2026-09-02 — workflow/tooling protocol updated; current HEAD `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`; GPC source/test complete, CI verification pending, Android runtime deferred.

@@ -51,7 +51,7 @@ These are treated as **ALREADY**, not migration targets.
 | Tracking Protection engine / larger filter DB | **PARTIAL → MEDIUM/ARCHITECTURAL** | Basic AdBlock exists; WebLibre-grade tracking protection requires engine/filter-data expansion. |
 | HTTPS-only mode | **COMPLETE / EASY-MEDIUM** | Implemented locally in both direct navigation and intercepted link navigation, with deterministic JVM policy tests and no new networking stack. |
 | DNS over HTTPS | **MISSING → ARCHITECTURAL** | Requires resolver/network integration not present in WebView architecture. |
-| Global Privacy Control | **MISSING → EASY/MEDIUM** | Request-header support may be locally implementable; next source-verification target. |
+| Global Privacy Control | **IMPLEMENTED / CI-PENDING** | `Sec-GPC: 1` is implemented through the existing request-header path with a dependency-free policy and JVM contract tests; current HEAD still needs CI verification. |
 | Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
 | WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
 | Screenshot protection | **PARTIAL/VERIFY** | Existing screenshot/fullscreen-related handling exists; exact prevention semantics need source verification before claiming parity. |
@@ -77,14 +77,17 @@ Conservative dependency-free cleaner. Removes only an explicit allowlist of comm
 ### P2 Step 2 — HTTPS-only navigation
 A plain-Java `HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` and leaves HTTPS, non-HTTP schemes, null, and blank input unchanged. The policy is applied to direct navigation in `NinjaWebView.loadUrl()` and intercepted link navigation in `NinjaWebViewClient.handleUri()`. The existing start-settings UI exposes `https_only`, default off. No HTTP fallback or networking architecture is introduced.
 
+### P2 Step 3 — Global Privacy Control (current checkpoint)
+A dependency-free `GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true. The existing `NinjaWebView.getRequestHeaders()` path carries the signal for direct navigation, and intercepted HTTP(S) link navigation passes the same headers. Deterministic `GpcPolicyTest` is committed. CI verification remains pending for current HEAD.
+
 ## Explicit YAGNI boundaries
 Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
 
 ## Next candidate
-**Global Privacy Control (GPC)** — source-verify the existing request-header seam first. Implement only a small deterministic header-policy change if current WebView APIs permit it without a new networking layer.
+After CI verification of GPC, select the next smallest high-value feature from this matrix. Prefer local/dependency-free changes with deterministic JVM seams before architectural gaps.
 
 ## Verification boundary
 This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own SOURCE-VERIFIED / TEST-VERIFIED / CI-VERIFIED records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
 
 ## Last synchronized
-2026-09-02 — P2 Steps 1–2 complete; next candidate is GPC source verification.
+2026-09-02 — P2 Steps 1–2 complete; P2 Step 3 GPC source/test implementation complete, CI pending.
