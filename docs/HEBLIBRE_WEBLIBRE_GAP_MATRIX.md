@@ -49,9 +49,9 @@ These are treated as **ALREADY**, not migration targets.
 | Container strict mode/history exclusion | **MISSING → MEDIUM** | Builds on container metadata and history routing; not needed before basic containers exist. |
 | Per-container proxy/Tor routing | **MISSING → ARCHITECTURAL** | Requires proxy/Tor networking architecture; outside immediate YAGNI boundary. |
 | Tracking Protection engine / larger filter DB | **PARTIAL → MEDIUM/ARCHITECTURAL** | Basic AdBlock exists; WebLibre-grade tracking protection requires engine/filter-data expansion. |
-| HTTPS-only mode | **COMPLETE / EASY-MEDIUM** | Implemented locally in both direct navigation and intercepted link navigation, with deterministic JVM policy tests and no new networking stack. |
+| HTTPS-only mode | **COMPLETE / CI-VERIFIED** | Implemented in direct and intercepted-link navigation with deterministic JVM tests and CI verification. |
 | DNS over HTTPS | **MISSING → ARCHITECTURAL** | Requires resolver/network integration not present in WebView architecture. |
-| Global Privacy Control | **IMPLEMENTED / CI-PENDING** | `Sec-GPC: 1` is implemented through the existing request-header path with a dependency-free policy and JVM contract tests; current HEAD still needs CI verification. |
+| Global Privacy Control | **COMPLETE / CI-VERIFIED** | `Sec-GPC: 1` is implemented through the existing request-header path with a dependency-free policy, JVM contract tests, and successful CI run `33668540065`. |
 | Fingerprinting defenses | **MISSING → ARCHITECTURAL** | Broad anti-fingerprinting changes are not justified before foundational navigation/privacy work. |
 | WebRTC privacy controls | **MISSING → ARCHITECTURAL** | Requires engine-level handling not exposed by current architecture. |
 | Screenshot protection | **PARTIAL/VERIFY** | Existing screenshot/fullscreen-related handling exists; exact prevention semantics need source verification before claiming parity. |
@@ -70,24 +70,23 @@ These are treated as **ALREADY**, not migration targets.
 | Container/backup migration | **MISSING → MEDIUM/ARCHITECTURAL** | Depends on actual container/profile data model. |
 
 ## Completed P2 targets
-
 ### P2 Step 1 — tracking/query-parameter cleanup
-Conservative dependency-free cleaner. Removes only an explicit allowlist of common analytics/click identifiers plus `utm_*`, while preserving meaningful parameters, path, fragment, and order. TDD contract committed before implementation; Android wiring occurs in the existing URL normalization path.
+Conservative dependency-free cleaner with JVM coverage.
 
 ### P2 Step 2 — HTTPS-only navigation
-A plain-Java `HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` and leaves HTTPS, non-HTTP schemes, null, and blank input unchanged. The policy is applied to direct navigation in `NinjaWebView.loadUrl()` and intercepted link navigation in `NinjaWebViewClient.handleUri()`. The existing start-settings UI exposes `https_only`, default off. No HTTP fallback or networking architecture is introduced.
+`HttpsOnlyPolicy` upgrades absolute `http://` URLs to `https://` on direct and intercepted-link navigation when enabled. CI-VERIFIED.
 
-### P2 Step 3 — Global Privacy Control (current checkpoint)
-A dependency-free `GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true. The existing `NinjaWebView.getRequestHeaders()` path carries the signal for direct navigation, and intercepted HTTP(S) link navigation passes the same headers. Deterministic `GpcPolicyTest` is committed. CI verification remains pending for current HEAD.
+### P2 Step 3 — Global Privacy Control
+`GpcPolicy` exposes `Sec-GPC: 1` when `gpc_enabled` is true through the existing WebView request-header path. Deterministic JVM tests and CI verification are complete; CI run `33668540065` succeeded for commit `e96298cbb2c0d0f3d9813ddc913bcbb98b348e2f`.
+
+## P2 Step 4 selection rule
+Prefer the smallest high-value feature that is local, dependency-free, and has a deterministic JVM seam. Avoid architectural gaps until there is a demonstrated product need. Do not reimplement anything already present in HebLibre.
 
 ## Explicit YAGNI boundaries
 Do not add without demonstrated need: multi-process architecture, WebView data-directory switching, broad cookie/DOM storage isolation, account systems, broad fingerprinting controls, proxy/Tor stack, WebRTC subsystem, DoH stack, Firefox extension runtime, large AI runtime, unrelated refactors/dependency upgrades, or emulator/instrumentation infrastructure solely for deferred runtime validation.
 
-## Next candidate
-After CI verification of GPC, select the next smallest high-value feature from this matrix. Prefer local/dependency-free changes with deterministic JVM seams before architectural gaps.
-
 ## Verification boundary
-This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own SOURCE-VERIFIED / TEST-VERIFIED / CI-VERIFIED records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
+This matrix is **DOCUMENTED / SOURCE-INFORMED**. Individual completed targets carry their own verification records in `docs/HEBLIBRE_WORKFLOW_STATE.md`.
 
 ## Last synchronized
-2026-09-02 — P2 Steps 1–2 complete; P2 Step 3 GPC source/test implementation complete, CI pending.
+2026-09-02 — P2 Steps 1–3 complete and CI-VERIFIED; P2 Step 4 selection is next.
