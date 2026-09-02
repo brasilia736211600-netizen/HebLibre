@@ -30,6 +30,8 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - P2.9 geolocation privacy guard — CI-VERIFIED, run `33684710168`.
 - P2.10 Save-Data preference contract/fallback correction — CI-VERIFIED, run `33686256788`.
 - P2.11 global settings search — CI-VERIFIED by Unit Tests run `33688160810`.
+- Download cookie privacy control — SOURCE-VERIFIED and TEST-VERIFIED at source level; CI reconciliation pending run `33692045747`.
+- BrowserContainer tab reorder integration tests — SOURCE-VERIFIED and TEST-VERIFIED; CI reconciliation pending run `33692092276`.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -53,7 +55,10 @@ PWA support is **not implemented**. `AndroidManifest.xml` exposes `BrowserActivi
 The tab model is flat: `BrowserContainer` stores a `List<AlbumController>` with add/remove/get/index operations, while `BrowserActivity` inserts new tabs relative to the current tab without parent/opener metadata. No parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy exists. Implementing true tab hierarchy would require a new model contract and corresponding tab-creation/UI lifecycle changes, so it is SOURCE-VERIFIED as MEDIUM rather than an immediate YAGNI implementation. No code was changed.
 
 ## Tab stacking / advanced switcher core slice
-A bounded reorder primitive is now implemented: `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping, and `BrowserContainer.move()` reorders an existing tab without destroying its WebView. This is SOURCE-VERIFIED and TEST-VERIFIED at the source level through committed JUnit tests; CI-VERIFIED is still pending. UI wiring into `BrowserActivity`/tab overview has not been claimed.
+A bounded reorder primitive is implemented: `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping, and `BrowserContainer.move()` reorders an existing tab without destroying its WebView state. Policy tests plus `BrowserContainerMoveTest` verify movement and preservation of controller identity. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete at source level. CI-VERIFIED: pending run `33692092276`. UI wiring into the tab overview has not been claimed because the existing long-press affordance closes tabs and changing it would be a non-trivial UX contract change.
+
+## Download cookie privacy control
+`BrowserUnit.download()` now consults the existing settings layer through `send_download_cookies`, defaulting to enabled for compatibility. Enabled mode forwards a non-empty WebView cookie; disabled mode omits the `Cookie` request header. No new dependency or authenticated-download behavior change is introduced by default. A deterministic `DownloadCookiePolicyTest` covers the default-compatible and disabled contracts. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete at source level. CI-VERIFIED: pending run `33692045747`.
 
 ## Multi-window source verification
 `BrowserActivity` is declared with `android:launchMode="singleInstance"`, so the current design does not provide independent concurrent browser windows. True multi-window support would alter activity/task lifecycle and state ownership and is therefore deferred as MEDIUM/architectural work.
@@ -62,10 +67,10 @@ A bounded reorder primitive is now implemented: `TabOrderPolicy` deterministical
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. QR scanner, PWA support, and tab hierarchy are deferred MEDIUM integrations. Tab reorder has a tested core model operation but still needs UI wiring and CI verification. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. Download cookie privacy control and tab reorder core tests are implemented and awaiting CI reconciliation. QR scanner, PWA support, tab hierarchy, and multi-window remain deferred MEDIUM/architectural integrations. Android runtime remains deferred.
 
 ## Next execution
-**Source-verify the smallest remaining bounded download privacy/control seam. Start from `BrowserUnit.download()` cookie-header behavior and existing settings. Do not duplicate download logic or change authenticated-download behavior by default. Add the deterministic test before integration; do not install the APK.**
+**Reconcile Unit Tests runs `33692045747` and `33692092276`. After CI is clean, inspect the existing tab overview for the smallest non-breaking UI affordance for the already-tested reorder primitive. Do not change the current long-press close behavior without a clear replacement interaction. Continue parallel source verification on independent small privacy/UX seams, and do not install the APK.**
 
 ## Last synchronized
-2026-09-03 — tab hierarchy and multi-window were source-verified as non-small; deterministic tab reorder core was added; unintegrated download-cookie experiment was removed; next candidate is bounded download privacy/control work.
+2026-09-03 — download cookie privacy control integrated, tab reorder container tests added, workflow state synchronized, and CI reconciliation is pending.
