@@ -20,6 +20,15 @@ Read first:
 Execute exactly:
 READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE
 
+Continuous-work rule — IMPORTANT:
+- When the user says `استمر` / `continue`, keep working continuously and autonomously instead of sending routine progress messages.
+- Do not interrupt the workstream to report a discovery, warning, failing test, CI state, or newly found problem. Analyze it internally, fix it when justified, retest, and continue.
+- When a better priority or required follow-up is discovered, change priority and execute what is required without asking the user unless a decision genuinely cannot be inferred.
+- Use parallel investigation/execution for genuinely independent work units where the tool surface allows; serialize only dependent branch mutations.
+- Before sending ANY user-facing progress/update message, complete at least **10 minutes of productive project work** in the current continuation cycle whenever tool/runtime conditions permit.
+- Do not artificially stop after one tiny feature, one search, one commit, or one CI submission when useful work remains.
+- User-facing messages are substantial checkpoints, not a streaming log of internal activity.
+
 Tool policy:
 - GitHub is authoritative and the primary execution surface.
 - Apply Codex Engineering Guardrails: YAGNI, minimal scope, verification discipline, evidence-based claims.
@@ -32,7 +41,7 @@ Tool policy:
 - Treat Yaps Memory as convenience only; never as authority.
 - Use Prompt Optimizer only for a demonstrated prompt-quality bottleneck.
 
-Rules:
+Engineering rules:
 - Never redo completed verified work without new evidence.
 - Keep SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, and DOCUMENTED distinct.
 - TDD first whenever deterministic JVM testing is possible.
@@ -40,7 +49,8 @@ Rules:
 - Apply YAGNI; no architecture, dependency, abstraction, or subsystem replacement without demonstrated need.
 - WebLibre is a separate project and only a feature/design source pool.
 - Do not block engineering on Android runtime availability.
-- IMPORTANT: do not build/install/test the Android APK after each feature. Continue source/JVM/CI work and postpone Android runtime validation until the planned feature set is mature enough for one final device pass. Fix runtime regressions discovered during that final pass afterward.
+- Do not build/install/test the Android APK after each feature. Continue source/JVM/CI work first.
+- Reserve Android build/install/runtime verification for the **final validation phase** as far as reasonably possible; do one consolidated device pass once the planned feature set is mature, collect runtime regressions, fix them together, and rerun final validation as needed.
 - When two work units are genuinely independent, investigate/execute them in parallel where the tool surface allows; serialize only dependent branch mutations.
 - Keep each substantive step small and independently resumable.
 
@@ -55,15 +65,15 @@ At the end of each substantive step:
 8. verify remote HEAD.
 
 Current authoritative next step:
-CI-verify the current privacy-control feature batch whose source/test tip is `aa5fdace59a746359870a09bfd43644c5e07aeb6` (bounded WebView media-permission guard + optional third-party cookie blocking). Reconcile the result before selecting the next bounded feature. Do not install the APK yet.
+Read the current workflow state and CI status from GitHub. Reconcile the P2.7/P2.8 feature batch result, fix any CI failure internally, and then continue autonomously into the next smallest high-value bounded feature. Do not install the APK yet.
 
 Final-device rule:
-Continue implementing and CI-verifying bounded features first. Reserve Android build/install/runtime verification for the final validation phase. Only after that pass should runtime regressions drive additional fixes.
+The Android device test is the **last major validation step** as far as reasonably possible, not a per-feature loop. Perform source verification, implementation, JVM tests, CI, review, and documentation first. Only after the feature set is sufficiently complete should the agent build/install/run the APK on the phone. Any runtime problems found then should be fixed and the final device validation repeated as required.
 ```
 
 ## Current authoritative checkpoint
 - Active branch: `genspark-dev`.
-- Current branch includes the documentation checkpoints following the privacy-control implementation batch.
 - P2.1–P2.6 are CI-VERIFIED.
-- P2.7 media permission guard and P2.8 third-party cookie blocking are source/test implemented; the feature batch is the current CI checkpoint.
+- P2.7 media permission guard and P2.8 third-party cookie blocking are source/test implemented; current feature-batch CI must be reconciled from GitHub before status is advanced.
 - Android runtime validation is deliberately reserved for the final device pass.
+- Continuous autonomous work and the 10-minute minimum before routine user-facing updates are mandatory workflow rules.
