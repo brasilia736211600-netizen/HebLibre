@@ -9,6 +9,7 @@ import android.webkit.*;
 import androidx.preference.PreferenceManager;
 import android.content.SharedPreferences;
 
+import de.baumann.browser.unit.GeolocationPermissionPolicy;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.WebRtcPermissionPolicy;
 import de.baumann.browser.view.NinjaWebView;
@@ -68,7 +69,13 @@ public class NinjaWebChromeClient extends WebChromeClient {
 
     @Override
     public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-        Activity activity =  (Activity) ninjaWebView.getContext();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ninjaWebView.getContext());
+        boolean enabled = preferences.getBoolean("sp_location", false);
+        if (!GeolocationPermissionPolicy.shouldGrant(enabled)) {
+            callback.invoke(origin, false, false);
+            return;
+        }
+        Activity activity = (Activity) ninjaWebView.getContext();
         HelperUnit.grantPermissionsLoc(activity);
         callback.invoke(origin, true, false);
         super.onGeolocationPermissionsShowPrompt(origin, callback);
