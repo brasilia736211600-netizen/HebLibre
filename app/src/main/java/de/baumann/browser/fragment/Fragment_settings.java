@@ -5,14 +5,24 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import android.text.method.LinkMovementMethod;
-import android.view.View;
 import android.widget.TextView;
 
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceGroup;
 
 import java.util.Objects;
 
@@ -24,6 +34,7 @@ import de.baumann.browser.activity.Settings_StartActivity;
 import de.baumann.browser.activity.Settings_UIActivity;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.ProfileIdentity;
+import de.baumann.browser.unit.SettingsSearchPolicy;
 import de.baumann.browser.R;
 
 public class Fragment_settings extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -117,6 +128,76 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
                 return false;
             }
         });
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View preferenceView = super.onCreateView(inflater, container, savedInstanceState);
+
+        LinearLayout root = new LinearLayout(requireContext());
+        root.setOrientation(LinearLayout.VERTICAL);
+
+        final EditText search = new EditText(requireContext());
+        search.setSingleLine(true);
+        search.setInputType(InputType.TYPE_CLASS_TEXT);
+        search.setHint(R.string.setting_search_hint);
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        search.setPadding(padding, padding / 2, padding, padding / 2);
+        root.addView(search, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        if (preferenceView != null) {
+            root.addView(preferenceView, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        }
+
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterPreferences(s == null ? "" : s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        return root;
+    }
+
+    private void filterPreferences(String query) {
+        PreferenceGroup root = getPreferenceScreen();
+        if (root == null) {
+            return;
+        }
+
+        int childCount = root.getPreferenceCount();
+        for (int i = 0; i < childCount; i++) {
+            filterPreference(root.getPreference(i), query);
+        }
+    }
+
+    private boolean filterPreference(Preference preference, String query) {
+        if (preference instanceof PreferenceGroup) {
+            PreferenceGroup group = (PreferenceGroup) preference;
+            boolean hasVisibleChild = false;
+            for (int i = 0; i < group.getPreferenceCount(); i++) {
+                if (filterPreference(group.getPreference(i), query)) {
+                    hasVisibleChild = true;
+                }
+            }
+            group.setVisible(hasVisibleChild);
+            return hasVisibleChild;
+        }
+
+        boolean visible = SettingsSearchPolicy.matches(query, preference.getTitle(), preference.getSummary());
+        preference.setVisible(visible);
+        return visible;
     }
 
     @Override
