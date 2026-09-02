@@ -20,7 +20,7 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - Build/toolchain recovery, minimal JUnit4 harness, CI workflow recovery.
 - P1 profile/identity groundwork and lifecycle/test-seam review; full storage isolation remains unimplemented.
 - P2.1 tracking/query cleanup — CI-VERIFIED.
-- P2.2 HTTPS-only navigation — CI-VERIFIED.
+- P2.2 HTTPS-only — CI-VERIFIED.
 - P2.3 Global Privacy Control — CI-VERIFIED.
 - P2.4 Desktop Mode — CI-VERIFIED.
 - P2.5 Screenshot Protection — CI-VERIFIED.
@@ -43,14 +43,17 @@ Reader Mode is **NOT TARGETED in the current P2 cycle**. Source tracing found no
 ## P2.11 — Global settings search
 `Fragment_settings` places a search field above the existing `PreferenceFragmentCompat` list and recursively filters preferences by title/summary using `Preference#setVisible`. `SettingsSearchPolicy` provides the dependency-free deterministic matching contract. Existing preference actions and stored values are not replaced. SOURCE-VERIFIED: complete. TEST-VERIFIED: source test committed; local execution unavailable in this tool surface. CI-VERIFIED: complete, Unit Tests run `33688160810` on HEAD `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
 
+## QR scanner source verification
+QR scanning is **not implemented**. Repository inspection found no QR/barcode scanner or decoder, no `CAMERA` permission in `app/src/main/AndroidManifest.xml`, and no ZXing/ML Kit/camera-scanning dependency in `app/build.gradle`. The current WebView camera permission guard is for web-origin media requests and does not provide a native QR capture/decode path. A complete QR scanner would therefore require a new camera/decoder integration and is not a YAGNI/dependency-free bounded change at this checkpoint.
+
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. QR scanner is SOURCE-VERIFIED as a MEDIUM integration requiring a new camera/decoder choice. Android runtime remains deferred.
 
 ## Next execution
-**Source-verify the next smallest high-value bounded privacy/UX seam from the gap matrix. Prefer a local, dependency-free change with deterministic JVM coverage. Do not install the APK.**
+**Source-verify PWA support as the next smallest high-value bounded privacy/UX seam. Inspect existing WebView manifest/launch handling first; do not commit to implementation until a bounded seam and deterministic test contract are established. Do not install the APK.**
 
 ## Last synchronized
-2026-09-03 — P2.11 CI reconciled successfully; checkpoint advanced.
+2026-09-03 — QR scanner source verification completed; no dependency-free implementation seam established; PWA support selected as the next source-verification candidate.
