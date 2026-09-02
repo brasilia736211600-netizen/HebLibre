@@ -11,6 +11,12 @@ Execution protocol:
 
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
+## Continuous autonomous-work rule
+When the user says `استمر` / `continue`, the agent must keep working internally for as long as useful and must not interrupt the workstream with routine progress messages. Investigate, verify, diagnose, prioritize, implement, test, review, reconcile CI results, and fix discovered problems autonomously. When a new problem, better priority, or required follow-up is discovered, handle it internally and continue from the new priority instead of sending an interim message. Use parallel investigation/execution for genuinely independent work units where the tool surface permits; serialize only dependent branch mutations. Before sending any user-facing progress/update message, complete at least **10 minutes of productive project work** in the current continuation cycle whenever tool/runtime conditions permit. Do not artificially stop after one small feature or one CI submission. The user-facing message is a checkpoint after a substantial work interval, not a streaming log.
+
+## Final Android validation rule
+Do not build, install, or repeatedly test the Android APK after each feature. Continue source/JVM/CI work first and reserve Android build/install/runtime verification for the **final validation phase** as far as reasonably possible. Perform one consolidated device validation pass after the planned feature set is mature. Collect all runtime regressions found there, fix them together, then rerun the final device validation as needed. Never block otherwise-ready engineering work merely because device validation is deferred.
+
 ## Tool-assisted workflow
 - **GitHub** is the operational source of truth and primary execution surface.
 - **Codex Engineering Guardrails**: apply YAGNI, scope control, verification discipline, and evidence-based claims.
@@ -78,7 +84,7 @@ Objective: minimum user intervention. `استمر` should resume from GitHub sta
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
 ## Next execution step
-**CI-verify current feature batch `aa5fdace59a746359870a09bfd43644c5e07aeb6`; then reconcile the result and select the next smallest high-value bounded feature. Keep Android installation deferred until final validation.**
+**CI-verify current feature batch `aa5fdace59a746359870a09bfd43644c5e07aeb6`; then reconcile the result and continue autonomously into the next smallest high-value bounded feature. Keep Android installation deferred until final validation.**
 
 ## Last updated
-2026-09-02 — media permission and third-party-cookie controls added; feature batch CI pending.
+2026-09-02 — continuous-work and final-device-validation rules added to the canonical workflow state; current feature batch remains the CI checkpoint.
