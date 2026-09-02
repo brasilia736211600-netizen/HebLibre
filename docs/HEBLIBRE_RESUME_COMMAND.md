@@ -33,13 +33,14 @@ Current verified state:
 - P2.9 Geolocation: Unit Tests run `33684710168` success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
 - P2.10 Save-Data: Unit Tests run `33686256788` success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
 - P2.11 Global settings search: Unit Tests run `33688160810` success, head `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
-- Current documentation synchronization advances HEAD beyond that feature commit; verify exact branch HEAD directly on every resume.
-- Android runtime is deferred to final validation.
-- Reader Mode is NOT TARGETED for the current P2 cycle: source tracing found no bounded dependency-free reader-extraction seam in the native WebView architecture, so speculative HTML/JS injection is intentionally excluded.
+- Tab reorder core: `TabOrderPolicy` + `BrowserContainer.move()` committed; deterministic JUnit source test committed; CI still pending.
+- QR scanner, PWA, true tab hierarchy, and true multi-window are deferred because they require larger camera/lifecycle/model architecture.
+- Android runtime remains deferred to final consolidated device validation.
+- Reader Mode remains NOT TARGETED for the current P2 cycle.
 
 Next execution:
-Source-verify the next smallest high-value bounded privacy/UX seam from the gap matrix, currently QR scanner. First inspect existing camera permissions, intent handling, and dependency surface. Prefer platform-only deterministic implementation; do not add a library unless repository evidence requires it. Implement only after a bounded seam and test contract are established. Do not install the APK.
+Source-verify the smallest bounded download privacy/control seam starting from `BrowserUnit.download()` cookie forwarding. Do not duplicate download logic or change authenticated-download behavior by default. Add a deterministic policy test first; integrate only if the existing call structure permits a minimal, correct change. Do not install the APK.
 ```
 
 ## Current authoritative checkpoint
-P2.1–P2.11 are CI-VERIFIED; Reader Mode has been closed as non-bounded for this cycle; global settings search is complete; QR scanner is the next source-verification target; Android runtime remains reserved for the final device pass.
+P2.1–P2.11 are CI-VERIFIED. Tab reorder has a deterministic core slice but is not yet UI-complete or CI-verified. QR/PWA/hierarchy/multi-window remain deferred medium/architectural seams. The next source-verification target is bounded download privacy/control work.
