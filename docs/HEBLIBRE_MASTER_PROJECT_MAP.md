@@ -9,10 +9,13 @@
 - Continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
 
 ## Continuous autonomous-work rule
-When the user says `استمر` / `continue`, work continuously rather than emitting routine progress updates. Investigate, verify, diagnose, prioritize, implement, test, review, reconcile CI, and fix discovered problems internally; do not interrupt the workstream merely to report a discovery or issue. Use parallel investigation/execution for genuinely independent work units where possible and serialize dependent branch mutations. Before any user-facing progress/update message, complete at least **10 minutes of productive project work** in the current continuation cycle whenever tool/runtime conditions permit. Treat user-facing messages as substantial checkpoints, not a streaming activity log.
+When the user says `استمر` / `continue`, work continuously rather than emitting routine progress updates. Investigate, verify, diagnose, prioritize, implement, test, review, reconcile CI, and fix discovered problems internally; do not interrupt the workstream merely to report a discovery or issue. Use parallel investigation/execution for genuinely independent work units where possible and serialize dependent branch mutations. Before any user-facing progress/update message, complete at least **10 minutes of productive project work** in the current continuation cycle whenever tool/runtime conditions permit. Do not artificially stop after one small feature, one search, one commit, or one CI submission when useful work remains.
 
 ## Final Android-validation rule
 Do not build/install/test the APK after every feature. Accumulate source verification, deterministic JVM tests, CI verification, and bounded feature work first. Reserve Android build/install/runtime verification for one consolidated final device-validation phase as far as reasonably possible. During that final pass, collect runtime regressions, fix them together, and rerun device validation only as necessary.
+
+## User-facing checkpoint rule
+User-facing updates are checkpoints, not an activity stream. After the 10-minute productive-work threshold, keep any update short and useful: state what is completed now, any current problem/blocker, where the project stands overall, and exactly one next step. Do not send interim messages for discoveries, warnings, failing tests, CI transitions, or priority changes; resolve or integrate those internally first. Never invent a blocker when none exists.
 
 ## Tooling policy
 GitHub is primary. Codex Engineering Guardrails enforce YAGNI and evidence-based verification. Process Jobs and Coordinator are used only for genuinely independent/parallel work. CodeRabbit is a second-pass review when its required local CLI/repository surface is available; no CodeRabbit result is claimed in the current environment. Advisor is for non-trivial decisions. AI DevKit/Develoop and Plugin Autopilot are optional capability-specific tools. Yaps Memory is non-authoritative. Prompt Optimizer is event-driven only.
@@ -56,10 +59,10 @@ Prefer local, dependency-free, deterministic features before architectural gaps.
 Reader Mode is only a candidate and must be source-verified before implementation. If it is not a small bounded seam, select the next high-value local privacy/UX feature instead. Do not reselect Desktop Mode or other already-present features.
 
 ## Current checkpoint
-Remote `genspark-dev` advanced to `7a85342ddf1df1f23197a997aa53e17e2d7e1283` with documentation reconciliation. The P2.7/P2.8 feature batch remains the CI checkpoint represented by `aa5fdace59a746359870a09bfd43644c5e07aeb6`. Android runtime remains reserved for final validation.
+The P2.7/P2.8 feature batch remains the CI checkpoint represented by `aa5fdace59a746359870a09bfd43644c5e07aeb6`; subsequent documentation-only commits do not change its feature status. Android runtime remains reserved for final validation.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Last synchronized
-2026-09-02 — reconciled project map with current branch and removed Desktop Mode from future candidates because it is already implemented.
+2026-09-02 — continuous autonomous execution, final-device validation, and concise checkpoint-reporting rules reinforced.
