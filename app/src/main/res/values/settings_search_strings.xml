@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="setting_search_hint">Search settings</string>
+    <string name="setting_title_download_cookies">Send cookies with downloads</string>
+    <string name="setting_summary_download_cookies">Allow downloads to reuse the cookies from the current website. Disable for stricter download privacy.</string>
 </resources>
