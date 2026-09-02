@@ -50,16 +50,22 @@ QR scanning is **not implemented**. Repository inspection found no QR/barcode sc
 PWA support is **not implemented**. `AndroidManifest.xml` exposes `BrowserActivity` as a conventional `http`/`https` VIEW handler and `BrowserActivity` dispatches incoming VIEW intents into ordinary browser tabs. `NinjaWebViewClient` keeps `http`/`https` navigation inside the WebView and routes non-http schemes externally when possible. No Web App Manifest parsing, install-prompt bridge, PWA install metadata, standalone PWA launch intent, or service-worker lifecycle integration was found. A real installable/standalone PWA feature is therefore MEDIUM and requires a new install/launch lifecycle seam; no bounded dependency-free JVM contract was established. No implementation was made.
 
 ## Tab hierarchy source verification
-The tab model is flat: `BrowserContainer` stores a `List<AlbumController>` with add/remove/get/index operations, while `AlbumController` exposes only view/activation lifecycle methods. `AlbumItem` selects or removes a tab and contains no opener/parent metadata. There is no parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy. Implementing true tab hierarchy would require a new model contract and corresponding tab-creation/UI lifecycle changes, so it is SOURCE-VERIFIED as MEDIUM rather than an immediate YAGNI implementation. No code was changed.
+The tab model is flat: `BrowserContainer` stores a `List<AlbumController>` with add/remove/get/index operations, while `BrowserActivity` inserts new tabs relative to the current tab without parent/opener metadata. No parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy exists. Implementing true tab hierarchy would require a new model contract and corresponding tab-creation/UI lifecycle changes, so it is SOURCE-VERIFIED as MEDIUM rather than an immediate YAGNI implementation. No code was changed.
+
+## Tab stacking / advanced switcher core slice
+A bounded reorder primitive is now implemented: `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping, and `BrowserContainer.move()` reorders an existing tab without destroying its WebView. This is SOURCE-VERIFIED and TEST-VERIFIED at the source level through committed JUnit tests; CI-VERIFIED is still pending. UI wiring into `BrowserActivity`/tab overview has not been claimed.
+
+## Multi-window source verification
+`BrowserActivity` is declared with `android:launchMode="singleInstance"`, so the current design does not provide independent concurrent browser windows. True multi-window support would alter activity/task lifecycle and state ownership and is therefore deferred as MEDIUM/architectural work.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. QR scanner, PWA support, and tab hierarchy are SOURCE-VERIFIED as MEDIUM integrations requiring new platform/model decisions. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. QR scanner, PWA support, and tab hierarchy are deferred MEDIUM integrations. Tab reorder has a tested core model operation but still needs UI wiring and CI verification. Android runtime remains deferred.
 
 ## Next execution
-**Source-verify Tab stacking/advanced switcher, and check the existing multi-window hook at the same time for a smaller bounded seam. Do not implement until the smallest deterministic contract is identified. Do not install the APK.**
+**Source-verify the smallest remaining bounded download privacy/control seam. Start from `BrowserUnit.download()` cookie-header behavior and existing settings. Do not duplicate download logic or change authenticated-download behavior by default. Add the deterministic test before integration; do not install the APK.**
 
 ## Last synchronized
-2026-09-03 — Tab hierarchy source verification completed; existing tab model is flat and lacks parent-child semantics; no implementation made; next candidate is tab stacking/advanced switcher with a targeted multi-window seam check.
+2026-09-03 — tab hierarchy and multi-window were source-verified as non-small; deterministic tab reorder core was added; unintegrated download-cookie experiment was removed; next candidate is bounded download privacy/control work.
