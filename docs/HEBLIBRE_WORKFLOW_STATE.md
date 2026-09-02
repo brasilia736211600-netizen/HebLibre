@@ -12,8 +12,8 @@ Execution protocol:
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
 ## Current repository state
-- Exact current branch HEAD: `b592f8abb419826caa06b2ec254a299c942d9ac7`.
-- This HEAD contains the completed P2 Step 1 URL-cleanup implementation.
+- Exact current branch HEAD: `7c5285474324699d04daa5e67c107e26afbe90ae`.
+- This HEAD contains completed P2 Step 1 tracking cleanup and completed P2 Step 2 HTTPS-only navigation policy.
 - Canonical continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
 - Genspark credits are exhausted; all work continues through available GitHub/local capabilities.
 
@@ -26,54 +26,56 @@ Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIM
 6. P1 Step 8 runtime validation: DEFERRED because no Android runtime is available; not a development blocker.
 7. P1 Step 8A: WebLibre/HebLibre feature gap matrix completed and persisted.
 8. P2 Step 1: conservative tracking/query-parameter cleanup completed.
+9. P2 Step 2: local HTTPS-only navigation policy completed.
 
 ## P2 Step 1 — conservative tracking/query-parameter cleanup
+- TDD contract: `UrlTrackerCleanerTest.java`.
+- Implementation: dependency-free `UrlTrackerCleaner.java`.
+- Removes only `utm_*`, `gclid`, `dclid`, `fbclid`, `msclkid`, and `yclid` while preserving meaningful query data, order, path, and fragment.
+- Wired through the existing URL-normalization/navigation path.
+- Commits: `0de51ef47591a1aa9c869bb7909906025662e726`, `61795dbb75a22dcaa7a2ed8e6fc3d353358eedc4`, `410b9ba9c8434228c9fac51a10a42e39091c9f35`, `b592f8abb419826caa06b2ec254a299c942d9ac7`.
+- P2 Step 1 source scope is limited to the cleaner, its tests, and `BrowserUnit.java` wiring.
+
+### P2 Step 1 verification
+- SOURCE-VERIFIED: complete.
+- TEST-VERIFIED: TDD contract committed.
+- CI-VERIFIED: earlier successful unit-test evidence exists, but no longer using the incorrect `33648307698` reference as feature-HEAD evidence.
+- ANDROID-RUNTIME-VERIFIED: not performed.
+- DOCUMENTED: superseded by this state record.
+
+## P2 Step 2 — HTTPS-only navigation policy
+### Source verification
+The existing architecture has two relevant navigation paths. Direct/user-entered navigation flows through `NinjaWebView.loadUrl()`, which already calls `BrowserUnit.queryWrapper(...)` before `super.loadUrl(...)`. Link navigation is intercepted by `NinjaWebViewClient.handleUri(...)`, where HTTP(S) links are loaded through the same WebView. No separate networking stack is present. fileciteturn543file0 fileciteturn544file0
+
+The start-settings screen is backed by `preference_start.xml`, so the feature can be exposed through the existing preferences UI without introducing a new settings architecture. fileciteturn535file0 fileciteturn542file0
+
 ### TDD / implementation
-- TDD contract added first as `app/src/test/java/de/baumann/browser/unit/UrlTrackerCleanerTest.java`.
-- Pure-Java implementation added as `app/src/main/java/de/baumann/browser/unit/UrlTrackerCleaner.java`.
-- Initial cleaner was corrected to preserve raw URI components rather than unintentionally re-encoding them.
-- Existing `BrowserUnit.queryWrapper()` was wired to call the cleaner only after an input has already been classified as a URL and before navigation returns it.
-- Search-query generation behavior was not changed.
-- Existing Google redirect unwrapping was not redesigned.
+- Added `app/src/test/java/de/baumann/browser/unit/HttpsOnlyPolicyTest.java` first as the deterministic contract.
+- Added `app/src/main/java/de/baumann/browser/unit/HttpsOnlyPolicy.java` as a plain-Java, dependency-free policy seam.
+- Policy behavior: absolute `http://` URLs are upgraded to `https://`; existing HTTPS URLs and non-HTTP schemes remain unchanged; null/blank input remains unchanged. fileciteturn539file0turn540file0
+- Added the existing preference UI entry `https_only`, default `false`, with localized title/summary resources. fileciteturn541file0turn542file0
+- `NinjaWebView.loadUrl()` enforces the policy only when `https_only` is enabled, after existing URL wrapping. fileciteturn543file0
+- `NinjaWebViewClient.handleUri()` applies the policy to intercepted link navigation before loading an upgraded URL. fileciteturn544file0
+- No HTTP fallback is attempted after upgrading; no new networking architecture or dependency was introduced.
 
-### Conservative behavior
-The cleaner removes only:
-- `utm_*`
-- `gclid`
-- `dclid`
-- `fbclid`
-- `msclkid`
-- `yclid`
-
-It preserves meaningful parameters, parameter order, path, and fragment. Invalid or blank input is returned unchanged. No network access, dependency, broad canonicalization, or arbitrary parameter deletion was introduced.
-
-### Commits
-- `0de51ef47591a1aa9c869bb7909906025662e726` — TDD contract.
-- `61795dbb75a22dcaa7a2ed8e6fc3d353358eedc4` — cleaner implementation.
-- `410b9ba9c8434228c9fac51a10a42e39091c9f35` — preserve raw URI components.
-- `b592f8abb419826caa06b2ec254a299c942d9ac7` — wire cleaner into URL navigation.
-
-### Diff scope
-Compared with `9ec94a0a5909b37e56f477c874da18d12a62c957`, the implementation is limited to:
-- add `UrlTrackerCleaner.java`;
-- add `UrlTrackerCleanerTest.java`;
-- modify `BrowserUnit.java` for the existing URL path.
-No unrelated production files were changed.
+### Commit sequence
+- `d1ed67d5b4edf2d842adae884daa525cefed8a6f` — first HTTPS-only direct-navigation implementation.
+- `7c5285474324699d04daa5e67c107e26afbe90ae` — link-navigation enforcement completion.
 
 ### Verification
-- SOURCE-VERIFIED: complete for implementation path and scope.
-- TEST-VERIFIED: the TDD contract is committed; the exact local test command result is not independently captured in this state record.
-- CI-VERIFIED: GitHub Actions run `33648307698`, job `test`, completed successfully; the `Run unit tests` step completed with success on the feature HEAD.
-- ANDROID-RUNTIME-VERIFIED: not performed.
+- SOURCE-VERIFIED: complete for the direct and intercepted-link navigation paths.
+- TEST-VERIFIED: `HttpsOnlyPolicyTest` is committed and the CI job completed its `Run unit tests` step successfully.
+- CI-VERIFIED: GitHub Actions run `33650164143`, job `test`, completed with conclusion `success`; all workflow steps including `Run unit tests` completed successfully.
+- ANDROID-RUNTIME-VERIFIED: not performed; no Android runtime is available.
 - DOCUMENTED: complete.
 
 ## Architecture boundary
 The P1 profile mechanism still does not isolate process-wide `CookieManager`, Chromium WebView disk storage, the default SharedPreferences store as a whole, history, or bookmarks. No full browser-storage isolation is claimed.
 
-No multi-process architecture, `WebView.setDataDirectorySuffix`, extension runtime, proxy/Tor stack, WebRTC subsystem, DNS-over-HTTPS stack, fingerprinting subsystem, or AI runtime has been added.
+No multi-process architecture, WebView data-directory switching, extension runtime, proxy/Tor stack, WebRTC subsystem, DNS-over-HTTPS stack, fingerprinting subsystem, or AI runtime has been added.
 
 ## Next execution step
-**P2 Step 2 — perform source verification for the smallest next high-value privacy/navigation gap (HTTPS-only mode) and implement it only if the current WebView navigation architecture supports a small deterministic change without introducing a new networking architecture. Start with a characterization test/contract where a plain-JVM seam exists.**
+**P2 Step 3 — source-verify the next smallest high-value WebLibre gap, Global Privacy Control (GPC), and implement it only if current WebView request-header APIs provide a deterministic local seam without introducing networking architecture.**
 
 ## Last updated
-2026-09-02 — P2 Step 1 implementation completed, CI-VERIFIED on run `33648307698`, current HEAD `b592f8abb419826caa06b2ec254a299c942d9ac7`, Android runtime remains deferred.
+2026-09-02 — P2 Step 2 completed and CI-VERIFIED on run `33650164143`; current HEAD `7c5285474324699d04daa5e67c107e26afbe90ae`; Android runtime remains deferred.
