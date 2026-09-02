@@ -20,6 +20,7 @@ import android.webkit.WebView;
 import de.baumann.browser.browser.*;
 import de.baumann.browser.R;
 import de.baumann.browser.unit.BrowserUnit;
+import de.baumann.browser.unit.DesktopModePolicy;
 import de.baumann.browser.unit.GpcPolicy;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.HttpsOnlyPolicy;
@@ -81,6 +82,7 @@ public class NinjaWebView extends WebView implements AlbumController {
     private Remote remoteHosts;
     private SharedPreferences sp;
     private WebSettings webSettings;
+    private String defaultUserAgent;
 
     private boolean foreground;
 
@@ -149,6 +151,7 @@ public class NinjaWebView extends WebView implements AlbumController {
 
         this.setBackgroundColor(primaryColor);
         webSettings = getSettings();
+        defaultUserAgent = webSettings.getUserAgentString();
         webSettings.setBuiltInZoomControls(true);
         webSettings.setDisplayZoomControls(false);
         webSettings.setSupportZoom(true);
@@ -165,9 +168,8 @@ public class NinjaWebView extends WebView implements AlbumController {
         String userAgent = sp.getString("userAgent", "");
         webSettings = getSettings();
 
-        if (!userAgent.isEmpty()) {
-            webSettings.setUserAgentString(userAgent);
-        }
+        webSettings.setUserAgentString(DesktopModePolicy.resolve(
+                sp.getBoolean("desktop_mode", false), userAgent, defaultUserAgent));
         webViewClient.enableAdBlock(sp.getBoolean(context.getString(R.string.sp_ad_block), true));
         webSettings = getSettings();
         webSettings.setTextZoom(Integer.parseInt(Objects.requireNonNull(sp.getString("sp_fontSize", "100"))));
@@ -178,6 +180,12 @@ public class NinjaWebView extends WebView implements AlbumController {
         webSettings.setJavaScriptEnabled(sp.getBoolean(context.getString(R.string.sp_javascript), true));
         webSettings.setJavaScriptCanOpenWindowsAutomatically(sp.getBoolean(context.getString(R.string.sp_javascript), true));
         webSettings.setGeolocationEnabled(sp.getBoolean(context.getString(R.string.sp_location), false));
+    }
+
+    private synchronized void applyUserAgentPreference() {
+        String customUserAgent = sp.getString("userAgent", "");
+        webSettings.setUserAgentString(DesktopModePolicy.resolve(
+                sp.getBoolean("desktop_mode", false), customUserAgent, defaultUserAgent));
     }
 
     private synchronized void initAlbum() {
@@ -205,6 +213,7 @@ public class NinjaWebView extends WebView implements AlbumController {
             return;
         }
         HelperUnit.initRendering(this);
+        applyUserAgentPreference();
 
         if (javaHosts.isWhite(url) || sp.getBoolean(context.getString(R.string.sp_javascript), true)) {
             webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
