@@ -109,7 +109,6 @@ public class BrowserUnit {
     }
 
     public static String queryWrapper(Context context, String query) {
-        // Use prefix and suffix to process some special links
         String temp = query.toLowerCase(Locale.getDefault());
         if (temp.contains(URL_PREFIX_GOOGLE_PLAY) && temp.contains(URL_SUFFIX_GOOGLE_PLAY)) {
             int start = temp.indexOf(URL_PREFIX_GOOGLE_PLAY) + URL_PREFIX_GOOGLE_PLAY.length();
@@ -125,11 +124,9 @@ public class BrowserUnit {
             if (query.startsWith(URL_SCHEME_ABOUT) || query.startsWith(URL_SCHEME_MAIL_TO)) {
                 return query;
             }
-
             if (!query.contains("://")) {
                 query = URL_SCHEME_HTTP + query;
             }
-
             return UrlTrackerCleaner.clean(query);
         }
 
@@ -143,32 +140,21 @@ public class BrowserUnit {
         String custom = sp.getString("sp_search_engine_custom", SEARCH_ENGINE_STARTPAGE);
         final int i = Integer.valueOf(Objects.requireNonNull(sp.getString(context.getString(R.string.sp_search_engine), "9")));
         switch (i) {
-            case 0:
-                return SEARCH_ENGINE_STARTPAGE + query;
-            case 1:
-                return SEARCH_ENGINE_STARTPAGE_DE + query;
-            case 2:
-                return SEARCH_ENGINE_BAIDU + query;
-            case 3:
-                return SEARCH_ENGINE_BING + query;
-            case 4:
-                return SEARCH_ENGINE_DUCKDUCKGO + query;
-            case 5:
-                return SEARCH_ENGINE_GOOGLE + query;
-            case 6:
-                return SEARCH_ENGINE_SEARX + query;
-            case 7:
-                return SEARCH_ENGINE_QWANT + query;
-            case 8:
-                return custom + query;
+            case 0: return SEARCH_ENGINE_STARTPAGE + query;
+            case 1: return SEARCH_ENGINE_STARTPAGE_DE + query;
+            case 2: return SEARCH_ENGINE_BAIDU + query;
+            case 3: return SEARCH_ENGINE_BING + query;
+            case 4: return SEARCH_ENGINE_DUCKDUCKGO + query;
+            case 5: return SEARCH_ENGINE_GOOGLE + query;
+            case 6: return SEARCH_ENGINE_SEARX + query;
+            case 7: return SEARCH_ENGINE_QWANT + query;
+            case 8: return custom + query;
             case 9:
-            default:
-                return SEARCH_ENGINE_ECOSIA + query;
+            default: return SEARCH_ENGINE_ECOSIA + query;
         }
     }
 
     public static void download(final Context context, final String url, final String contentDisposition, final String mimeType) {
-
         String text = context.getString(R.string.dialog_title_download) + " - " + URLUtil.guessFileName(url, contentDisposition, mimeType);
         final BottomSheetDialog dialog = new BottomSheetDialog(context);
         View dialogView = View.inflate(context, R.layout.dialog_action, null);
@@ -179,11 +165,16 @@ public class BrowserUnit {
             @Override
             public void onClick(View view) {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-                String filename = URLUtil.guessFileName(url, contentDisposition, mimeType); // Maybe unexpected filename.
+                String filename = URLUtil.guessFileName(url, contentDisposition, mimeType);
 
-                CookieManager cookieManager = CookieManager.getInstance();
-                String cookie = cookieManager.getCookie(url);
-                request.addRequestHeader("Cookie", cookie);
+                if (DownloadCookiePolicy.shouldSendCookies(PreferenceManager.getDefaultSharedPreferences(context)
+                        .getBoolean("send_download_cookies", DownloadCookiePolicy.DEFAULT_ENABLED))) {
+                    CookieManager cookieManager = CookieManager.getInstance();
+                    String cookie = cookieManager.getCookie(url);
+                    if (cookie != null && !cookie.isEmpty()) {
+                        request.addRequestHeader("Cookie", cookie);
+                    }
+                }
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 request.setTitle(filename);
                 request.setMimeType(mimeType);
@@ -331,7 +322,6 @@ public class BrowserUnit {
         List<Record> list = action.listBookmark(context, false, 0);
         action.close();
         File file = new File(context.getExternalFilesDir(null), "browser_backup//export_Bookmark.html");
-
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file, false));
             for (Record record : list) {
@@ -355,7 +345,6 @@ public class BrowserUnit {
         try {
             RecordAction action = new RecordAction(context);
             action.open(true);
-
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line;
             while ((line = reader.readLine()) != null) {
@@ -392,7 +381,7 @@ public class BrowserUnit {
     }
 
     private static String getBookmarkTitle(String line) {
-        line = line.substring(0, line.length() - 4); // Remove last </a>
+        line = line.substring(0, line.length() - 4);
         int index = line.lastIndexOf(">");
         return line.substring(index + 1);
     }
@@ -400,7 +389,7 @@ public class BrowserUnit {
     private static String getBookmarkURL(String line) {
         for (String string : line.split(" +")) {
             if (string.startsWith("href=\"") || string.startsWith("HREF=\"")) {
-                return string.substring(6, string.length() - 1); // Remove href=\" and \"
+                return string.substring(6, string.length() - 1);
             }
         }
         return "";
