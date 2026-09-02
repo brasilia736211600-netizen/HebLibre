@@ -28,6 +28,7 @@ Legacy Android browser/WebView application based on the FOSS Browser codebase. C
 - P1 Step 2: made `BrowserContainer` instance-scoped and added isolation tests.
 - P1 Step 3: added `ProfileScopedWhitelist` keyed by profile id and tests; existing default behavior preserved.
 - P1 Step 4: migrated the four whitelist SQLite tables to `PROFILE_ID`, profile-scoped CRUD, and version 4→5 migration; full JVM suite reached 17/17 and main Java compilation passed.
+- Continuity recovery: created the canonical master map and hardened the resume/state documents for operation without Genspark.
 
 ## Current architecture boundary
 ### Already profile-capable
@@ -61,7 +62,7 @@ Do not add without demonstrated product need:
 P1 Steps 1–4 are complete. The persistence and in-memory whitelist boundaries exist, but there is no user-facing profile selection yet.
 
 ## Single next execution target
-Before adding UI or a profile-management framework, verify the live branch/HEAD and inspect the current profile constructor/call-site graph. Determine whether a small, testable identity contract has concrete value. If it is only plumbing with no behavior, do not implement it merely for completeness. If a useful contract is found, implement the smallest TDD-first seam and immediately save state.
+**P1 Step 5 — create a real, minimal profile identity contract that has an immediate consumer.** Use the existing SharedPreferences convention only if it creates actual selection/storage behavior; otherwise stop at evidence-gathering rather than adding no-op plumbing. Any profile UI must explicitly avoid claiming full cookie/WebView storage isolation.
 
 ## Continuity requirements
 Every substantive change must update `docs/HEBLIBRE_WORKFLOW_STATE.md` with:
@@ -76,4 +77,7 @@ Every substantive change must update `docs/HEBLIBRE_WORKFLOW_STATE.md` with:
 Every new agent must read the state file and this map before acting. If they conflict with live GitHub, reconcile them before implementation.
 
 ## Credit-independent operation
-Genspark credits are currently exhausted. The project must continue using available GitHub/local capabilities. Do not wait for Genspark, do not claim work was performed by Genspark, and do not spend effort reproducing work already verified in GitHub.
+Genspark credits are exhausted. The project must continue using available GitHub/local capabilities. Do not wait for Genspark, do not claim work was performed by Genspark, and do not spend effort reproducing work already verified in GitHub.
+
+## Last synchronized
+2026-09-02 — map aligned with the reconciled workflow state; engineering parent remains `4f0f97b955ce1e8b3dd039b365f056e48b4c00de` and current branch HEAD includes documentation-only continuity commits.
