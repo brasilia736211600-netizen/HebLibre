@@ -32,6 +32,7 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - P2.11 global settings search — CI-VERIFIED, run `33688160810`.
 - Download cookie privacy control — SOURCE/TEST/CI-VERIFIED, run `33692045747`.
 - BrowserContainer tab reorder core + integration tests — SOURCE/TEST/CI-VERIFIED, run `33692092276`.
+- Remote-content default consistency — SOURCE/TEST/CI-VERIFIED, run `33694722442`.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -62,14 +63,20 @@ The tab overview is a `ScrollView` containing a `LinearLayout`. `AlbumItem` curr
 ## Download cookie privacy control
 `BrowserUnit.download()` consults `send_download_cookies`; enabled mode forwards a non-empty WebView cookie, disabled mode omits the `Cookie` header, with the compatibility-preserving default enabled. SOURCE-VERIFIED, TEST-VERIFIED, and CI-VERIFIED via run `33692045747`.
 
+## Remote-content default consistency
+`preference_start.xml` declares `sp_remote` default `true`; `NinjaWebView.loadUrl()` and `NinjaWebView.initPreferences()` now use the same default. SOURCE-VERIFIED, TEST/CI-VERIFIED via run `33694722442`.
+
+## Reorder UI reconciliation
+The actual source boundary is `BrowserActivity` owning both `BrowserContainer` and `tab_container`, while `AlbumItem` owns the tab view. A temporary controller mutation seam was attempted and immediately reverted because it was incomplete without the corresponding `BrowserActivity` implementation. No incomplete reorder API remains in source. The UI is intentionally still PARTIAL.
+
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Download cookie privacy and tab reorder core are CI-VERIFIED. The remaining immediate engineering target is the smallest non-breaking tab-overview reorder UI. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
+P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency are CI-VERIFIED. The next bounded candidate remains tab-overview reorder UI, but it must be implemented as a complete source mutation across the actual `BrowserActivity`/`AlbumItem` boundary. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
 
 ## Next execution
-**Continue parallel source verification on independent bounded privacy/UX seams while designing the smallest dedicated reorder affordance. Implement only when the complete mutation path can be updated safely; preserve long-click close behavior. Then run deterministic tests, reconcile CI, review the diff, and synchronize state. Do not install the APK yet.**
+**Continue parallel source verification on independent bounded privacy/UX seams while keeping tab reorder UI deferred until its complete mutation path can be edited safely. Preserve long-click close behavior. Then run deterministic tests, reconcile CI, review the diff, and synchronize state. Do not install the APK yet.**
 
 ## Last synchronized
-2026-09-03 — CI reconciled for download-cookie and tab-reorder work; tab-overview and `AlbumItem` interaction boundary source-verified; documentation synchronized.
+2026-09-03 — reconciled current branch state, remote-content CI evidence, and the reverted incomplete reorder-controller seam; map synchronized with actual source boundaries.
