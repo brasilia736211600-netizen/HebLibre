@@ -28,8 +28,8 @@ Rules:
 - Android runtime testing is optional until the code path is otherwise prepared; do not block development on phone availability.
 - Do not touch unrelated files.
 - This repository is HebLibre. Do not resurrect or use old WebLibre project state documents.
-- Use Genspark credits only for deep repository analysis, difficult debugging, substantial multi-file implementation, and long verification loops. Use low-cost/local orchestration for state checks, GitHub inspection, small documentation edits, and bounded deterministic work.
-- Genspark credits are currently exhausted. Continue using available GitHub/local capabilities; do not wait for Genspark and do not claim Genspark execution.
+- Genspark credits are exhausted. Continue using available GitHub/local capabilities; do not wait for Genspark and do not claim Genspark execution.
+- Use available GitHub/local capabilities for repository inspection, deterministic implementation, tests, CI verification, and continuity updates.
 - When a long task is running, continue independent non-conflicting verification/work instead of waiting idle.
 
 At the end of every completed substantive step:
@@ -39,10 +39,10 @@ At the end of every completed substantive step:
 4. record exactly ONE NEXT EXECUTION STEP,
 5. stop before starting an unrelated phase.
 
-Current verified project state must always be taken from GitHub, not from the resume command itself. If the state document conflicts with GitHub, reconcile the document before implementation.
+Current verified project state must always be taken from GitHub, not from this resume command itself. If the state document conflicts with GitHub, reconcile the document before implementation.
 
 Start from the current state recorded in docs/HEBLIBRE_WORKFLOW_STATE.md and continue from its SINGLE NEXT EXECUTION STEP. If that next step is stale, first perform READ/VERIFY/RECONCILE and replace it with the smallest evidence-backed next step.
 ```
 
 ## Current resume target
-P1 persisted whitelist profile-id migration is complete. The next decision/implementation target must be derived from the current `docs/HEBLIBRE_WORKFLOW_STATE.md` and verified against the live `genspark-dev` HEAD before any code change. Do not assume that a profile-switching UI is authorized merely because the persistence layer can accept a non-default profile id.
+P1 Step 5 identity contract is implemented and CI-verified successfully. The current single next execution step is **P1 Step 6 — implement the smallest user-facing profile selector using the existing SharedPreferences path, reuse `ProfileIdentity.PREFERENCE_KEY`, preserve the default profile, and wire the selected id into the existing profile-aware whitelist constructors.** Do not expand into cookies, WebView storage, history/bookmarks, multi-process architecture, or unrelated settings without new evidence.
