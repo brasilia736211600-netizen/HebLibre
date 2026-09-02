@@ -2,6 +2,7 @@ package de.baumann.browser.unit;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 
 /**
  * Conservative URL tracking-parameter cleaner.
@@ -51,20 +52,30 @@ public final class UrlTrackerCleaner {
                 kept.append(parameter);
             }
 
-            String newQuery = kept.length() == 0 ? null : kept.toString();
-            return new URI(
-                    uri.getScheme(),
-                    uri.getRawAuthority(),
-                    uri.getRawPath(),
-                    newQuery,
-                    uri.getRawFragment()).toString();
+            StringBuilder cleaned = new StringBuilder();
+            if (uri.getScheme() != null) {
+                cleaned.append(uri.getScheme()).append(':');
+            }
+            if (uri.getRawAuthority() != null) {
+                cleaned.append("//").append(uri.getRawAuthority());
+            }
+            if (uri.getRawPath() != null) {
+                cleaned.append(uri.getRawPath());
+            }
+            if (kept.length() > 0) {
+                cleaned.append('?').append(kept);
+            }
+            if (uri.getRawFragment() != null) {
+                cleaned.append('#').append(uri.getRawFragment());
+            }
+            return cleaned.toString();
         } catch (URISyntaxException ignored) {
             return url;
         }
     }
 
     private static boolean isTrackingParameter(String name) {
-        String normalized = name.toLowerCase(java.util.Locale.ROOT);
+        String normalized = name.toLowerCase(Locale.ROOT);
         if (normalized.startsWith("utm_")) {
             return true;
         }
