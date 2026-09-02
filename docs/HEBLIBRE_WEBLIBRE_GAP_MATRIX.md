@@ -25,6 +25,9 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | Geolocation privacy guard | **COMPLETE / CI-VERIFIED** | Canonical preference key; CI run `33684710168`. |
 | Save-Data preference contract/fallback | **COMPLETE / CI-VERIFIED** | `SaveDataPolicy` + corrected fallback; CI run `33686256788`. |
 | Global settings search | **COMPLETE / CI-VERIFIED** | `SettingsSearchPolicy` + bounded `Fragment_settings` filtering; Unit Tests run `33688160810`. |
+| Download cookie control | **COMPLETE / CI-VERIFIED** | `DownloadCookiePolicy` integrated into `BrowserUnit.download()`; CI run `33692045747`. |
+| Tab reorder core | **COMPLETE CORE / CI-VERIFIED** | `TabOrderPolicy` + `BrowserContainer.move()` and controller-identity JVM tests; CI run `33692092276`. |
+| Remote-content default consistency | **SOURCE-VERIFIED** | `NinjaWebView.initPreferences()` fallback for `sp_remote` aligned with declared preference default and existing navigation fallback; current commit has no CI result established yet. |
 
 ## Remaining feature pool
 | Feature | HebLibre status | Decision |
@@ -33,7 +36,7 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | QR scanner | **SOURCE-VERIFIED / MEDIUM** | No existing QR/barcode scanner, decoder, camera permission, scanner intent, or QR-specific dependency was found. A complete scanner needs a new camera/decoder integration. Defer until a concrete platform/library decision is justified. |
 | PWA support | **SOURCE-VERIFIED / MEDIUM** | Current WebView has no manifest/install/standalone lifecycle seam or deterministic dependency-free contract. Defer until lifecycle scope is explicit. |
 | Tab hierarchy | **SOURCE-VERIFIED / MEDIUM** | Current tab model is flat with no parent/opener metadata; true hierarchy requires a new model contract plus UI/lifecycle integration. |
-| Tab stacking/advanced switcher | **PARTIAL / MEDIUM** | Deterministic one-step reorder core is implemented in `TabOrderPolicy` + `BrowserContainer.move()`. UI wiring and CI verification remain. |
+| Tab stacking/advanced switcher UI | **PARTIAL / MEDIUM** | Core reorder is implemented and CI-verified. Dedicated non-long-press UI wiring remains; do not alter long-press close behavior. |
 | Container site assignment | MISSING → MEDIUM | Requires container metadata/routing. |
 | Container strict/history exclusion | MISSING → MEDIUM | Depends on containers. |
 | Tracking Protection engine | PARTIAL → MEDIUM/ARCHITECTURAL | Existing AdBlock; broader engine/filter expansion deferred. |
@@ -47,14 +50,14 @@ Planning artifact comparing current HebLibre with the separate WebLibre feature 
 | On-device AI | MISSING → ARCHITECTURAL | New model/runtime/storage architecture. |
 | Translation | MISSING → MEDIUM/ARCHITECTURAL | Service/engine decision. |
 | PDF/Markdown/full-page export | PARTIAL | PDF/print exists; Markdown/full-page export remains. |
-| Download manager enhancements | PARTIAL | Download handling exists; privacy/control seam needs source verification. |
+| Download manager enhancements | PARTIAL | Download handling exists; cookie privacy control is complete; broader manager enhancements remain unscoped. |
 | Multi-window | **SOURCE-VERIFIED / MEDIUM** | `BrowserActivity` uses `launchMode="singleInstance"`; true concurrent windows would change task/lifecycle/state ownership. Defer. |
 
 ## Selection rule
 Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Tab reorder core is SOURCE-VERIFIED with committed deterministic JVM tests, but UI integration and CI are pending. QR, PWA, hierarchy and multi-window are deferred MEDIUM/architectural seams. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. Download-cookie integration and tab reorder core are CI-VERIFIED. Remote-content default consistency is SOURCE-VERIFIED only. Tab reorder UI remains the next bounded implementation candidate. QR, PWA, hierarchy and multi-window remain deferred. Android runtime remains deferred.
 
 ## Last synchronized
-2026-09-03 — tab hierarchy and multi-window verification completed; deterministic tab reorder core added; download-cookie experiment removed before integration; next candidate is bounded download privacy/control source verification.
+2026-09-03 — reconciled current `genspark-dev` source, recorded the download-cookie and reorder-core evidence, and added the remote-content default consistency correction as SOURCE-VERIFIED pending CI evidence.
