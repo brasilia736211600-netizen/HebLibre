@@ -35,7 +35,7 @@ When the minimum 10-minute productive-work threshold has been satisfied and a us
 Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
 
 ## Current repository state
-- Current branch HEAD: `e46e37d206320481e024b6783ad8845e3a363c8a` at the prior workflow synchronization; this state update advances the remote HEAD again.
+- Last verified branch HEAD before the documentation synchronization commits: `e46e37d206320481e024b6783ad8845e3a363c8a`. On every resume, verify the exact remote HEAD directly from GitHub rather than treating this recorded SHA as immutable.
 - P2 Steps 1–6 are complete and CI-VERIFIED.
 - P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are now **CI-VERIFIED** by Unit Tests run `33679583870` on feature-batch commit `aa5fdace59a746359870a09bfd43644c5e07aeb6`.
 - Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
@@ -91,4 +91,4 @@ No multi-process profile isolation, WebView data-directory switching, extension 
 **Source-trace Reader Mode for a small bounded implementation. If the existing WebView architecture does not expose a safe, dependency-free seam, select the next smallest high-value local privacy/UX feature instead; do not install the APK.**
 
 ## Last updated
-2026-09-02 — P2.7/P2.8 CI reconciled as successful; autonomous-work, final-device, and concise-checkpoint rules remain mandatory.
+2026-09-02 — P2.7/P2.8 CI success reconciled and the continuous autonomous-work, final-device, and concise checkpoint-reporting rules are canonical.
