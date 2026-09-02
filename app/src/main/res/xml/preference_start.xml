@@ -22,6 +22,12 @@
         android:title="@string/setting_title_https_only"
         android:summary="@string/setting_summary_https_only"/>
 
+    <CheckBoxPreference
+        android:key="gpc_enabled"
+        android:defaultValue="false"
+        android:title="@string/setting_title_gpc"
+        android:summary="@string/setting_summary_gpc"/>
+
     <CheckBoxPreference android:key="saveHistory"
         android:icon="@drawable/icon_history"
         android:defaultValue="true"
