@@ -25,13 +25,14 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 - Do not introduce architecture, dependencies, or subsystem replacements without demonstrated need.
 
 ## Current repository state
-- Remote `genspark-dev` HEAD advanced to `64ddb831b061d0e7024bb316344c39a7c41b6339` after download-cookie integration and tab reorder container tests.
+- Active branch `genspark-dev` HEAD: `3e8a6c94f27adfe2ed866844246dd73ad9ce2640` before this documentation checkpoint.
 - P2.1–P2.11 remain CI-VERIFIED from their recorded successful runs.
-- P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
-- P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
-- P2.11 Global settings search CI evidence: Unit Tests run `33688160810`, success, head `7cc68ab9eae51faea830f94bd9381fdc880b68e4`.
-- Download-cookie privacy integration is SOURCE-VERIFIED; Unit Tests run `33692045747` targets its integration commit and was still in progress when this state was saved.
-- BrowserContainer reorder integration tests are committed; Unit Tests run `33692092276` targets the test commit and was still in progress when this state was saved.
+- P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success.
+- P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success.
+- P2.11 Global settings search CI evidence: Unit Tests run `33688160810`, success.
+- Download-cookie integration CI run `33692045747`: completed success; unit-test job completed success.
+- BrowserContainer reorder integration-test CI run `33692092276`: completed success; unit-test job completed success.
+- Latest docs-synchronized CI run `33692188936`: completed success.
 - Android runtime verification remains intentionally deferred to the final device pass.
 
 ## Completed engineering
@@ -53,35 +54,23 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 16. PWA support source verification — completed; no bounded manifest/install/standalone lifecycle seam established.
 17. Tab hierarchy source verification — completed; current tab model is flat and has no parent-child semantics.
 18. Tab reorder core model slice — deterministic `TabOrderPolicy` plus `BrowserContainer.move()` that reorders an existing tab without destroying its WebView state.
-19. Download cookie privacy control — added a default-compatible `send_download_cookies` preference, deterministic policy/test contract, and integrated the policy into `BrowserUnit.download()`; disabling it prevents forwarding WebView cookies while the default preserves authenticated-download behavior.
+19. Download cookie privacy control — added a default-compatible `send_download_cookies` preference, deterministic policy/test contract, and integrated the policy into `BrowserUnit.download()`.
 20. BrowserContainer move tests — added JVM-level tests using fake `AlbumController` instances to verify left/right reordering preserves controller identity.
 
 ## Tab stacking / advanced switcher core slice
-Source review showed indexed insertion was already available, making a small reorder primitive viable. `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping; `BrowserContainer.move()` applies the reorder without destroying the moved WebView. The committed policy and container tests cover movement, boundaries, invalid inputs, and controller identity. SOURCE-VERIFIED: complete. TEST-VERIFIED: source tests committed. CI-VERIFIED: pending on the latest test commit. UI wiring into the tab overview is intentionally not claimed because the current long-press behavior closes tabs and there is no clean non-breaking reorder affordance yet.
+Source review showed indexed insertion was already available, making a small reorder primitive viable. `TabOrderPolicy` deterministically computes one-step left/right target indices with boundary clamping; `BrowserContainer.move()` applies the reorder without destroying the moved WebView. The committed policy and container tests cover movement, boundaries, invalid inputs, and controller identity. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete. CI-VERIFIED: complete via run `33692092276`. UI wiring remains deferred: `dialog_overview.xml` uses a `ScrollView` containing a `LinearLayout`, while `AlbumItem` maps normal click to selection and long-click to tab removal. A reorder control must be added without stealing the existing long-click close contract.
 
 ## Download privacy seam
-`BrowserUnit.download()` now consults `send_download_cookies`, defaulting to enabled for compatibility. When enabled it forwards a non-empty WebView cookie; when disabled it does not add the `Cookie` request header. The preference is exposed in the existing global settings list. This is a bounded control with no new dependency and no change to authenticated-download behavior by default. SOURCE-VERIFIED: complete. TEST-VERIFIED: deterministic policy test committed. CI-VERIFIED: pending run `33692045747` at integration commit `bbbd52ce4ad5590c870f2d740854f037ada42bdc`.
+`BrowserUnit.download()` consults `send_download_cookies`, defaulting to enabled for compatibility. When enabled it forwards a non-empty WebView cookie; when disabled it omits the `Cookie` request header. SOURCE-VERIFIED: complete. TEST-VERIFIED: complete. CI-VERIFIED: complete via run `33692045747`.
 
-## QR scanner source verification
-Repository inspection found no native QR/barcode scanner or decoder, no `CAMERA` permission, and no ZXing/ML Kit/camera-scanning dependency. QR scanning remains MEDIUM and deferred pending a justified camera/decoder decision.
-
-## PWA support source verification
-The app has conventional `http`/`https` WebView navigation but no Web App Manifest parser, install prompt bridge, standalone launch metadata, or service-worker lifecycle integration. PWA remains MEDIUM and deferred.
-
-## Tab hierarchy source verification
-The tab model is flat with no opener/parent metadata or hierarchy policy. True hierarchy remains MEDIUM and deferred.
-
-## Multi-window source verification
-`BrowserActivity` uses `android:launchMode="singleInstance"`; true independent browser windows would alter task/activity lifecycle and state ownership. Deferred as MEDIUM/architectural work.
+## Remaining bounded-source decisions
+QR scanner, PWA support, tab hierarchy, multi-window, and Reader Mode remain deferred because no smaller dependency-free seam has been established. Continue source verification on genuinely independent privacy/UX seams rather than introducing speculative architecture.
 
 ## Architecture boundary
 No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
-## Reader Mode decision
-Reader Mode is NOT TARGETED in the current P2 cycle because no bounded dependency-free extraction seam was established in the native WebView architecture.
-
 ## Next execution step
-**Continue parallel source verification around the remaining bounded UX/privacy seams. First reconcile Unit Tests runs `33692045747` and `33692092276`; if they pass, mark download-cookie control and tab reorder core TEST/CI evidence accordingly. Then inspect the existing tab-overview UI for the smallest non-breaking reorder affordance. Keep QR/PWA/tab hierarchy/multi-window deferred and do not install the APK.**
+**Continue parallel source verification. For tab reorder, the next implementation candidate is a dedicated non-long-press reorder affordance that invokes the existing tested `BrowserContainer.move()` path and keeps the tab overview view order synchronized. Do not change long-press close behavior. Keep deferred architectural features deferred and do not install the APK.**
 
 ## Last updated
-2026-09-03 — download-cookie control integrated, BrowserContainer move tests added, and CI reconciliation is pending on runs `33692045747` and `33692092276`.
+2026-09-03 — reconciled download-cookie and BrowserContainer reorder CI successfully; verified the tab-overview/AlbumItem interaction boundary and preserved the non-breaking UX constraint.
