@@ -12,74 +12,73 @@ Execution protocol:
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
 ## Tool-assisted workflow
-- **GitHub** is the operational source of truth and the primary execution surface.
-- **Codex Engineering Guardrails**: apply YAGNI, scope control, verification-level discipline, and no unsupported claims.
-- **Codex Process Jobs**: use only when a task has genuinely independent work units; do not decompose small tasks unnecessarily.
-- **Codex Coordinator**: use when multiple workstreams are active or dependencies must be coordinated; do not add coordination overhead to a single local change.
-- **CodeRabbit**: use for substantive diff/PR review and security/code-quality review after implementation; do not substitute it for tests or source verification. Current environment lacks a local repository/terminal surface for the required CLI workflow, so no CodeRabbit result is claimed for the current changes.
-- **Codex Advisor**: use only at non-trivial engineering decision points.
-- **AI DevKit / Develoop**: optional accelerators when they provide a concrete capability not already available through GitHub/Codex; do not make them mandatory layers.
-- **Plugin Autopilot**: use only when selecting/combining external plugin capabilities is itself the task.
-- **Yaps Memory**: optional convenience only; never authoritative over GitHub continuity files.
-- **Prompt Optimizer**: not part of the normal development loop; optimize prompts only when a real prompt-quality bottleneck is demonstrated.
+- **GitHub** is the operational source of truth and primary execution surface.
+- **Codex Engineering Guardrails**: apply YAGNI, scope control, verification discipline, and evidence-based claims.
+- **Codex Process Jobs**: use only for genuinely independent work units; do not decompose small tasks unnecessarily.
+- **Codex Coordinator**: use only when multiple workstreams are active or dependencies must be coordinated.
+- **CodeRabbit**: use for substantive review when its local CLI/repository surface is available; never substitute it for tests. No CodeRabbit result is claimed in the current environment.
+- **Codex Advisor**: only at non-trivial engineering decision points.
+- **AI DevKit / Develoop**: optional only when adding concrete capability beyond current tools.
+- **Plugin Autopilot**: only for plugin selection/orchestration tasks.
+- **Yaps Memory**: convenience only; never continuity authority.
+- **Prompt Optimizer**: only when a real prompt-quality bottleneck exists.
 
-The objective is minimum user intervention: the user can say `استمر` / `continue`, and the agent should resume from GitHub state, choose the smallest valid next action, execute, verify, save state, and continue without asking for unnecessary manual steps.
+Objective: minimum user intervention. `استمر` should resume from GitHub state and advance without unnecessary manual steps.
 
 ## Current repository state
-- Exact current branch HEAD: `0b299bdee4ffb0c74c52234ba9e74ddedd5021b0`.
-- P2 Step 4 Desktop Mode is implemented and CI-VERIFIED by Actions run `33677771905` on feature HEAD `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`.
-- A follow-up documentation checkpoint changed the branch HEAD to `0b299bdee4ffb0c74c52234ba9e74ddedd5021b0`; therefore the documentation commit itself remains the latest branch tip and the feature implementation remains CI-VERIFIED at its exact feature HEAD.
-- Android runtime verification remains deferred because no Android runtime is available.
+- Current branch HEAD: `aa5fdace59a746359870a09bfd43644c5e07aeb6`.
+- P2 Steps 1–6 are complete and CI-VERIFIED.
+- P2 Step 7 media permission privacy guard and P2 Step 8 third-party cookie privacy control are source/test implemented. Their feature batch is the current CI checkpoint.
+- Android runtime verification is intentionally deferred until the feature set is sufficiently complete for a single final device pass.
+- Do not build/install/test the APK after each feature. Use JVM tests and GitHub Actions first; perform Android build/install/runtime verification as the final validation phase, then fix any runtime regressions discovered.
 - Canonical continuity files: `docs/HEBLIBRE_WORKFLOW_STATE.md`, `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`, `docs/HEBLIBRE_RESUME_COMMAND.md`, `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`.
-- Genspark credits are exhausted; all work continues through available GitHub/local capabilities.
 
 ## Completed engineering
-1. Build/toolchain recovery: Gradle 5.4.1 / AGP 3.5.2 baseline recovered with JDK 11, compile SDK 29, build-tools 28.0.3; debug build verified locally.
-2. Minimal JUnit4 harness: `BrowserUnit.isURL` characterization; 4 tests green.
-3. CI workflow: JDK 17 for SDK tooling, JDK 11 for Gradle. Successful CI established.
-4. P1 profile/identity groundwork: profile-scoped whitelist state and persisted `PROFILE_ID` boundary complete; runtime validation deferred.
-5. P1 lifecycle/test-seam review: no dependency-free end-to-end seam justified; no synthetic framework added.
-6. P1 WebLibre/HebLibre feature gap matrix completed and persisted.
-7. P2 Step 1: conservative tracking/query-parameter cleanup completed.
-8. P2 Step 2: HTTPS-only navigation policy completed and CI-VERIFIED.
-9. P2 Step 3: Global Privacy Control completed and CI-VERIFIED.
-10. P2 Step 4: Desktop Mode completed with deterministic JVM coverage and CI verification.
+1. Build/toolchain recovery: Gradle 5.4.1 / AGP 3.5.2, compile SDK 29, build-tools 28.0.3, JDK 11 for Gradle, JDK 17 for CI SDK tooling.
+2. Minimal JUnit4 harness.
+3. CI workflow recovery.
+4. P1 profile/identity groundwork; runtime validation deferred.
+5. P1 lifecycle/test-seam review.
+6. P1 WebLibre/HebLibre feature gap matrix.
+7. P2 Step 1: conservative tracking/query-parameter cleanup.
+8. P2 Step 2: HTTPS-only navigation.
+9. P2 Step 3: Global Privacy Control.
+10. P2 Step 4: Desktop Mode.
+11. P2 Step 5: Screenshot Protection.
+12. P2 Step 6: built-in search bang routing.
+13. P2 Step 7: bounded WebView media permission privacy guard.
+14. P2 Step 8: optional third-party cookie blocking.
 
-## P2 Step 4 — Desktop Mode (COMPLETE)
-### Source verification
-The existing WebView already owns `WebSettings` and already supports a `userAgent` preference. No networking stack or engine replacement is required. The current `NinjaWebView` path can choose the effective user-agent before navigation.
-
-### TDD / implementation
-- TDD contract: `app/src/test/java/de/baumann/browser/unit/DesktopModePolicyTest.java`.
-- Policy: `app/src/main/java/de/baumann/browser/unit/DesktopModePolicy.java`.
-- Preference: `desktop_mode` (default off).
-- Enabled behavior: a single stable desktop user-agent is used, overriding the custom mobile/user agent for that navigation.
-- Disabled behavior: explicit custom user-agent remains authoritative; blank custom value falls back to the WebView default user-agent.
-- `NinjaWebView` captures the WebView default UA, applies the policy during preference initialization, and reapplies it immediately before navigation so toggling the preference does not require a new architecture.
-- No new dependency, transport, or storage layer was introduced.
-
-### Verification
+## P2 Step 7 — Media permission privacy guard
+- Test: `app/src/test/java/de/baumann/browser/unit/WebRtcPermissionPolicyTest.java`.
+- Policy: `app/src/main/java/de/baumann/browser/unit/WebRtcPermissionPolicy.java`.
+- Preference: `block_media_permissions`, default `true`.
+- `NinjaWebChromeClient.onPermissionRequest()` denies camera/microphone resources when enabled.
 - SOURCE-VERIFIED: complete.
-- TEST-VERIFIED: complete — `DesktopModePolicyTest` committed before implementation.
-- CI-VERIFIED: complete — Actions run `33677771905`, commit `c5c9e77abe8df400bc902099a7877ec6a3d1fc51`, conclusion `success`.
-- ANDROID-RUNTIME-VERIFIED: not performed; no Android runtime available.
-- CODE REVIEW: CodeRabbit not run in this environment because its documented review flow requires a local git repository and CLI surface.
-- DOCUMENTED: complete in continuity files.
+- TEST-VERIFIED: complete.
+- CI-VERIFIED: pending for current feature batch.
+- ANDROID-RUNTIME-VERIFIED: deferred to final device pass.
 
-## Corrected existing-feature findings
-- **Clear-on-exit** is already implemented: `sp_clear_quit` exists in the clear settings and `BrowserActivity.onDestroy()` starts `ClearService` when enabled. It is not a migration target.
-- **OLED/AMOLED pure-black theme** already exists as `AppTheme_amoled` with black background/navigation colors and white primary/secondary text. It is not a migration target.
+## P2 Step 8 — Third-party cookie blocking
+- Test: `app/src/test/java/de/baumann/browser/unit/ThirdPartyCookiePolicyTest.java`.
+- Policy: `app/src/main/java/de/baumann/browser/unit/ThirdPartyCookiePolicy.java`.
+- Preference: `block_third_party_cookies`, default `false` for compatibility.
+- `NinjaWebView` applies the policy at initialization, before navigation, and on preference change using `CookieManager.setAcceptThirdPartyCookies()`.
+- Project minSdk is 21, matching the guarded API usage.
+- SOURCE-VERIFIED: complete.
+- TEST-VERIFIED: complete.
+- CI-VERIFIED: pending for current feature batch.
+- ANDROID-RUNTIME-VERIFIED: deferred to final device pass.
+
+## Existing-feature corrections
+- Clear-on-exit is already implemented; do not reimplement.
+- OLED/AMOLED pure-black support is already implemented; do not reimplement.
 
 ## Architecture boundary
-The P1 profile mechanism still does not isolate process-wide `CookieManager`, Chromium WebView disk storage, the default SharedPreferences store as a whole, history, or bookmarks. No full browser-storage isolation is claimed.
-
-No multi-process architecture, WebView data-directory switching, extension runtime, proxy/Tor stack, WebRTC subsystem, DNS-over-HTTPS stack, fingerprinting subsystem, or AI runtime has been added.
-
-## P2 Step 5 selection rule
-Select the smallest remaining high-value feature with a strong product/privacy payoff and bounded implementation scope. Prefer deterministic JVM seams. For Android-window or UI-only features without a meaningful pure-Java seam, perform a bounded source trace and document the decision before implementation. Do not start architectural features merely because they appear in the WebLibre feature pool.
+No multi-process profile isolation, WebView data-directory switching, extension runtime, proxy/Tor stack, DNS-over-HTTPS stack, broad anti-fingerprinting subsystem, or on-device AI runtime has been introduced.
 
 ## Next execution step
-**Source-verify Screenshot Protection as the next high-value bounded feature; confirm there is no existing `FLAG_SECURE`/equivalent path, define the smallest preference + activity-window implementation, and choose TDD only if a meaningful dependency-free seam exists.**
+**CI-verify current feature batch `aa5fdace59a746359870a09bfd43644c5e07aeb6`; then reconcile the result and select the next smallest high-value bounded feature. Keep Android installation deferred until final validation.**
 
 ## Last updated
-2026-09-02 — Desktop Mode implemented and CI-VERIFIED; existing Clear-on-exit and AMOLED support source-verified; P2 Step 5 is now Screenshot Protection source verification.
+2026-09-02 — media permission and third-party-cookie controls added; feature batch CI pending.
