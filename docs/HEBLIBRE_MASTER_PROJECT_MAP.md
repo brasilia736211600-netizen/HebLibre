@@ -53,13 +53,13 @@ Profile-aware whitelist state and profile identity are implemented, but SharedPr
 Prefer local, dependency-free, deterministic features before architectural gaps. Architectural items remain deferred: multi-process/data-directory isolation, DoH, proxy/Tor routing, broad fingerprinting, full WebRTC engine changes, extension runtime/uBlock, large AI runtime, and similar subsystem replacements.
 
 ## Next candidate after current CI
-Prefer Reader Mode only after source-verifying a small bounded implementation. Otherwise select the next high-value local privacy/UX seam. Do not start an architectural feature merely because it appears in WebLibre.
+Reader Mode is only a candidate and must be source-verified before implementation. If it is not a small bounded seam, select the next high-value local privacy/UX feature instead. Do not reselect Desktop Mode or other already-present features.
 
 ## Current checkpoint
-Feature batch at `aa5fdace59a746359870a09bfd43644c5e07aeb6` contains P2.7 and P2.8 source/test implementation. The branch subsequently advances with workflow/documentation checkpoints. Android runtime remains reserved for final validation.
+Remote `genspark-dev` advanced to `7a85342ddf1df1f23197a997aa53e17e2d7e1283` with documentation reconciliation. The P2.7/P2.8 feature batch remains the CI checkpoint represented by `aa5fdace59a746359870a09bfd43644c5e07aeb6`. Android runtime remains reserved for final validation.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Last synchronized
-2026-09-02 — continuous autonomous-work and final-device-validation rules added to the canonical project map.
+2026-09-02 — reconciled project map with current branch and removed Desktop Mode from future candidates because it is already implemented.
