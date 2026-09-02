@@ -41,12 +41,14 @@ At the end of every completed substantive step:
 5. record exactly ONE NEXT EXECUTION STEP,
 6. verify remote HEAD.
 
-Current authoritative next step: read docs/HEBLIBRE_WORKFLOW_STATE.md and follow its SINGLE NEXT EXECUTION STEP. Current target: P2 Step 2 — source-verify HTTPS-only mode and implement only the smallest evidence-backed local navigation policy seam if supported by the existing WebView architecture.
+Current authoritative next step: read docs/HEBLIBRE_WORKFLOW_STATE.md and follow its SINGLE NEXT EXECUTION STEP. Current target: P2 Step 3 — source-verify Global Privacy Control (GPC) support in the existing WebView request-header path; implement only if a deterministic local seam exists without introducing networking architecture.
 ```
 
 ## Current authoritative state
 - Active branch: `genspark-dev`.
 - P1 profile/identity implementation reached its documented boundary; Android profile-switch runtime validation is deferred and is not a blocker.
 - `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` records the comparison between existing HebLibre functionality and the separate WebLibre feature pool.
-- P2 Step 1 conservative tracking/query-parameter cleanup is implemented and CI-VERIFIED by run `33648307698` on the feature HEAD.
-- Current next implementation target: **P2 Step 2 — source verification of HTTPS-only mode in the existing WebView navigation path; make the smallest deterministic TDD-backed change only if the architecture supports it without new networking architecture.**
+- P2 Step 1 conservative tracking/query-parameter cleanup is complete.
+- P2 Step 2 HTTPS-only navigation policy is complete and CI-VERIFIED by run `33650164143` (`test` job success, including `Run unit tests`).
+- Current next implementation target: **P2 Step 3 — source verification of GPC support in the existing WebView request-header path; make the smallest deterministic TDD-backed change only if the architecture supports it without new networking architecture.**
+```
