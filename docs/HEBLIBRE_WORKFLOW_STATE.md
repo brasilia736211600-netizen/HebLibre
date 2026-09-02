@@ -25,7 +25,7 @@ Do not build, install, or repeatedly test the APK after each feature. Complete s
 - Do not introduce architecture, dependencies, or subsystem replacements without demonstrated need.
 
 ## Current repository state
-- Remote `genspark-dev` HEAD verified directly from GitHub: `f2d22027adc0cf3ce38f268943b25fa87d4a549b` at this checkpoint.
+- Remote `genspark-dev` HEAD verified directly from GitHub: `43bcb93c846e887e5c7d652b4bff4b7e9499693b` at this checkpoint.
 - P2.1–P2.11 are CI-VERIFIED.
 - P2.9 Geolocation CI evidence: Unit Tests run `33684710168`, success, head `e48c1f036aa4c7fcaea7339735c7fe81201c5d9d`.
 - P2.10 Save-Data CI evidence: Unit Tests run `33686256788`, success, head `1a71cd2eb358bfd57f3209d141fc40253183dff1`.
