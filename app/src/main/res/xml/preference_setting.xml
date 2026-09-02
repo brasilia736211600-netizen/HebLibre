@@ -68,6 +68,11 @@
             android:title="@string/setting_title_screenshot_protection"
             android:summary="@string/setting_summary_screenshot_protection"/>
 
+        <CheckBoxPreference
+            android:key="block_media_permissions"
+            android:defaultValue="true"
+            android:title="@string/setting_title_block_media_permissions"
+            android:summary="@string/setting_summary_block_media_permissions"/>
 
     </PreferenceCategory>
 
