@@ -47,16 +47,19 @@ Reader Mode is **NOT TARGETED in the current P2 cycle**. Source tracing found no
 QR scanning is **not implemented**. Repository inspection found no QR/barcode scanner or decoder, no `CAMERA` permission in `app/src/main/AndroidManifest.xml`, and no ZXing/ML Kit/camera-scanning dependency in `app/build.gradle`. The current WebView camera permission guard is for web-origin media requests and does not provide a native QR capture/decode path. A complete QR scanner would therefore require a new camera/decoder integration and is not a YAGNI/dependency-free bounded change at this checkpoint.
 
 ## PWA support source verification
-PWA support is **not implemented**. `AndroidManifest.xml` exposes the browser as a normal `http`/`https` VIEW handler and `BrowserActivity` dispatches those intents into ordinary browser tabs. `NinjaWebViewClient` keeps `http`/`https` navigation inside the WebView and routes non-http schemes externally when possible. No Web App Manifest parsing, install-prompt bridge, PWA install metadata, standalone launch intent, or service-worker lifecycle integration was found. Therefore a real installable/standalone PWA feature is a MEDIUM integration requiring a new install/launch lifecycle seam; no bounded dependency-free JVM contract was established. No implementation was made.
+PWA support is **not implemented**. `AndroidManifest.xml` exposes `BrowserActivity` as a conventional `http`/`https` VIEW handler and `BrowserActivity` dispatches incoming VIEW intents into ordinary browser tabs. `NinjaWebViewClient` keeps `http`/`https` navigation inside the WebView and routes non-http schemes externally when possible. No Web App Manifest parsing, install-prompt bridge, PWA install metadata, standalone PWA launch intent, or service-worker lifecycle integration was found. A real installable/standalone PWA feature is therefore MEDIUM and requires a new install/launch lifecycle seam; no bounded dependency-free JVM contract was established. No implementation was made.
+
+## Tab hierarchy source verification
+The tab model is flat: `BrowserContainer` stores a `List<AlbumController>` with add/remove/get/index operations, while `AlbumController` exposes only view/activation lifecycle methods. `AlbumItem` selects or removes a tab and contains no opener/parent metadata. There is no parent-child relation, hierarchy identifier, tree traversal, or hierarchy policy. Implementing true tab hierarchy would require a new model contract and corresponding tab-creation/UI lifecycle changes, so it is SOURCE-VERIFIED as MEDIUM rather than an immediate YAGNI implementation. No code was changed.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. QR scanner and PWA support are SOURCE-VERIFIED as MEDIUM integrations requiring new platform/lifecycle decisions. Android runtime remains deferred.
+P2.1–P2.11 are CI-VERIFIED. QR scanner, PWA support, and tab hierarchy are SOURCE-VERIFIED as MEDIUM integrations requiring new platform/model decisions. Android runtime remains deferred.
 
 ## Next execution
-**Source-verify Tab hierarchy as the next smallest bounded feature. Inspect the existing tab/album model and lifecycle first; do not implement until a minimal parent-child contract and deterministic JVM test seam are established. Do not install the APK.**
+**Source-verify Tab stacking/advanced switcher, and check the existing multi-window hook at the same time for a smaller bounded seam. Do not implement until the smallest deterministic contract is identified. Do not install the APK.**
 
 ## Last synchronized
-2026-09-03 — PWA support source verification completed; implementation deferred because the current WebView has no manifest/install/standalone lifecycle seam; Tab hierarchy selected as the next source-verification candidate.
+2026-09-03 — Tab hierarchy source verification completed; existing tab model is flat and lacks parent-child semantics; no implementation made; next candidate is tab stacking/advanced switcher with a targeted multi-window seam check.
