@@ -28,11 +28,12 @@
         android:title="@string/setting_title_gpc"
         android:summary="@string/setting_summary_gpc"/>
 
-    <CheckBoxPreference android:key="block_third_party_cookies"
+    <CheckBoxPreference
+        android:key="block_third_party_cookies"
         android:icon="@drawable/icon_cookie"
         android:defaultValue="true"
-        android:title="@string/setting_title_block_third_party_cookies"
-        android:summary="@string/setting_summary_block_third_party_cookies"/>
+        android:title="Block third-party cookies"
+        android:summary="Block third-party cookies by default. Disable only when a site requires them."/>
 
     <CheckBoxPreference android:key="saveHistory"
         android:icon="@drawable/icon_history"
