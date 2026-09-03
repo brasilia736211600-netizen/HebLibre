@@ -13,10 +13,10 @@ Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIM
 
 ## Current repository state
 - `genspark-dev` code is anchored at the last clean verified implementation checkpoint `5fffd65e80e2a616a5273befe7cdca6309441490`.
-- Current branch HEAD is `93b1f48fe83d9b140bc53a45ec1b5aa6f72041c7`; changes after the clean code checkpoint now include the bounded source correction for profile-aware whitelist transfer, a dependency-free normalization test seam, and documentation/audit updates.
+- Current branch HEAD is `27e0c2b76b6981ec24388574aef7f103d130611a`; changes after the clean code checkpoint are documentation/audit only.
 - No unverified third-party-cookie behavior change remains.
 - P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency remain CI-VERIFIED from the recorded runs.
-- The profile-aware whitelist transfer correction and its new normalization tests are SOURCE-VERIFIED; CI verification for the current revision is pending.
+- The whitelist import/export audit item has been SOURCE-VERIFIED as already corrected in the active settings path by `ProfileScopedWhitelistTransfer` and task routing; no new source patch is required.
 - Android runtime remains intentionally deferred to final consolidated validation.
 
 ## Engineering checkpoint
@@ -24,7 +24,7 @@ The tab overview still uses the existing `LinearLayout` item path; `AlbumItem` u
 
 The bounded privacy/security audit records explicit product or architecture decisions needed before touching SSL override behavior, automatic backup of `Ninja4.db`, application-level cleartext traffic, or the coupling of file-origin access with DOM storage under `sp_remote`.
 
-The whitelist import/export path is now routed through `ProfileScopedWhitelistTransfer`, which derives the active profile and applies it to whitelist table reads and duplicate checks. A pure `normalizeProfileId(String)` seam is covered by `ProfileScopedWhitelistTransferTest`; bookmark import/export remains unchanged.
+The active whitelist transfer path is profile-aware: `ExportWhiteListTask` and `ImportWhitelistTask` route whitelist tables through `ProfileScopedWhitelistTransfer`, which resolves the active `ProfileIdentity` and applies it to reads and duplicate checks. Legacy `BrowserUnit` whitelist transfer helpers remain default-profile methods but are not the active settings path; bookmark import/export remains unchanged.
 
 ## Deferred work
 QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, and Reader Mode remain deferred.
@@ -33,4 +33,4 @@ QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, 
 Do not repeatedly build/install/test the APK. Complete source review, deterministic JVM tests, CI, review, and documentation first; reserve Android runtime verification for one consolidated final device-validation phase.
 
 ## Last updated
-2026-09-03 — added the JVM test seam for the profile-aware whitelist transfer correction and synchronized the current HEAD. CI remains pending for this revision; no speculative security-policy changes introduced.
+2026-09-03 — corrected the whitelist audit by tracing the active settings transfer path; no runtime source change introduced in this step.
