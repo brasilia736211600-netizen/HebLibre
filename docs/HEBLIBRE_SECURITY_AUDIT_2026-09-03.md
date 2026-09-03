@@ -1,7 +1,7 @@
 # HebLibre Security Audit — 2026-09-03
 
 ## Scope
-Bounded source audit with one concrete profile-isolation correction verified in the active code path. No Android runtime work.
+Bounded source audit with targeted official Android security cross-checks. No Android runtime work.
 
 ## Finding: SSL certificate errors are user-overridable
 
@@ -16,11 +16,17 @@ This is a security-policy decision rather than a deterministic compatibility-pre
 - `setAllowUniversalAccessFromFileURLs`
 - `setDomStorageEnabled`
 
-The setting therefore controls both file-origin access and DOM storage. This coupling may be intentional legacy behavior, but separating the concerns would be an architectural change rather than a safe micro-fix. No change made.
+Official Android guidance treats file-origin access as security-sensitive and shows `setAllowFileAccessFromFileURLs(false)` and `setAllowUniversalAccessFromFileURLs(false)` as the safer configuration; the latter is deprecated from API 30. The project targets SDK 29, so this remains a design-level review item rather than an opportunistic API migration. No runtime change made.
 
 ## Finding: cleartext remains an application-level capability
 
-`AndroidManifest.xml` sets `android:usesCleartextTraffic="true"`, while HTTPS-only navigation is opt-in. Removing cleartext at the application level would change compatibility for HTTP destinations. No change made.
+`AndroidManifest.xml` sets `android:usesCleartextTraffic="true"`, while the project target SDK is 29 and HTTPS-only navigation is separately opt-in. Current Android guidance says cleartext is disabled by default for apps targeting Android 9 / API 28+ and recommends Network Security Config for explicit domain exceptions. The manifest attribute therefore deliberately broadens cleartext capability beyond the platform default for this target level.
+
+Removing it globally could change compatibility for HTTP destinations, so this remains a product/security decision. No change made.
+
+## Finding: automatic backup contains browser database
+
+`backup_descriptor.xml` explicitly includes `Ninja4.db`. The browser database contains history, bookmarks, tabs, and whitelist data. Automatic backup is therefore privacy-relevant. Android guidance supports retaining backup while excluding sensitive data with backup rules, but changing this project's backup contract can affect restore continuity and user expectations. No change made.
 
 ## Finding: whitelist import/export profile mismatch was already corrected in the active path
 
@@ -29,16 +35,31 @@ An earlier source audit identified legacy `BrowserUnit.exportWhitelist()` / `imp
 ### Active-path verification
 - `ExportWhiteListTask` routes whitelist export (tables 0/1/2/3) through `ProfileScopedWhitelistTransfer.exportWhitelist()`.
 - `ImportWhitelistTask` routes whitelist import (tables 0/1/2/3) through `ProfileScopedWhitelistTransfer.importWhitelist()`.
-- `ProfileScopedWhitelistTransfer` resolves `ProfileIdentity.PREFERENCE_KEY` and normalizes it before all whitelist table reads and duplicate checks.
+- `ProfileScopedWhitelistTransfer` resolves `ProfileIdentity.PREFERENCE_KEY` and normalizes it before whitelist table reads and duplicate checks.
 - Bookmark import/export remains on the existing `BrowserUnit` path and is intentionally unchanged.
 
-Therefore there is **no new runtime patch required for this finding**. The earlier conclusion that this was the next concrete code change was based on inspecting the legacy helper without first tracing the active task call path.
+Therefore there is **no new runtime patch required for this finding**. The earlier conclusion that this was the next concrete code change was corrected after tracing the actual settings task call path.
 
 ### Verification status
-- SOURCE-VERIFIED: yes — active transfer path is profile-aware and legacy default-profile methods are not used by the settings transfer tasks.
+- SOURCE-VERIFIED: yes — active transfer path is profile-aware and the legacy default-profile helpers are not used by the settings transfer tasks.
 - TEST-VERIFIED: existing recorded profile/whitelist tests remain the applicable evidence; no new source change was required here.
-- CI-VERIFIED: no new CI run is required solely for this audit correction because the active source behavior was already present in the verified code checkpoint.
+- CI-VERIFIED: current HEAD Unit Tests run `33703506073` completed successfully.
 - ANDROID-RUNTIME-VERIFIED: not yet; remains deferred to final consolidated device validation.
 
+## Finding: download cookie policy has a second download path that bypasses it
+
+The main `BrowserUnit.download()` path now gates the `Cookie` request header behind `DownloadCookiePolicy` and the `send_download_cookies` preference. However, `HelperUnit.save_as()` constructs `DownloadManager.Request` directly and still unconditionally adds `CookieManager.getInstance().getCookie(url)` as a request header.
+
+This creates a concrete policy bypass: disabling download-cookie forwarding does not guarantee that the alternate "Save as" download path stops sending cookies.
+
+This is a bounded correctness/privacy issue and is a higher-value runtime candidate than the already-resolved whitelist audit item. The safest fix is to route this second path through the same cookie-forwarding policy without changing the existing Save As UI or download destination behavior, then add deterministic policy coverage where practical and run CI before any Android runtime validation.
+
+## Official Android cross-checks
+
+- Android Network Security Configuration: cleartext traffic defaults to disabled for apps targeting Android 9 / API 28+ unless explicitly enabled or otherwise configured: https://developer.android.com/privacy-and-security/security-config
+- `usesCleartextTraffic`: WebView honors the application's cleartext policy for targets API 26+: https://developer.android.com/reference/android/security/NetworkSecurityPolicy.html
+- WebView security guidance documents safer file-origin settings and warns about untrusted WebView content: https://developer.android.com/reference/androidx/webkit/WebViewAssetLoader and https://developer.android.com/privacy-and-security/security-tips
+- Android application backup guidance supports selective `dataExtractionRules`/backup configuration for sensitive app data: https://developer.android.com/guide/topics/manifest/application-element
+
 ## Next bounded work
-Continue source verification for deterministic, compatibility-preserving seams. Treat SSL override policy, backup semantics, and remote/file-origin policy coupling as explicit product or architecture decisions before changing runtime behavior.
+Prioritize closing the `HelperUnit.save_as()` download-cookie policy bypass with the smallest shared-policy seam. Keep SSL override, global cleartext policy, backup semantics, and `sp_remote` file-origin coupling as explicit product/architecture decisions until their contracts are approved.
