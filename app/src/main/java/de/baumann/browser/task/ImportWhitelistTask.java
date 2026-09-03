@@ -3,6 +3,7 @@ package de.baumann.browser.task;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.os.Bundle;
 import android.os.AsyncTask;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -11,6 +12,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import de.baumann.browser.R;
+import de.baumann.browser.unit.ProfileScopedWhitelistTransfer;
 import de.baumann.browser.unit.BrowserUnit;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.view.NinjaToast;
@@ -47,19 +49,19 @@ public class ImportWhitelistTask extends AsyncTask<Void, Void, Boolean> {
     protected Boolean doInBackground(Void... params) {
         switch (table) {
             case 0:
-                count = BrowserUnit.importWhitelist(context, 0);
+                count = ProfileScopedWhitelistTransfer.importWhitelist(context, 0);
                 break;
             case 1:
-                count = BrowserUnit.importWhitelist(context, 1);
+                count = ProfileScopedWhitelistTransfer.importWhitelist(context, 1);
                 break;
             case 3:
-                count = BrowserUnit.importWhitelist(context, 3);
+                count = ProfileScopedWhitelistTransfer.importWhitelist(context, 3);
                 break;
             case 4:
                 count = BrowserUnit.importBookmarks(context);
                 break;
             default:
-                count = BrowserUnit.importWhitelist(context, 2);
+                count = ProfileScopedWhitelistTransfer.importWhitelist(context, 2);
                 break;
         }
         return !isCancelled() && count >= 0;
