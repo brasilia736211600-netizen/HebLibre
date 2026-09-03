@@ -232,7 +232,7 @@ public class NinjaWebView extends WebView implements AlbumController {
 
     private void applyThirdPartyCookiePolicy() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            boolean block = sp.getBoolean("block_third_party_cookies", false);
+            boolean block = sp.getBoolean("block_third_party_cookies", ThirdPartyCookiePolicy.DEFAULT_ENABLED);
             CookieManager.getInstance().setAcceptThirdPartyCookies(
                     this, ThirdPartyCookiePolicy.acceptThirdPartyCookies(block));
         }
