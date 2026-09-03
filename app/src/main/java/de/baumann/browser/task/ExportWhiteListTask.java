@@ -10,6 +10,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import de.baumann.browser.R;
+import de.baumann.browser.unit.ProfileScopedWhitelistTransfer;
 import de.baumann.browser.unit.BrowserUnit;
 import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.view.NinjaToast;
@@ -46,19 +47,19 @@ public class ExportWhiteListTask extends AsyncTask<Void, Void, Boolean> {
     protected Boolean doInBackground(Void... params) {
         switch (table) {
             case 0:
-                path = BrowserUnit.exportWhitelist(context, 0);
+                path = ProfileScopedWhitelistTransfer.exportWhitelist(context, 0);
                 break;
             case 1:
-                path = BrowserUnit.exportWhitelist(context, 1);
+                path = ProfileScopedWhitelistTransfer.exportWhitelist(context, 1);
                 break;
             case 3:
-                path = BrowserUnit.exportWhitelist(context, 3);
+                path = ProfileScopedWhitelistTransfer.exportWhitelist(context, 3);
                 break;
             case 4:
                 path = BrowserUnit.exportBookmarks(context);
                 break;
             default:
-                path = BrowserUnit.exportWhitelist(context, 2);
+                path = ProfileScopedWhitelistTransfer.exportWhitelist(context, 2);
                 break;
         }
         return !isCancelled() && path != null && !path.isEmpty();
