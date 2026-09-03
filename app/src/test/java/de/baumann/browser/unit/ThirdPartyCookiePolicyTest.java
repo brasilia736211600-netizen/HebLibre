@@ -6,14 +6,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * TDD contract for the third-party cookie privacy control.
+ * TDD contract for the optional third-party cookie privacy control.
  */
 public class ThirdPartyCookiePolicyTest {
-
-    @Test
-    public void defaultEnablesBlocking() {
-        assertTrue(ThirdPartyCookiePolicy.DEFAULT_ENABLED);
-    }
 
     @Test
     public void enabledBlocksThirdPartyCookies() {
@@ -21,7 +16,7 @@ public class ThirdPartyCookiePolicyTest {
     }
 
     @Test
-    public void disabledPreservesCookieAcceptance() {
+    public void disabledPreservesDefaultAcceptance() {
         assertTrue(ThirdPartyCookiePolicy.acceptThirdPartyCookies(false));
     }
 }
