@@ -1,7 +1,7 @@
 # HebLibre Security Audit — 2026-09-03
 
 ## Scope
-Bounded source audit with one concrete profile-isolation correction. No Android runtime work.
+Bounded source audit with one concrete profile-isolation correction verified in the active code path. No Android runtime work.
 
 ## Finding: SSL certificate errors are user-overridable
 
@@ -22,20 +22,23 @@ The setting therefore controls both file-origin access and DOM storage. This cou
 
 `AndroidManifest.xml` sets `android:usesCleartextTraffic="true"`, while HTTPS-only navigation is opt-in. Removing cleartext at the application level would change compatibility for HTTP destinations. No change made.
 
-## Finding: whitelist import/export was hard-coded to the default profile
+## Finding: whitelist import/export profile mismatch was already corrected in the active path
 
-`BrowserUnit.exportWhitelist()` and `BrowserUnit.importWhitelist()` query/check whitelist tables with `RecordUnit.DEFAULT_PROFILE_ID` rather than the active `ProfileIdentity` value. This was inconsistent with the profile-scoped persistence introduced for whitelist tables.
+An earlier source audit identified legacy `BrowserUnit.exportWhitelist()` / `importWhitelist()` methods that use `RecordUnit.DEFAULT_PROFILE_ID`. That finding does **not** represent the active settings transfer path.
 
-### Correction
-A profile-aware transfer entry point, `ProfileScopedWhitelistTransfer`, now derives the active profile through `ProfileIdentity` and uses that profile id for whitelist export/import table reads and duplicate checks. `ExportWhiteListTask` and `ImportWhitelistTask` route their whitelist operations through this entry point. Existing bookmark import/export behavior is unchanged.
+### Active-path verification
+- `ExportWhiteListTask` routes whitelist export (tables 0/1/2/3) through `ProfileScopedWhitelistTransfer.exportWhitelist()`.
+- `ImportWhitelistTask` routes whitelist import (tables 0/1/2/3) through `ProfileScopedWhitelistTransfer.importWhitelist()`.
+- `ProfileScopedWhitelistTransfer` resolves `ProfileIdentity.PREFERENCE_KEY` and normalizes it before all whitelist table reads and duplicate checks.
+- Bookmark import/export remains on the existing `BrowserUnit` path and is intentionally unchanged.
 
-A small dependency-free test seam was added through `ProfileScopedWhitelistTransfer.normalizeProfileId(String)` so the profile-normalization contract can be verified on the JVM without constructing Android `Context` objects.
+Therefore there is **no new runtime patch required for this finding**. The earlier conclusion that this was the next concrete code change was based on inspecting the legacy helper without first tracing the active task call path.
 
 ### Verification status
-- SOURCE-VERIFIED: yes — active-profile resolution, profile-filtered CRUD, task routing, and the pure normalization seam are present.
-- TEST-VERIFIED: pending CI execution for the current source revision.
-- CI-VERIFIED: pending for the current source revision.
+- SOURCE-VERIFIED: yes — active transfer path is profile-aware and legacy default-profile methods are not used by the settings transfer tasks.
+- TEST-VERIFIED: existing recorded profile/whitelist tests remain the applicable evidence; no new source change was required here.
+- CI-VERIFIED: no new CI run is required solely for this audit correction because the active source behavior was already present in the verified code checkpoint.
 - ANDROID-RUNTIME-VERIFIED: not yet; remains deferred to final consolidated device validation.
 
 ## Next bounded work
-Verify the new profile-aware transfer path in CI, then continue source verification for deterministic compatibility-preserving seams. Treat SSL override policy, backup semantics, and remote/file-origin policy coupling as explicit product or architecture decisions before changing runtime behavior.
+Continue source verification for deterministic, compatibility-preserving seams. Treat SSL override policy, backup semantics, and remote/file-origin policy coupling as explicit product or architecture decisions before changing runtime behavior.
