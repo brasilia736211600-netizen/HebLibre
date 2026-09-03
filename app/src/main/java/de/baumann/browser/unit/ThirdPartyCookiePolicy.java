@@ -1,11 +1,9 @@
 package de.baumann.browser.unit;
 
 /**
- * Third-party cookie privacy policy for the WebView.
+ * Optional third-party cookie privacy policy for the WebView.
  */
 public final class ThirdPartyCookiePolicy {
-
-    public static final boolean DEFAULT_ENABLED = true;
 
     private ThirdPartyCookiePolicy() {
         // Utility class.
