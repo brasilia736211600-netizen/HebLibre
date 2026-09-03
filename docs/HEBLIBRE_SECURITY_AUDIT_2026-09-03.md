@@ -29,9 +29,11 @@ The setting therefore controls both file-origin access and DOM storage. This cou
 ### Correction
 A profile-aware transfer entry point, `ProfileScopedWhitelistTransfer`, now derives the active profile through `ProfileIdentity` and uses that profile id for whitelist export/import table reads and duplicate checks. `ExportWhiteListTask` and `ImportWhitelistTask` route their whitelist operations through this entry point. Existing bookmark import/export behavior is unchanged.
 
+A small dependency-free test seam was added through `ProfileScopedWhitelistTransfer.normalizeProfileId(String)` so the profile-normalization contract can be verified on the JVM without constructing Android `Context` objects.
+
 ### Verification status
-- SOURCE-VERIFIED: yes — active-profile resolution and profile-filtered CRUD are present in the transfer path.
-- TEST-VERIFIED: pending CI execution for the new integration path.
+- SOURCE-VERIFIED: yes — active-profile resolution, profile-filtered CRUD, task routing, and the pure normalization seam are present.
+- TEST-VERIFIED: pending CI execution for the current source revision.
 - CI-VERIFIED: pending for the current source revision.
 - ANDROID-RUNTIME-VERIFIED: not yet; remains deferred to final consolidated device validation.
 
