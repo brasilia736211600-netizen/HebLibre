@@ -33,6 +33,7 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - Download cookie privacy control — SOURCE/TEST/CI-VERIFIED, run `33692045747`.
 - BrowserContainer tab reorder core + integration tests — SOURCE/TEST/CI-VERIFIED, run `33692092276`.
 - Remote-content default consistency — SOURCE/TEST/CI-VERIFIED, run `33694722442`.
+- Whitelist import/export profile-awareness in the active settings path — SOURCE-VERIFIED via `ProfileScopedWhitelistTransfer`; CI-VERIFIED on the recorded Unit Tests run `33703506073`.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -63,20 +64,25 @@ The tab overview is a `ScrollView` containing a `LinearLayout`. `AlbumItem` curr
 ## Download cookie privacy control
 `BrowserUnit.download()` consults `send_download_cookies`; enabled mode forwards a non-empty WebView cookie, disabled mode omits the `Cookie` header, with the compatibility-preserving default enabled. SOURCE-VERIFIED, TEST-VERIFIED, and CI-VERIFIED via run `33692045747`.
 
+A separate `HelperUnit.save_as()` path still creates its own `DownloadManager.Request` and unconditionally forwards the WebView cookie. It bypasses the shared `send_download_cookies` policy and is the next bounded privacy candidate; no runtime patch has been introduced yet.
+
 ## Remote-content default consistency
 `preference_start.xml` declares `sp_remote` default `true`; `NinjaWebView.loadUrl()` and `NinjaWebView.initPreferences()` now use the same default. SOURCE-VERIFIED, TEST/CI-VERIFIED via run `33694722442`.
 
-## Reorder UI reconciliation
-The actual source boundary is `BrowserActivity` owning both `BrowserContainer` and `tab_container`, while `AlbumItem` owns the tab view. A temporary controller mutation seam was attempted and immediately reverted because it was incomplete without the corresponding `BrowserActivity` implementation. No incomplete reorder API remains in source. The UI is intentionally still PARTIAL.
+## Whitelist transfer profile reconciliation
+The active settings path no longer uses the legacy `BrowserUnit.exportWhitelist()` / `importWhitelist()` helpers. `ExportWhiteListTask` and `ImportWhitelistTask` route whitelist transfer through `ProfileScopedWhitelistTransfer`, which reads the active `ProfileIdentity` and uses that profile in domain listing and duplicate checks. The legacy `BrowserUnit` methods remain default-profile-only helpers but have no verified active settings caller.
+
+## Security audit decisions
+SSL certificate-error override behavior, automatic Android backup of `Ninja4.db`, application-level cleartext traffic, and the coupling of file-origin access with DOM storage under `sp_remote` remain explicit product/architecture decisions. Do not change them opportunistically.
 
 ## Current phase
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency are CI-VERIFIED. The next bounded candidate remains tab-overview reorder UI, but it must be implemented as a complete source mutation across the actual `BrowserActivity`/`AlbumItem` boundary. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
+P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and the active whitelist transfer profile fix are completed at source/test/CI levels as recorded. The next bounded runtime candidate is the `HelperUnit.save_as()` cookie-forwarding policy bypass. Tab reorder UI remains PARTIAL and must be implemented as a complete mutation path across `BrowserActivity`/`AlbumItem` without breaking long-click close. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
 
 ## Next execution
-**Continue parallel source verification on independent bounded privacy/UX seams while keeping tab reorder UI deferred until its complete mutation path can be edited safely. Preserve long-click close behavior. Then run deterministic tests, reconcile CI, review the diff, and synchronize state. Do not install the APK yet.**
+**Audit and then patch `HelperUnit.save_as()` so the existing `send_download_cookies` contract applies consistently to Save As, with the smallest dependency-free policy seam and JVM coverage possible. Then reconcile CI, review the diff, and synchronize state. Do not install the APK yet.**
 
 ## Last synchronized
-2026-09-03 — reconciled current branch state, remote-content CI evidence, and the reverted incomplete reorder-controller seam; map synchronized with actual source boundaries.
+2026-09-03 — reconciled the active branch and verified that whitelist transfer is already profile-aware in the real settings path; selected Save As cookie forwarding as the next bounded privacy candidate.
