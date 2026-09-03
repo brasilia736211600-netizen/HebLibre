@@ -29,9 +29,13 @@ public final class ProfileScopedWhitelistTransfer {
     private ProfileScopedWhitelistTransfer() {
     }
 
+    public static String normalizeProfileId(String profileId) {
+        return ProfileIdentity.normalize(profileId);
+    }
+
     private static String activeProfileId(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return ProfileIdentity.normalize(preferences.getString(
+        return normalizeProfileId(preferences.getString(
                 ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
     }
 
