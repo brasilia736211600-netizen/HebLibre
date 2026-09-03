@@ -1,7 +1,7 @@
 # HebLibre Security Audit — 2026-09-03
 
 ## Scope
-Bounded source audit only. No Android runtime work and no behavior change made.
+Bounded source audit with one concrete profile-isolation correction. No Android runtime work.
 
 ## Finding: SSL certificate errors are user-overridable
 
@@ -22,11 +22,18 @@ The setting therefore controls both file-origin access and DOM storage. This cou
 
 `AndroidManifest.xml` sets `android:usesCleartextTraffic="true"`, while HTTPS-only navigation is opt-in. Removing cleartext at the application level would change compatibility for HTTP destinations. No change made.
 
-## Finding: whitelist import/export is hard-coded to the default profile
+## Finding: whitelist import/export was hard-coded to the default profile
 
-`BrowserUnit.exportWhitelist()` and `BrowserUnit.importWhitelist()` query/check whitelist tables with `RecordUnit.DEFAULT_PROFILE_ID` rather than the active `ProfileIdentity` value. This is inconsistent with the profile-scoped persistence introduced for whitelist tables. A non-default profile can therefore be isolated during normal whitelist operation but still export/import the default profile's data.
+`BrowserUnit.exportWhitelist()` and `BrowserUnit.importWhitelist()` query/check whitelist tables with `RecordUnit.DEFAULT_PROFILE_ID` rather than the active `ProfileIdentity` value. This was inconsistent with the profile-scoped persistence introduced for whitelist tables.
 
-This is a concrete profile-isolation correctness gap. Fixing it safely requires threading an explicit profile id through the import/export API or deriving the active profile at the existing settings boundary; changing it blindly risks breaking existing callers. It should be addressed as a small, tested follow-up rather than mixed into unrelated privacy changes.
+### Correction
+A profile-aware transfer entry point, `ProfileScopedWhitelistTransfer`, now derives the active profile through `ProfileIdentity` and uses that profile id for whitelist export/import table reads and duplicate checks. `ExportWhiteListTask` and `ImportWhitelistTask` route their whitelist operations through this entry point. Existing bookmark import/export behavior is unchanged.
+
+### Verification status
+- SOURCE-VERIFIED: yes — active-profile resolution and profile-filtered CRUD are present in the transfer path.
+- TEST-VERIFIED: pending CI execution for the new integration path.
+- CI-VERIFIED: pending for the current source revision.
+- ANDROID-RUNTIME-VERIFIED: not yet; remains deferred to final consolidated device validation.
 
 ## Next bounded work
-Prefer deterministic, compatibility-preserving seams that can be covered by dependency-free JVM tests. The whitelist import/export profile mismatch is now the highest-value bounded correctness candidate. Treat SSL override policy, backup semantics, and remote/file-origin policy coupling as explicit product or architecture decisions before changing runtime behavior.
+Verify the new profile-aware transfer path in CI, then continue source verification for deterministic compatibility-preserving seams. Treat SSL override policy, backup semantics, and remote/file-origin policy coupling as explicit product or architecture decisions before changing runtime behavior.
