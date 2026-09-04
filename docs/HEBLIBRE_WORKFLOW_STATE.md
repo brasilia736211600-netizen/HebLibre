@@ -13,7 +13,7 @@ Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIM
 
 ## Current repository state
 - `genspark-dev` code is anchored at the last clean verified implementation checkpoint `5fffd65e80e2a616a5273befe7cdca6309441490`.
-- Current branch HEAD is `ceda463d647af8ffeeef5b8b32610fa8a8d19ae1`; changes after the clean code checkpoint are documentation/audit only.
+- Current branch HEAD is `bb227491f4252e91d43ad61e9ad86a8557c2c54c`; changes after the clean code checkpoint are documentation/audit only.
 - No unverified third-party-cookie behavior change remains.
 - P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency remain CI-VERIFIED from the recorded runs.
 - The whitelist import/export audit item is SOURCE-VERIFIED as already corrected in the active settings path by `ProfileScopedWhitelistTransfer` and task routing; no new runtime patch is required.
@@ -36,4 +36,4 @@ QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, 
 Do not repeatedly build/install/test the APK. Complete source review, deterministic JVM tests, CI, review, and documentation first; reserve Android runtime verification for one consolidated final device-validation phase.
 
 ## Last updated
-2026-09-04 — reconciled GitHub HEAD after the active-path whitelist verification. No runtime source change introduced in this sync; `HelperUnit.save_as()` cookie-policy bypass remains the next bounded runtime candidate.
+2026-09-04 — synchronized workflow state with the current GitHub HEAD after reconciling the master project map and verified whitelist transfer path. Next bounded runtime candidate remains the `HelperUnit.save_as()` cookie-forwarding policy bypass.
