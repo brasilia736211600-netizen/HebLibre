@@ -33,7 +33,7 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - Download cookie privacy control — SOURCE/TEST/CI-VERIFIED, run `33692045747`.
 - BrowserContainer tab reorder core + integration tests — SOURCE/TEST/CI-VERIFIED, run `33692092276`.
 - Remote-content default consistency — SOURCE/TEST/CI-VERIFIED, run `33694722442`.
-- Whitelist import/export profile-awareness in the active settings path — SOURCE-VERIFIED via `ProfileScopedWhitelistTransfer`; CI-VERIFIED on the recorded Unit Tests run `33703506073`.
+- Whitelist import/export profile-awareness in the active settings path — SOURCE-VERIFIED via `ProfileScopedWhitelistTransfer`; CI-VERIFIED on recorded Unit Tests run `33703506073`.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -82,7 +82,7 @@ SSL certificate-error override behavior, automatic Android backup of `Ninja4.db`
 P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and the active whitelist transfer profile fix are completed at source/test/CI levels as recorded. The next bounded runtime candidate is the `HelperUnit.save_as()` cookie-forwarding policy bypass. Tab reorder UI remains PARTIAL and must be implemented as a complete mutation path across `BrowserActivity`/`AlbumItem` without breaking long-click close. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
 
 ## Next execution
-**Audit and then patch `HelperUnit.save_as()` so the existing `send_download_cookies` contract applies consistently to Save As, with the smallest dependency-free policy seam and JVM coverage possible. Then reconcile CI, review the diff, and synchronize state. Do not install the APK yet.**
+**Patch `HelperUnit.save_as()` so the existing `send_download_cookies` contract applies consistently to Save As, using the smallest shared-policy seam and deterministic JVM coverage where practical. Then run CI, review the diff, and synchronize state. Do not install the APK yet.**
 
 ## Last synchronized
-2026-09-03 — reconciled the active branch and verified that whitelist transfer is already profile-aware in the real settings path; selected Save As cookie forwarding as the next bounded privacy candidate.
+2026-09-04 — reconciled active branch state; confirmed whitelist transfer is already profile-aware in the real settings path and retained Save As cookie forwarding as the next bounded runtime candidate.
