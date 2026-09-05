@@ -296,9 +296,9 @@ public class RecordAction {
 
     public void deleteDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) { return; }
-        database.execSQL("DELETE FROM " + table
-                + " WHERE " + RecordUnit.COLUMN_DOMAIN + " = " + "\"" + domain.trim() + "\""
-                + " AND " + RecordUnit.COLUMN_PROFILE_ID + " = " + "\"" + profileId + "\"");
+        database.delete(table,
+                RecordUnit.COLUMN_DOMAIN + "=? AND " + RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {domain.trim(), profileId});
     }
 
     public List<String> listDomains(String table, String profileId) {
@@ -357,7 +357,9 @@ public class RecordAction {
                     RecordUnit.COLUMN_URL + "=? AND " + RecordUnit.COLUMN_PROFILE_ID + "=?",
                     new String[] {domain.trim(), activeProfileId()});
         } else {
-            database.execSQL("DELETE FROM " + table + " WHERE " + RecordUnit.COLUMN_URL + " = " + "\"" + domain.trim() + "\"");
+            database.delete(table,
+                    RecordUnit.COLUMN_URL + "=?",
+                    new String[] {domain.trim()});
         }
     }
 
