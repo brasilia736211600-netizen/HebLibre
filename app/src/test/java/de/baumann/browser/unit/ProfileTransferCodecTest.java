@@ -4,7 +4,9 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.baumann.browser.database.Record;
 
@@ -25,15 +27,18 @@ public class ProfileTransferCodecTest {
     }
 
     @Test
-    public void plainRoundTripPreservesProfileAndRecords() {
+    public void plainRoundTripPreservesProfileRecordsAndPreferences() {
         List<Record> history = Collections.singletonList(
                 new Record("History | title", "https://example.com/a?x=1&y=2", 11L, -1));
         List<Record> bookmarks = Collections.singletonList(
                 new Record("Bookmark", "https://example.com/book", 12L, -1));
         List<Record> tabs = Collections.singletonList(
                 new Record("Tab", "https://example.com/tab", 13L, -1));
+        Map<String, String> preferences = new HashMap<>();
+        preferences.put("desktop_mode", "b:true");
+        preferences.put("userAgent", "s:Profile-UA & value");
 
-        String encoded = ProfileTransferCodec.encodePlain(metadata(), history, bookmarks, tabs);
+        String encoded = ProfileTransferCodec.encodePlain(metadata(), history, bookmarks, tabs, preferences);
         ProfileTransferCodec.TransferPackage decoded = ProfileTransferCodec.decode(encoded, null);
 
         assertEquals("work", decoded.getMetadata().getId());
@@ -43,6 +48,8 @@ public class ProfileTransferCodecTest {
         assertEquals(history.get(0).getURL(), decoded.getHistory().get(0).getURL());
         assertEquals(1, decoded.getBookmarks().size());
         assertEquals(1, decoded.getTabs().size());
+        assertEquals("b:true", decoded.getPreferences().get("desktop_mode"));
+        assertEquals("s:Profile-UA & value", decoded.getPreferences().get("userAgent"));
     }
 
     @Test
@@ -120,6 +127,13 @@ public class ProfileTransferCodecTest {
         } catch (IllegalArgumentException expected) {
             // expected
         }
+    }
+
+    @Test
+    public void legacyExportsDecodeWithEmptyPreferences() {
+        String encoded = ProfileTransferCodec.encodePlain(metadata(), null, null, null);
+        ProfileTransferCodec.TransferPackage decoded = ProfileTransferCodec.decode(encoded, null);
+        assertTrue(decoded.getPreferences().isEmpty());
     }
 
     private static String replaceLine(String content, String key, String replacement) {
