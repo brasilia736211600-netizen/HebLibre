@@ -4,7 +4,7 @@
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
 ## Live branch checkpoint
-`ac454447a2553cabec830ae129823ad4358a1a81` — latest source checkpoint after making profile-record import transactional and adding rollback coverage to the debug smoke harness.
+`63835726fd73ac2db50dd26359032e463a5faca0` — latest documentation-synchronized branch HEAD. The latest source checkpoint remains `ac454447a2553cabec830ae129823ad4358a1a81`.
 
 ## Current source checkpoint
 `ac454447a2553cabec830ae129823ad4358a1a81` — profile-aware app records, profile-owned launcher session restore, profile transfer with optional AES-GCM encryption, SQL predicate hardening, hardened transfer parsing, transactional profile-record import, and debug rollback smoke coverage.
@@ -31,15 +31,15 @@
 - `RecordAction.importProfileRecords(...)`: app-owned history/bookmark/tab imports now execute in one transaction using the canonical profile-ID policy and `insertOrThrow`, so invalid input cannot leave a partial import.
 - `ProfileTransferActivity`: failed profile-record import removes the newly created catalog entry; active-profile selection happens only after the record transaction succeeds.
 - Runtime smoke coverage: debug-only `ProfileTransferSmokeActivity` validates that the production Profile Transfer screen can be launched by an installed debug build without exporting the production activity.
-- Runtime smoke coverage: `ProfileManagerSmokeActivity` now verifies rollback behavior after a deliberately invalid imported record.
+- Runtime smoke coverage: `ProfileManagerSmokeActivity` verifies rollback behavior after a deliberately invalid imported record.
 
 ## Verification evidence
-- SOURCE-VERIFIED: profile catalog, profile manager, WebView profile binding, profile-owned cookie path, profile-aware HISTORY/BOOKMARK/TAB database code, migration logic, session persistence/restore code, profile transfer codec/UI, deterministic policy tests, debug-only smoke harnesses, deletion predicate hardening, transactional import, and rollback coverage are present on `genspark-dev`.
-- TEST-VERIFIED: prior Unit Tests run `33994575842` and `33990897505` passed on earlier checkpoints. Fresh tests for the current source remain unverified because GitHub-hosted jobs terminate before any step executes. No local Android SDK/emulator/toolchain is assumed available as an authoritative replacement.
-- CI-VERIFIED: current push workflows continue to fail before any executed step/runner allocation. Runner Probe `33998860529` and the Unit/Runtime pushes for the transactional-import checkpoint terminate without runner/steps/log output. This is classified as runner/workflow initialization failure, not application failure.
-- ANDROID-RUNTIME-VERIFIED: earlier Android Runtime Smoke run `33994758706` on checkpoint `5aa5a6e87e45b0fa3cc7aca820c1de6b8bfbdb8e` completed successfully for the baseline browser/emulator flow. Fresh runtime proof for the current profile-transfer/import checkpoint is still pending because no current APK is produced.
+- SOURCE-VERIFIED: all features listed above are present on `genspark-dev`; the current source hardening has not yet received fresh compiler/runtime execution.
+- TEST-VERIFIED: prior Unit Tests runs `33994575842` and `33990897505` passed on earlier checkpoints. Fresh tests for `ac454447...` remain unverified because hosted jobs terminate before any step executes.
+- CI-VERIFIED: current push workflows continue to fail before any executed step/runner allocation. Runner Probe `33998860529` and the Unit/Runtime pushes for the transactional-import checkpoint terminate without runner/steps/log output. This is runner/workflow initialization failure, not application failure.
+- ANDROID-RUNTIME-VERIFIED: earlier Android Runtime Smoke run `33994758706` on checkpoint `5aa5a6e87e45b0fa3cc7aca820c1de6b8bfbdb8e` completed successfully for the baseline browser/emulator flow. Fresh runtime proof for the current profile-transfer/import checkpoint remains pending because no current APK is produced.
 - ARTIFACT-VERIFIED: an earlier GitHub Actions x86_64 smoke APK matched its published SHA-256 checksum. The current Runtime Smoke lane has produced no artifact because its job never receives a runner.
-- DOCUMENTED: yes. This state file and the master project map are synchronized with the latest source checkpoint and blocker evidence.
+- DOCUMENTED: yes. State and master map are synchronized to the latest source checkpoint.
 
 ## Architectural boundaries
 - `WebViewCompat.setProfile()` must happen before WebView use/navigation; the binder follows this ordering.
@@ -72,7 +72,7 @@
 - `D-028`: profile-record imports are transactional and the catalog entry is removed on record-import failure; activation occurs only after the transaction succeeds.
 
 ## Current next executable slice
-1. Obtain the first GitHub Actions capacity that actually assigns a hosted runner; verify Unit Tests and Runtime Smoke on the latest checkpoint, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation.
+1. Obtain the first GitHub Actions capacity that actually assigns a hosted runner; verify Unit Tests and Runtime Smoke on the latest source checkpoint, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation.
 2. Continue bounded profile-settings source inventory; implement only after a complete reader/writer/migration map exists and the contract is explicit.
 3. Keep per-profile proxy routing deferred until a network-layer design provides genuine profile/request isolation.
 4. Keep same-URL in-process profile switching separate from launcher/session restore.
