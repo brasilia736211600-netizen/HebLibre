@@ -14,10 +14,6 @@ on:
       - '.github/workflows/android-runtime-smoke.yml'
   workflow_dispatch:
 
-concurrency:
-  group: heb-libre-runtime-smoke-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   runtime-smoke:
     runs-on: ubuntu-latest
