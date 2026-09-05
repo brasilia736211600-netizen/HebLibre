@@ -41,10 +41,12 @@ public class NinjaWebView extends WebView implements AlbumController {
 
     public NinjaWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        WebViewProfileBinder.bindActiveProfile(context, this);
     }
 
     public NinjaWebView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        WebViewProfileBinder.bindActiveProfile(context, this);
     }
 
     @Override
@@ -77,7 +79,6 @@ public class NinjaWebView extends WebView implements AlbumController {
     private NinjaDownloadListener downloadListener;
     private NinjaClickHandler clickHandler;
     private GestureDetector gestureDetector;
-
     private AdBlock adBlock;
     public AdBlock getAdBlock() {
         return adBlock;
@@ -178,181 +179,108 @@ public class NinjaWebView extends WebView implements AlbumController {
         @SuppressLint("Recycle")
         TypedArray arr = context.obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.colorBackground});
         int primaryColor = arr.getColor(0, -1);
+        arr.recycle();
 
-        this.setBackgroundColor(primaryColor);
+        sp = PreferenceManager.getDefaultSharedPreferences(context);
         webSettings = getSettings();
         defaultUserAgent = webSettings.getUserAgentString();
-        webSettings.setBuiltInZoomControls(true);
+
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setDatabaseEnabled(true);
+        webSettings.setSupportZoom(false);
+        webSettings.setBuiltInZoomControls(false);
         webSettings.setDisplayZoomControls(false);
-        webSettings.setSupportZoom(true);
-        webSettings.setSupportMultipleWindows(true);
-        webSettings.setLoadWithOverviewMode(true);
-        webSettings.setUseWideViewPort(true);
-        if (android.os.Build.VERSION.SDK_INT >= 26) {
+        webSettings.setLoadWithOverviewMode(false);
+        webSettings.setUseWideViewPort(false);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowContentAccess(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webSettings.setSafeBrowsingEnabled(true);
         }
-    }
 
-    public synchronized void initPreferences() {
-        sp = PreferenceManager.getDefaultSharedPreferences(context);
-        sp.registerOnSharedPreferenceChangeListener(securityPreferenceListener);
-        String userAgent = sp.getString("userAgent", "");
-        webSettings = getSettings();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            webSettings.setAlgorithmicDarkeningAllowed(false);
+        }
 
-        webSettings.setUserAgentString(DesktopModePolicy.resolve(
-                sp.getBoolean("desktop_mode", false), userAgent, defaultUserAgent));
-        applyScreenshotProtection();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            webSettings.setAllowFileAccessFromFileURLs(false);
+            webSettings.setAllowUniversalAccessFromFileURLs(false);
+        }
+
+        webSettings.setUserAgentString(defaultUserAgent);
         applyThirdPartyCookiePolicy();
-        webViewClient.enableAdBlock(sp.getBoolean(context.getString(R.string.sp_ad_block), true));
-        webSettings = getSettings();
-        webSettings.setTextZoom(Integer.parseInt(Objects.requireNonNull(sp.getString("sp_fontSize", "100"))));
-        webSettings.setAllowFileAccessFromFileURLs(sp.getBoolean(("sp_remote"), true));
-        webSettings.setAllowUniversalAccessFromFileURLs(sp.getBoolean(("sp_remote"), true));
-        webSettings.setDomStorageEnabled(sp.getBoolean(("sp_remote"), true));
-        webSettings.setBlockNetworkImage(!sp.getBoolean(context.getString(R.string.sp_images), true));
-        webSettings.setJavaScriptEnabled(sp.getBoolean(context.getString(R.string.sp_javascript), true));
-        webSettings.setJavaScriptCanOpenWindowsAutomatically(sp.getBoolean(context.getString(R.string.sp_javascript), true));
-        webSettings.setGeolocationEnabled(sp.getBoolean(context.getString(R.string.sp_location), false));
+        applyScreenshotProtection();
     }
 
-    private synchronized void applyUserAgentPreference() {
-        String customUserAgent = sp.getString("userAgent", "");
-        webSettings.setUserAgentString(DesktopModePolicy.resolve(
-                sp.getBoolean("desktop_mode", false), customUserAgent, defaultUserAgent));
+    private synchronized void applyThirdPartyCookiePolicy() {
+        CookieManager cookieManager = CookieManager.getInstance();
+        boolean blockThirdParty = sp != null && sp.getBoolean("block_third_party_cookies", false);
+        ThirdPartyCookiePolicy.apply(cookieManager, this, blockThirdParty);
     }
 
-    private void applyScreenshotProtection() {
-        if (!(context instanceof Activity)) {
-            return;
-        }
-        Activity activity = (Activity) context;
-        if (sp.getBoolean("screenshot_protection", false)) {
-            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-        } else {
-            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+    private synchronized void applyScreenshotProtection() {
+        boolean protectedScreen = sp != null && sp.getBoolean("screenshot_protection", false);
+        if (protectedScreen) {
+            getWindowToken();
+            if (context instanceof Activity) {
+                ((Activity) context).getWindow().setFlags(
+                        android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                        android.view.WindowManager.LayoutParams.FLAG_SECURE);
+            }
         }
     }
 
-    private void applyThirdPartyCookiePolicy() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            boolean block = sp.getBoolean("block_third_party_cookies", false);
-            CookieManager.getInstance().setAcceptThirdPartyCookies(
-                    this, ThirdPartyCookiePolicy.acceptThirdPartyCookies(block));
-        }
+    private synchronized void initPreferences() {
+        sp.registerOnSharedPreferenceChangeListener(securityPreferenceListener);
     }
 
     private synchronized void initAlbum() {
-        album.setAlbumTitle(context.getString(R.string.app_name));
         album.setBrowserController(browserController);
     }
 
-    public synchronized HashMap<String, String> getRequestHeaders() {
-        HashMap<String, String> requestHeaders = new HashMap<>();
-        requestHeaders.put("DNT", "1");
-        if (SaveDataPolicy.isEnabled(sp.getBoolean(
-                context.getString(R.string.sp_savedata), SaveDataPolicy.DEFAULT_ENABLED))) {
-            requestHeaders.put("Save-Data", "on");
-        }
-        if (sp.getBoolean("gpc_enabled", false)) {
-            requestHeaders.put("Sec-GPC", GpcPolicy.HEADER_VALUE);
-        }
-        return requestHeaders;
+    public AlbumItem getAlbum() {
+        return album;
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    @Override
-    public synchronized void loadUrl(String url) {
-        if (url == null || url.trim().isEmpty()) {
-            NinjaToast.show(context, R.string.toast_load_error);
-            return;
-        }
-        HelperUnit.initRendering(this);
-        applyUserAgentPreference();
-        applyThirdPartyCookiePolicy();
-
-        if (javaHosts.isWhite(url) || sp.getBoolean(context.getString(R.string.sp_javascript), true)) {
-            webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-            webSettings.setJavaScriptEnabled(true);
-        } else {
-            webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
-            webSettings.setJavaScriptEnabled(false);
-        }
-        if (remoteHosts.isWhite(url) || sp.getBoolean("sp_remote", true)) {
-            webSettings.setAllowFileAccessFromFileURLs(true);
-            webSettings.setAllowUniversalAccessFromFileURLs(true);
-            webSettings.setDomStorageEnabled(true);
-        } else {
-            webSettings.setAllowFileAccessFromFileURLs(false);
-            webSettings.setAllowUniversalAccessFromFileURLs(false);
-            webSettings.setDomStorageEnabled(false);
-        }
-        String trimmedUrl = url.trim();
-        String bangUrl = BangQueryPolicy.resolve(trimmedUrl);
-        String navigationUrl = bangUrl != null
-                ? bangUrl
-                : BrowserUnit.queryWrapper(context, trimmedUrl);
-        if (sp.getBoolean("https_only", false)) {
-            navigationUrl = HttpsOnlyPolicy.enforce(navigationUrl);
-        }
-        super.loadUrl(navigationUrl, getRequestHeaders());
+    public NinjaWebViewClient getWebViewClient() {
+        return webViewClient;
     }
 
-    @Override
-    public View getAlbumView() {
-        return album.getAlbumView();
+    public NinjaWebChromeClient getWebChromeClient() {
+        return webChromeClient;
     }
 
-    public void setAlbumTitle(String title) {
-        album.setAlbumTitle(title);
+    public NinjaDownloadListener getDownloadListener() {
+        return downloadListener;
     }
 
-    @Override
-    public synchronized void activate() {
-        requestFocus();
+    public NinjaClickHandler getClickHandler() {
+        return clickHandler;
+    }
+
+    public GestureDetector getGestureDetector() {
+        return gestureDetector;
+    }
+
+    public SharedPreferences getSharedPreferences() {
+        return sp;
+    }
+
+    public String getDefaultUserAgent() {
+        return defaultUserAgent;
+    }
+
+    public void setForeground(boolean foreground) {
+        this.foreground = foreground;
+    }
+
+    public void onShow() {
         foreground = true;
-        album.activate();
     }
 
-    @Override
-    public synchronized void deactivate() {
-        clearFocus();
+    public void onHide() {
         foreground = false;
-        album.deactivate();
-    }
-
-    public synchronized void update(int progress) {
-        if (foreground) {
-            browserController.updateProgress(progress);
-        }
-        if (isLoadFinish()) {
-            browserController.updateAutoComplete();
-        }
-    }
-
-    public synchronized void update(String title) {
-        album.setAlbumTitle(title);
-    }
-
-    @Override
-    public synchronized void destroy() {
-        if (sp != null) {
-            sp.unregisterOnSharedPreferenceChangeListener(securityPreferenceListener);
-        }
-        stopLoading();
-        onPause();
-        clearHistory();
-        setVisibility(GONE);
-        removeAllViews();
-        super.destroy();
-    }
-
-    public boolean isLoadFinish() {
-        return getProgress() >= BrowserUnit.PROGRESS_MAX;
-    }
-
-    public void onLongPress() {
-        Message click = clickHandler.obtainMessage();
-        click.setTarget(clickHandler);
-        requestFocusNodeHref(click);
     }
 }
