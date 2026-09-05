@@ -1,6 +1,8 @@
 package de.baumann.browser.activity;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,7 +14,7 @@ import java.util.List;
 import de.baumann.browser.database.Record;
 import de.baumann.browser.unit.ProfileSessionStore;
 
-/** Launcher trampoline that restores the last profile-local tab set. */
+/** Launcher trampoline that restores the last profile-local tab set once. */
 public class SessionRestoreActivity extends Activity {
 
     private static final long RESTORE_STEP_DELAY_MS = 250L;
@@ -20,10 +22,15 @@ public class SessionRestoreActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        restoreOrLaunch(getIntent());
+        if (hasExistingBrowserTask()) {
+            launchBrowser(new Intent(Intent.ACTION_MAIN));
+            finish();
+            return;
+        }
+        restoreOrLaunch();
     }
 
-    private void restoreOrLaunch(Intent sourceIntent) {
+    private void restoreOrLaunch() {
         List<Record> tabs = ProfileSessionStore.load(this);
         if (tabs.isEmpty()) {
             launchBrowser(new Intent(Intent.ACTION_MAIN));
@@ -46,6 +53,25 @@ public class SessionRestoreActivity extends Activity {
                 }
             }, i * RESTORE_STEP_DELAY_MS);
         }
+    }
+
+    private boolean hasExistingBrowserTask() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (manager == null) {
+            return false;
+        }
+        ComponentName browser = new ComponentName(this, BrowserActivity.class);
+        List<ActivityManager.AppTask> tasks = manager.getAppTasks();
+        for (ActivityManager.AppTask task : tasks) {
+            ActivityManager.RecentTaskInfo info = task.getTaskInfo();
+            if (info == null) {
+                continue;
+            }
+            if (browser.equals(info.topActivity) || browser.equals(info.baseActivity)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void launchBrowser(Intent intent) {
