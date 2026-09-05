@@ -24,6 +24,7 @@ public final class ProfileTransferCodec {
     private static final String ENCRYPTED_HEADER = "HEBLIBRE_PROFILE_V1_AES_GCM";
     private static final int SALT_BYTES = 16;
     private static final int IV_BYTES = 12;
+    private static final int GCM_TAG_BYTES = 16;
     private static final int KEY_BITS = 256;
     private static final int PBKDF2_ITERATIONS = 120_000;
 
@@ -79,13 +80,18 @@ public final class ProfileTransferCodec {
             throw new IllegalArgumentException("Empty profile export");
         }
         String normalized = content.trim();
-        if (normalized.startsWith(ENCRYPTED_HEADER)) {
+        List<String> lines = lines(normalized);
+        if (lines.isEmpty()) {
+            throw new IllegalArgumentException("Empty profile export");
+        }
+        String header = lines.get(0);
+        if (ENCRYPTED_HEADER.equals(header)) {
             return decodeEncrypted(normalized, password);
         }
-        if (!normalized.startsWith(PLAIN_HEADER)) {
-            throw new IllegalArgumentException("Unsupported profile export format");
+        if (PLAIN_HEADER.equals(header)) {
+            return decodePlain(normalized);
         }
-        return decodePlain(normalized);
+        throw new IllegalArgumentException("Unsupported profile export format");
     }
 
     private static TransferPackage decodeEncrypted(String content, String password) {
@@ -95,10 +101,16 @@ public final class ProfileTransferCodec {
         String ivHex = findValue(lines, "iv");
         String ciphertextHex = findValue(lines, "ciphertext");
         try {
-            SecretKey key = deriveKey(password, fromHex(saltHex));
+            byte[] salt = fromHex(saltHex);
+            byte[] iv = fromHex(ivHex);
+            byte[] ciphertext = fromHex(ciphertextHex);
+            if (salt.length != SALT_BYTES || iv.length != IV_BYTES || ciphertext.length < GCM_TAG_BYTES) {
+                throw new IllegalArgumentException("Invalid encrypted profile export dimensions");
+            }
+            SecretKey key = deriveKey(password, salt);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, fromHex(ivHex)));
-            String plain = new String(cipher.doFinal(fromHex(ciphertextHex)), StandardCharsets.UTF_8);
+            cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(128, iv));
+            String plain = new String(cipher.doFinal(ciphertext), StandardCharsets.UTF_8);
             return decodePlain(plain.trim());
         } catch (GeneralSecurityException | IllegalArgumentException e) {
             throw new IllegalArgumentException("Incorrect password or damaged profile export", e);
@@ -107,6 +119,9 @@ public final class ProfileTransferCodec {
 
     private static TransferPackage decodePlain(String content) {
         List<String> lines = lines(content);
+        if (lines.isEmpty() || !PLAIN_HEADER.equals(lines.get(0))) {
+            throw new IllegalArgumentException("Unsupported profile export format");
+        }
         String id = decode(findValue(lines, "id"));
         String name = decode(findValue(lines, "name"));
         String color = decode(findValue(lines, "color"));
