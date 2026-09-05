@@ -7,15 +7,10 @@ Branch: `genspark-dev`
 Default branch: `l10n_crowdin`
 
 ## Communication language
-All human-facing conversation about HebLibre is in Arabic unless the user explicitly requests another language. Repository source code, identifiers, commit messages, CI output, and filenames remain in their native/project language.
+All human-facing conversation about HebLibre is in Arabic unless the user explicitly requests another language. Durable project-control documents are written in clear English. Source code, identifiers, commit messages, CI output, and filenames remain in their native/project language.
 
-## Mandatory continuity documents
-- `docs/HEBLIBRE_AI_AGENT_CONTRACT.md`
-- `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`
-- `docs/HEBLIBRE_EXECUTION_BOARD.md`
-- `docs/HEBLIBRE_DECISION_LOG.md`
-- `docs/HEBLIBRE_RESUME_COMMAND.md`
-- `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`
+## Mandatory bootstrap
+Before any implementation, inspect the current `docs/` control-plane area, reconcile it with live GitHub source, verify the actual branch/HEAD, verify relevant evidence, and identify one executable next step.
 
 ## Execution protocol
 `READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE`
@@ -25,59 +20,72 @@ All human-facing conversation about HebLibre is in Arabic unless the user explic
 - `TEST-VERIFIED`: deterministic automated tests passed.
 - `CI-VERIFIED`: GitHub Actions passed for the relevant source checkpoint.
 - `ANDROID-RUNTIME-VERIFIED`: application executed on Android; emulator and physical-device evidence are distinct.
-- `DOCUMENTED`: decision/result persisted in repository documentation.
+- `DOCUMENTED`: intent, decision, or result persisted in repository documentation.
 
 Never conflate these levels.
 
-## Current repository state
-- Live `genspark-dev` HEAD: `72550bbaa5dfd18d0bc8345b03f3bc0015bf1835`.
-- Latest verified application-source fix: `247768c4e2e442fcb9b42d299d8cf00d3c24b81b` — whitelist import/export resolves the active normalized profile instead of hard-coding the default profile.
-- Consolidated Unit Tests run `33985143542` passed for that source checkpoint.
-- Current HEAD is 9 commits beyond Android emulator checkpoint `48300a4ad2c366e2987cea9949de8e722089c962`; GitHub compare reports those 9 commits changed documentation/control-plane files only. No application-source file changed after the emulator checkpoint.
-- Android Runtime Smoke run `33988773661` (run #15) completed successfully on `48300a4ad2c366e2987cea9949de8e722089c962`; because the current HEAD has no application-source changes after that checkpoint, the current application source retains that emulator runtime evidence.
-- Latest current-HEAD Unit Tests run `33990897505` completed successfully.
-- No unverified third-party-cookie behavior change remains; the compatibility-preserving default is retained.
+## Live checkpoint
+- Live `genspark-dev` HEAD: `134325502235ef838554f0a69f019586d26d81de`.
+- Latest verified application-source fix: `247768c4e2e442fcb9b42d299d8cf00d3c24b81b` — whitelist import/export resolves the active normalized profile.
+- Consolidated Unit Tests run `33985143542` passed for that application-source checkpoint.
+- Current branch HEAD is documentation/control-plane work after the application-source checkpoint; no new runtime feature has been introduced by the scope reset.
+- Current-HEAD Unit Tests previously passed at run `33990897505`.
+- Android emulator smoke previously passed at run `33988773661` on checkpoint `48300a4ad2c366e2987cea9949de8e722089c962`; this remains emulator evidence only.
+- Physical target-device validation is not complete for the new product scope.
 
-## Engineering checkpoint
-The bounded P2 implementation is complete at the source/test/CI level. Implemented areas include P2.1–P2.11, download-cookie privacy, profile-aware whitelist transfer, tab reorder core, and remote-content default consistency.
+## Current product direction
+The 2026 product direction is defined by `docs/HEBLIBRE_PRODUCT_SCOPE_2026-09-06.md`.
 
-The tab overview remains `ScrollView` + `LinearLayout`. `AlbumItem` uses normal click for selection and long-click for tab close. Tab reorder core uses `TabOrderPolicy` + `BrowserContainer.move()` and preserves controller/WebView identity; dedicated reorder UI remains deferred so long-click close behavior is not broken.
+Target: a lightweight, fast, reliable Android browser combining high-value profile-management and privacy patterns from mature social/multi-profile browsers with legitimate privacy lessons from leading anti-detect browsers.
 
-Whitelist transfer is profile-aware in both the active settings route and legacy `BrowserUnit` helpers. Bookmark transfer remains unchanged.
+Anti-detect is bounded to legitimate privacy, profile isolation, session continuity, configuration consistency, and user-controlled data separation. Primary-purpose fraud/security detection bypass, identity-verification bypass, ban evasion, covert stealth automation, credential theft, and covert session sharing are excluded.
 
-Download cookie privacy is enforced in both main download and Save As paths with a compatibility-preserving enabled default.
+Older chat-only feature requests are superseded by the active product-scope document.
 
-`sp_remote` declared/default behavior is consistent across preference initialization and navigation.
+## Durable continuity rule
+Every material step must be recoverable from GitHub without chat context. Persist material decisions, architecture conclusions, rejected approaches, scope changes, blockers, test conclusions, exact source checkpoints, CI evidence, and the next executable step before they can be lost.
 
-## Security/architecture decisions
-Do not silently modify:
+Do not commit trivial thoughts. Do not allow a material conclusion to exist only in chat.
+
+## Completed foundation
+P2.1–P2.11, download-cookie privacy, profile-aware whitelist transfer, tab reorder core, and remote-content default consistency remain implemented at the recorded source/test/CI levels. The bounded existing feature set is not being reimplemented.
+
+## New roadmap status
+`P0/P1 planning and bounded implementation wave` is now active.
+
+Priority next areas:
+1. Profile metadata/groups/tags/notes.
+2. Profile-local history/bookmarks/session ownership.
+3. Feasibility of real WebView storage partitioning.
+4. Profile-local cookies/login state.
+5. Secure profile import/export.
+6. Optional encrypted sensitive profile state.
+7. Profile-local settings where Android truly permits it.
+8. Per-profile proxy feasibility audit.
+9. Site permission/resource controls.
+10. Tab grouping/reorder UI without breaking long-click close semantics.
+11. Performance/startup/memory instrumentation before heavy architectural additions.
+
+Architectural candidates such as WebView storage partitioning, per-profile network routing, DoH, full WebRTC privacy, extension runtime, PWA, multi-window, QR scanning, and Reader Mode require feasibility/design checkpoints before implementation.
+
+## Security decisions not silently reopened
 - SSL certificate-error override behavior.
 - Application-level `android:usesCleartextTraffic` policy.
 - Automatic Android backup semantics for `Ninja4.db`.
 - Coupling of file-origin access and DOM storage under `sp_remote`.
-- Complete profile/WebView storage isolation.
-- DoH, per-container proxy/Tor, broad fingerprinting defenses, full WebRTC privacy, extensions/uBlock, and on-device AI.
+- Complete profile/WebView storage isolation until its architecture is explicitly designed.
 
-See `docs/HEBLIBRE_DECISION_LOG.md` and `docs/HEBLIBRE_SECURITY_AUDIT_2026-09-03.md`.
+## Android validation policy
+Do not repeatedly build/install APKs during feature work. Finish source review, deterministic tests, CI, review, and documentation first. Physical validation is consolidated near a coherent product checkpoint.
 
-## Android validation
-### Completed
-- ARM debug APK packaging: CI-verified.
-- GitHub-hosted Android emulator smoke: successful on `48300a4ad2c366e2987cea9949de8e722089c962`.
-- Current HEAD has no application-source changes after that emulator checkpoint.
+## Current blockers
+No implementation blocker for starting the first bounded P1 profile-management audit. Architectural blockers remain for true per-profile WebView storage and per-profile network routing; these must be investigated before code is promised.
 
-### Final gate
-Physical target-device validation remains the only remaining release-confidence gate for the bounded scope.
-
-The consolidated pass should cover: launch/relaunch and restoration; navigation/external intents/back-forward; search/bangs; tracking cleanup; HTTPS-only; GPC; Save-Data; custom/desktop UA interaction; screenshot protection; camera/microphone and geolocation permissions; third-party cookies; download/Save As; profile switching + whitelist import/export isolation; tabs/close/overview/reorder core; settings search/persistence; history/bookmarks/home/clear-data; lifecycle/rendering/crash regression.
-
-Any runtime defect follows one consolidated cycle: reproduce → smallest seam → batch related fixes → deterministic tests → CI → physical recheck.
-
-## Deferred work
-QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, Reader Mode, dedicated tab-reorder UI, broader download-manager UX, translation-service integration, and full-page/Markdown export remain deferred by design.
+## Current next executable step
+Run a bounded source audit of the profile model and `RecordAction`/`RecordHelper` boundaries, then select the smallest TDD-first profile-management seam. In parallel, perform a feasibility audit of WebView storage partitioning and measure the likely performance/memory cost before introducing any heavy architecture.
 
 ## Session handoff rule
-Every meaningful session ends with this file synchronized to the live HEAD, exact evidence, unresolved decisions, and one next executable step.
+At the end of every meaningful session, update this file with the exact live HEAD, current application-source checkpoint, work completed, evidence, material reasoning/decisions, unresolved items, and one next executable step.
 
 ## Last updated
-2026-09-06 — reconciled live HEAD `72550...` with source checkpoint `247768...`, current Unit Tests run `33990897505`, and successful Android emulator smoke run `33988773661`; confirmed the post-emulator HEAD delta is documentation/control-plane only and reduced the project to the final physical-device validation gate.
+2026-09-06 — adopted the 2026 product-scope reset, synchronized the durable control plane with live branch state, replaced the old deferred backlog with a P0/P1 implementation wave, and recorded the legitimate-privacy boundary for anti-detect-derived ideas.
