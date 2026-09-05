@@ -24,6 +24,8 @@ EXECUTE:
 READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE
 
 CONTINUITY RULES:
+- All human-facing conversation about HebLibre MUST be in Arabic unless the user explicitly requests another language.
+- Source code, identifiers, commit messages, CI output, and repository filenames remain in their native/project language.
 - GitHub is the source of truth.
 - `استمر` / `continue` means continue autonomously from the repository state; do not wait for routine confirmation.
 - Every meaningful change must end with a durable Git commit and synchronized workflow state.
