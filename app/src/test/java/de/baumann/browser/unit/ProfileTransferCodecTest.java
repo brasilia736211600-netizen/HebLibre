@@ -79,10 +79,18 @@ public class ProfileTransferCodecTest {
     }
 
     @Test
-    public void rejectsShortPasswordAndUnknownFormat() {
+    public void rejectsShortPasswordUnknownHeaderAndInvalidEncryptedDimensions() {
         try {
             ProfileTransferCodec.encodeEncrypted(metadata(), null, null, null, "short");
             throw new AssertionError("Expected short password to fail");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+
+        String plain = ProfileTransferCodec.encodePlain(metadata(), null, null, null);
+        try {
+            ProfileTransferCodec.decode("HEBLIBRE_PROFILE_V1_PLAIN_EXTRA\n" + plain.substring(plain.indexOf('\n') + 1), null);
+            throw new AssertionError("Expected header suffix to fail");
         } catch (IllegalArgumentException expected) {
             // expected
         }
@@ -93,5 +101,39 @@ public class ProfileTransferCodecTest {
         } catch (IllegalArgumentException expected) {
             // expected
         }
+
+        String encrypted = ProfileTransferCodec.encodeEncrypted(
+                metadata(), Collections.<Record>emptyList(), Collections.<Record>emptyList(),
+                Collections.<Record>emptyList(), "correct-horse");
+        String badSalt = replaceLine(encrypted, "salt=", "salt=00");
+        try {
+            ProfileTransferCodec.decode(badSalt, "correct-horse");
+            throw new AssertionError("Expected invalid salt length to fail");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+
+        String badIv = replaceLine(encrypted, "iv=", "iv=00");
+        try {
+            ProfileTransferCodec.decode(badIv, "correct-horse");
+            throw new AssertionError("Expected invalid IV length to fail");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+    }
+
+    private static String replaceLine(String content, String key, String replacement) {
+        String[] lines = content.split("\\R");
+        StringBuilder result = new StringBuilder();
+        for (String line : lines) {
+            if (line.startsWith(key)) {
+                line = replacement;
+            }
+            if (result.length() > 0) {
+                result.append('\n');
+            }
+            result.append(line);
+        }
+        return result.toString();
     }
 }
