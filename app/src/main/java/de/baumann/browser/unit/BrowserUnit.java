@@ -215,22 +215,25 @@ public class BrowserUnit {
         RecordAction action = new RecordAction(context);
         List<String> list;
         String filename;
+        String profileId = ProfileIdentity.normalize(
+                PreferenceManager.getDefaultSharedPreferences(context)
+                        .getString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
         action.open(false);
         switch (i) {
             case 0:
-                list = action.listDomains(RecordUnit.TABLE_WHITELIST, RecordUnit.DEFAULT_PROFILE_ID);
+                list = action.listDomains(RecordUnit.TABLE_WHITELIST, profileId);
                 filename = "export_whitelist_AdBlock.txt";
                 break;
             case 1:
-                list = action.listDomains(RecordUnit.TABLE_JAVASCRIPT, RecordUnit.DEFAULT_PROFILE_ID);
+                list = action.listDomains(RecordUnit.TABLE_JAVASCRIPT, profileId);
                 filename = "export_whitelist_java.txt";
                 break;
             case 3:
-                list = action.listDomains(RecordUnit.TABLE_REMOTE, RecordUnit.DEFAULT_PROFILE_ID);
+                list = action.listDomains(RecordUnit.TABLE_REMOTE, profileId);
                 filename = "export_whitelist_remote.txt";
                 break;
             default:
-                list = action.listDomains(RecordUnit.TABLE_COOKIE, RecordUnit.DEFAULT_PROFILE_ID);
+                list = action.listDomains(RecordUnit.TABLE_COOKIE, profileId);
                 filename = "export_whitelist_cookie.txt";
                 break;
         }
@@ -251,6 +254,9 @@ public class BrowserUnit {
 
     public static int importWhitelist (Context context, int i) {
         int count = 0;
+        String profileId = ProfileIdentity.normalize(
+                PreferenceManager.getDefaultSharedPreferences(context)
+                        .getString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
         try {
             String filename;
             AdBlock adBlock = null;
@@ -283,25 +289,25 @@ public class BrowserUnit {
             while ((line = reader.readLine()) != null) {
                 switch (i) {
                     case 0:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_WHITELIST, RecordUnit.DEFAULT_PROFILE_ID)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_WHITELIST, profileId)) {
                             adBlock.addDomain(line);
                             count++;
                         }
                         break;
                     case 1:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_JAVASCRIPT, RecordUnit.DEFAULT_PROFILE_ID)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_JAVASCRIPT, profileId)) {
                             js.addDomain(line);
                             count++;
                         }
                         break;
                     case 3:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_REMOTE, RecordUnit.DEFAULT_PROFILE_ID)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_REMOTE, profileId)) {
                             remote.addDomain(line);
                             count++;
                         }
                         break;
                     default:
-                        if (!action.checkDomain(line, RecordUnit.TABLE_COOKIE, RecordUnit.DEFAULT_PROFILE_ID)) {
+                        if (!action.checkDomain(line, RecordUnit.TABLE_COOKIE, profileId)) {
                             cookie.addDomain(line);
                             count++;
                         }
