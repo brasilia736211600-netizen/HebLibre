@@ -30,10 +30,10 @@ Continue autonomously on `استمر`; apply YAGNI and evidence-based claims. Do
 - P2.9 geolocation privacy guard — CI-VERIFIED, run `33684710168`.
 - P2.10 Save-Data preference contract/fallback correction — CI-VERIFIED, run `33686256788`.
 - P2.11 global settings search — CI-VERIFIED, run `33688160810`.
-- Download cookie privacy control — SOURCE/TEST/CI-VERIFIED, run `33692045747`.
+- Download cookie privacy control — SOURCE/TEST/CI-VERIFIED, run `33692045747`; main download and Save As paths are both policy-gated.
 - BrowserContainer tab reorder core + integration tests — SOURCE/TEST/CI-VERIFIED, run `33692092276`.
 - Remote-content default consistency — SOURCE/TEST/CI-VERIFIED, run `33694722442`.
-- Whitelist import/export profile-awareness in the active settings path — SOURCE-VERIFIED via `ProfileScopedWhitelistTransfer`; CI-VERIFIED on recorded Unit Tests run `33703506073`.
+- Whitelist import/export profile-awareness — SOURCE/TEST/CI-VERIFIED; active settings route uses `ProfileScopedWhitelistTransfer`, and legacy `BrowserUnit` helpers now also resolve the active normalized profile. Latest source fix `247768c4e2e442fcb9b42d299d8cf00d3c24b81b`; consolidated Unit Tests run `33985143542` passed.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -62,15 +62,13 @@ Current `BrowserActivity` uses `singleInstance`; independent browser windows wou
 The tab overview is a `ScrollView` containing a `LinearLayout`. `AlbumItem` currently uses normal click for tab selection and long-click for tab removal. Therefore the safe UI follow-up is a separate reorder affordance; long-click must remain close-tab behavior until an explicit replacement contract exists.
 
 ## Download cookie privacy control
-`BrowserUnit.download()` consults `send_download_cookies`; enabled mode forwards a non-empty WebView cookie, disabled mode omits the `Cookie` header, with the compatibility-preserving default enabled. SOURCE-VERIFIED, TEST-VERIFIED, and CI-VERIFIED via run `33692045747`.
-
-A separate `HelperUnit.save_as()` path still creates its own `DownloadManager.Request` and unconditionally forwards the WebView cookie. It bypasses the shared `send_download_cookies` policy and is the next bounded privacy candidate; no runtime patch has been introduced yet.
+`BrowserUnit.download()` consults `send_download_cookies`; enabled mode forwards a non-empty WebView cookie, disabled mode omits the `Cookie` header, with the compatibility-preserving default enabled. `HelperUnit.save_as()` now applies the same policy in both SDK branches. SOURCE-VERIFIED, TEST-VERIFIED, and CI-VERIFIED.
 
 ## Remote-content default consistency
 `preference_start.xml` declares `sp_remote` default `true`; `NinjaWebView.loadUrl()` and `NinjaWebView.initPreferences()` now use the same default. SOURCE-VERIFIED, TEST/CI-VERIFIED via run `33694722442`.
 
 ## Whitelist transfer profile reconciliation
-The active settings path no longer uses the legacy `BrowserUnit.exportWhitelist()` / `importWhitelist()` helpers. `ExportWhiteListTask` and `ImportWhitelistTask` route whitelist transfer through `ProfileScopedWhitelistTransfer`, which reads the active `ProfileIdentity` and uses that profile in domain listing and duplicate checks. The legacy `BrowserUnit` methods remain default-profile-only helpers but have no verified active settings caller.
+Both the active task path and legacy `BrowserUnit` transfer helpers resolve the active `ProfileIdentity` and pass it into whitelist table reads and duplicate checks. The default profile remains the fallback. Bookmark import/export remains unchanged.
 
 ## Security audit decisions
 SSL certificate-error override behavior, automatic Android backup of `Ninja4.db`, application-level cleartext traffic, and the coupling of file-origin access with DOM storage under `sp_remote` remain explicit product/architecture decisions. Do not change them opportunistically.
@@ -79,10 +77,13 @@ SSL certificate-error override behavior, automatic Android backup of `Ninja4.db`
 `P2 — WebLibre Feature Gap Implementation`
 
 ## Current checkpoint
-P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and the active whitelist transfer profile fix are completed at source/test/CI levels as recorded. The next bounded runtime candidate is the `HelperUnit.save_as()` cookie-forwarding policy bypass. Tab reorder UI remains PARTIAL and must be implemented as a complete mutation path across `BrowserActivity`/`AlbumItem` without breaking long-click close. QR/PWA/tab hierarchy/multi-window/Reader Mode remain deferred. Android runtime remains deferred.
+P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, whitelist profile consistency, and the bounded security audit are complete at the source/test/CI level recorded in GitHub. No unresolved bounded privacy/runtime candidate remains in the current plan. Tab reorder UI is still partial; larger architectural items remain intentionally deferred.
 
-## Next execution
-**Patch `HelperUnit.save_as()` so the existing `send_download_cookies` contract applies consistently to Save As, using the smallest shared-policy seam and deterministic JVM coverage where practical. Then run CI, review the diff, and synchronize state. Do not install the APK yet.**
+## Final validation gate
+The project is now at the pre-runtime final validation gate. Before Android testing, ensure the current branch remains on the verified source checkpoint and the consolidated CI result remains successful. Then perform one device pass covering navigation, profile/whitelist transfer, downloads, security preferences, tabs/reorder core behavior, settings search, and regression checks. Any runtime defects discovered there should be fixed as a consolidated batch, followed by CI and one final device recheck.
+
+## Deferred backlog
+QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, and Reader Mode remain deferred.
 
 ## Last synchronized
-2026-09-04 — reconciled active branch state; confirmed whitelist transfer is already profile-aware in the real settings path and retained Save As cookie forwarding as the next bounded runtime candidate.
+2026-09-05 — reconciled the master map with current `genspark-dev`; whitelist transfer and download-cookie gaps are source/CI-verified, and the project is ready for the final consolidated Android validation gate.
