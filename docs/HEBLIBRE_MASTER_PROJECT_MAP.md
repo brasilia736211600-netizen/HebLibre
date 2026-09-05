@@ -120,15 +120,15 @@ Current 2026 market references repeatedly identify Multilogin, GoLogin, AdsPower
 `P0/P1 portability implementation → CI/runtime recovery → settings/proxy architecture decisions`
 
 ## Current blocking items
-- The minimal `ubuntu-22.04` Runner Probe also fails before its first step on a fresh push. Its job metadata reports `runner_id=0`, an empty runner name, zero steps, and a two-second failure window. This independently confirms the failure is occurring before project/toolchain execution.
+- Fresh GitHub Actions hosted jobs continue to fail before any job step. The minimal Runner Probe also fails in ~2 seconds with `runner_id=0`, an empty runner name, and zero steps, independently ruling out Android/Gradle execution as the immediate cause.
 - A successful current x86_64 GitHub Actions artifact is therefore not yet available for consolidated emulator validation.
 - Complete profile-local settings and per-profile proxy routing remain architectural work and are intentionally not represented as completed features.
 
 ## Current next executable step
-Use the next fresh GitHub Actions capacity that successfully assigns a hosted runner: verify the Runner Probe or Unit Tests first, then run Runtime Smoke on the latest checkpoint, download the exact x86_64 APK + checksum, verify SHA-256, and perform one consolidated emulator validation. Keep profile-settings work limited to source inventory/design until its full reader/writer and migration contract is explicit.
+Use the next fresh GitHub Actions capacity that successfully assigns a hosted runner: verify Unit Tests and Runtime Smoke on HEAD `f863baeec686d28ebcc2e8b478b36529c5544117`, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation. Keep profile-settings work limited to source inventory/design until its full reader/writer and migration contract is explicit.
 
 ## Android validation gate
 Do not repeatedly build/install APKs during feature development. Complete source review, deterministic tests, CI, and documentation first. Then perform consolidated physical-device validation. Emulator evidence remains separate from physical-device evidence.
 
 ## Last synchronized
-2026-09-06 — synchronized the master map to HEAD `a8626da1cc7e6ad9551c6c14207dc8e5cb8ca098`, including the expanded Profile Transfer smoke coverage and confirmed hosted-runner pre-step failure signature.
+2026-09-06 — synchronized the master map to HEAD `f863baeec686d28ebcc2e8b478b36529c5544117`, including Profile Transfer smoke coverage and confirmed hosted-runner pre-step failure signature.
