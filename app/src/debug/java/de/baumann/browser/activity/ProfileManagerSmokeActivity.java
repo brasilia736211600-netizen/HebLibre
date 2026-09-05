@@ -78,9 +78,10 @@ public class ProfileManagerSmokeActivity extends Activity {
         require(reader.listHistory().isEmpty(), "history leaked across profiles");
         require(reader.listBookmark(this, false, 0L).isEmpty(), "bookmark leaked across profiles");
         require(reader.listTab().isEmpty(), "tab leaked across profiles");
-        require(reader.listDomains(RecordUnit.TABLE_WHITELIST, firstProfile).isEmpty() == false ||
-                        reader.listDomains(RecordUnit.TABLE_WHITELIST, secondProfile).isEmpty(),
-                "unexpected whitelist profile state");
+        require(reader.listDomains(RecordUnit.TABLE_WHITELIST, firstProfile).size() == 1,
+                "first profile whitelist disappeared");
+        require(reader.listDomains(RecordUnit.TABLE_WHITELIST, secondProfile).isEmpty(),
+                "whitelist leaked into second profile");
         reader.close();
 
         require(ProfileCatalogStore.setActiveProfileId(this, firstProfile), "cannot restore first profile");
