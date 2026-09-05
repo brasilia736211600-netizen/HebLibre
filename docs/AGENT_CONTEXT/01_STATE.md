@@ -4,38 +4,44 @@
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
 ## Current live checkpoint
-`a9677287744bf80bf06626522a8e0831d04e9d9b` — capability-checked WebView profile-binding seam.
+`ae5c6d7fda37de4ba33e3b20f01abf6599c57ec6` — WebKit 1.9.0 + Android 33 CI toolchain alignment.
 
 ## Previous application-source checkpoints
-- `12c237e0ab9832adb509889c1d1202cd73f2e8bf` — AndroidX WebKit dependency evaluation (`1.14.0`).
+- `7520c0326f88e1cb99764b699eeb62297b873489` — WebKit 1.9.0 with compileSdk/build-tools 33 alignment.
+- `cab285b5abea743593a4f0813d9ee8f099c642a5` — active-profile WebView binding wired immediately after `super(context)`.
+- `a9677287744bf80bf06626522a8e0831d04e9d9b` — capability-checked WebView profile-binding seam.
 - `247768c4e2e442fcb9b42d299d8cf00d3c24b81b` — profile-aware whitelist import/export correction.
 
 ## Work completed in this session
 - Added `ProfileMetadata`, a dependency-free reusable profile metadata contract with stable profile id ownership, name, color, icon, notes, tags, and group.
 - Added JVM tests covering metadata normalization, required fields, optional fields, duplicate/blank tag handling, and immutability.
-- Upgraded AndroidX WebKit from `1.3.0-alpha03` to `1.14.0` as the compatibility candidate while preserving `minSdkVersion 21`.
+- Evaluated WebKit `1.14.0`; CI proved the existing legacy build toolchain could not consume that dependency cleanly because of the newer annotation-experimental dependency path.
+- Reconciled the dependency spike to `androidx.webkit:webkit:1.9.0`, the first stable multi-profile release, and aligned the CI Android SDK installation plus app compileSdk/build-tools to Android 33/33.0.2 while preserving `minSdkVersion 21` and `targetSdkVersion 29`.
 - Added `WebViewProfileBindingPolicy` and `WebViewProfileBinder`. The binder checks `MULTI_PROFILE`, preserves legacy behavior for the default profile, and binds only named profiles through `WebViewCompat.setProfile()`.
+- Wired `WebViewProfileBinder.bindActiveProfile(context, this)` immediately after `super(context)` in `NinjaWebView(Context)`.
 - Added deterministic tests for the binding policy.
-- Created this `docs/AGENT_CONTEXT/` control plane on the active branch; the earlier GitHub commits `2ebf571...` and `4557891...` contained the same context files but were not ancestors of the live branch, so current-branch context is authoritative.
+- Created and synchronized this `docs/AGENT_CONTEXT/` control plane. The earlier GitHub commits `2ebf571...` and `4557891...` contained context files but were not ancestors of the live branch; current-branch context is authoritative.
 
 ## Evidence
-- SOURCE-VERIFIED: current profile metadata, WebKit dependency, binding policy/binder, and context files are present on `genspark-dev`.
-- TEST-VERIFIED: pending the current GitHub Actions run for the latest source checkpoint.
-- CI-VERIFIED: pending. The prior `1.14.0` build/test run is still in progress and predates the binder commit.
-- ANDROID-RUNTIME-VERIFIED: not claimed; final consolidated validation only.
+- SOURCE-VERIFIED: current profile metadata, WebKit dependency, WebView binding seam, CI toolchain, and context files are present on `genspark-dev`.
+- TEST-VERIFIED: pending the latest `Unit Tests` run after the toolchain alignment.
+- CI-VERIFIED: the `1.14.0` run failed; its failure drove the bounded downgrade to `1.9.0`. The new `1.9.0` CI run is in progress.
+- ANDROID-RUNTIME-VERIFIED: not claimed; the current runtime-smoke runs are intermediate build validation, not final consolidated device validation.
 - DOCUMENTED: yes, current context is synchronized to the latest live HEAD.
 
 ## Architecture findings
-AndroidX WebKit multi-profile support exists from WebKit `1.9.0`; `WebViewCompat.setProfile()` associates a WebView with a named Profile and `ProfileStore` manages profiles. The current application constructs `NinjaWebView` directly. Binding must occur immediately after WebView construction and before WebView configuration/navigation.
+AndroidX WebKit 1.9.0 introduced the stable WebView multi-profile API: `WebViewCompat.setProfile()` binds a WebView to a named Profile and `ProfileStore` manages available profiles. Profile-specific CookieManager/WebStorage/ServiceWorker-related state is available through the Profile API, while legacy static WebView APIs such as `CookieManager.getInstance()` continue to address the default profile.
 
-`androidx.webkit:webkit:1.14.0` is the selected compatibility candidate for the current `minSdkVersion 21` baseline. WebKit `1.15.0` raises minSdk to 23; do not upgrade past 1.14.x without an explicit support-floor decision.
+The current application constructs `NinjaWebView` directly. Binding is now placed immediately after WebView construction and before WebView configuration/navigation. The binder is capability-checked, so unsupported WebView implementations retain legacy behavior and no isolation claim is made.
 
-The binding seam is intentionally not yet wired into `NinjaWebView`; the next source mutation must add exactly that early-constructor call, then verify build/tests before broader lifecycle work. Until it is wired, no runtime profile isolation is claimed.
+The build baseline is intentionally conservative: `minSdkVersion 21`, `targetSdkVersion 29`, `compileSdkVersion 33`, WebKit 1.9.0. Do not raise targetSdk or minSdk as a side effect of profile work.
 
 ## Deferred policy decisions
 Do not change SSL certificate override semantics, application cleartext policy, automatic backup semantics, or the coupling of file-origin access with DOM storage without an explicit product/architecture decision.
 
 Do not fake profile-local proxying with process-global `ProxyController` behavior.
 
+Do not add profile switcher UI, storage migration, or profile-specific cookie/storage cleanup until the binding/build contract is CI-verified.
+
 ## Next executable action
-Wire `WebViewProfileBinder.bindActiveProfile(context, this)` immediately after `super(context)` in the `NinjaWebView(Context)` constructor, then run the affected CI/build checks and inspect the integrated diff before adding any profile switcher UI or storage migration.
+Wait only for the current CI evidence needed to validate the WebKit 1.9.0/toolchain change. If CI passes, inspect the final diff and then implement the minimal profile-switch/rebind lifecycle contract; if it fails, diagnose from CI logs before any further feature work.
