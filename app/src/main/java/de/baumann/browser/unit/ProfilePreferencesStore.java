@@ -51,29 +51,29 @@ public final class ProfilePreferencesStore {
     }
 
     public static void initializeProfile(Context context, String profileId) {
-        if (context == null || !ProfileCatalogPolicy.isValidProfileId(profileId)) {
+        if (context == null || !isSupportedProfileId(profileId)) {
             return;
         }
         SharedPreferences profile = profilePreferences(context, profileId);
         if (profile.getBoolean(INITIALIZED_KEY, false)) {
             return;
         }
-        copyGlobalToProfile(context, profile, PreferenceManager.getDefaultSharedPreferences(context));
+        copyGlobalToProfile(profile, PreferenceManager.getDefaultSharedPreferences(context));
         profile.edit().putBoolean(INITIALIZED_KEY, true).apply();
     }
 
     public static void saveGlobalToProfile(Context context, String profileId) {
-        if (context == null || !ProfileCatalogPolicy.isValidProfileId(profileId)) {
+        if (context == null || !isSupportedProfileId(profileId)) {
             return;
         }
         SharedPreferences global = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences profile = profilePreferences(context, profileId);
-        copyGlobalToProfile(context, profile, global);
+        copyGlobalToProfile(profile, global);
         profile.edit().putBoolean(INITIALIZED_KEY, true).apply();
     }
 
     public static void loadProfileToGlobal(Context context, String profileId) {
-        if (context == null || !ProfileCatalogPolicy.isValidProfileId(profileId)) {
+        if (context == null || !isSupportedProfileId(profileId)) {
             return;
         }
         initializeProfile(context, profileId);
@@ -94,19 +94,23 @@ public final class ProfilePreferencesStore {
     }
 
     public static void deleteProfile(Context context, String profileId) {
-        if (context == null || !ProfileCatalogPolicy.isValidProfileId(profileId)) {
+        if (context == null || !ProfileCatalogPolicy.isValidUserProfileId(profileId)) {
             return;
         }
         profilePreferences(context, profileId).edit().clear().apply();
+    }
+
+    private static boolean isSupportedProfileId(String profileId) {
+        String normalized = ProfileIdentity.normalize(profileId);
+        return ProfileIdentity.DEFAULT_PROFILE_ID.equals(normalized)
+                || ProfileCatalogPolicy.isValidUserProfileId(normalized);
     }
 
     private static SharedPreferences profilePreferences(Context context, String profileId) {
         return context.getSharedPreferences(STORE_PREFIX + ProfileIdentity.normalize(profileId), Context.MODE_PRIVATE);
     }
 
-    private static void copyGlobalToProfile(Context context,
-                                            SharedPreferences profile,
-                                            SharedPreferences global) {
+    private static void copyGlobalToProfile(SharedPreferences profile, SharedPreferences global) {
         SharedPreferences.Editor editor = profile.edit();
         for (String key : BOOLEAN_KEYS) {
             editor.putBoolean(key, global.getBoolean(key, defaultBoolean(key)));
