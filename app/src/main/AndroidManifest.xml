@@ -73,6 +73,10 @@
             android:label="@string/setting_label"
             android:theme="@style/AppTheme"/>
 
+        <activity android:name="de.baumann.browser.activity.ProfileManagerActivity"
+            android:label="@string/profile_manager_title"
+            android:theme="@style/AppTheme"/>
+
         <activity android:name="de.baumann.browser.activity.Whitelist_AdBlock"
             android:label="@string/setting_title_whitelist"
             android:theme="@style/AppTheme"/>
