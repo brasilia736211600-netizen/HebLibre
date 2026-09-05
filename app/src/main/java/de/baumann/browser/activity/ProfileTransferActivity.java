@@ -1,6 +1,7 @@
 package de.baumann.browser.activity;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.baumann.browser.R;
@@ -95,8 +97,8 @@ public class ProfileTransferActivity extends AppCompatActivity {
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton("Continue", null)
                 .create();
-        dialog.setOnShowListener(new android.content.DialogInterface.OnShowListener() {
-            @Override public void onShow(android.content.DialogInterface ignored) {
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override public void onShow(DialogInterface ignored) {
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override public void onClick(View v) {
                         String value = password.getText().toString();
@@ -149,9 +151,8 @@ public class ProfileTransferActivity extends AppCompatActivity {
     private void writeExport(Uri destination) throws Exception {
         String activeId = ProfileCatalogStore.getActiveProfileId(this);
         ProfileMetadata metadata = ProfileCatalogStore.get(this, activeId);
-        if (metadata == null) {
-            throw new IllegalStateException("Active profile metadata is missing");
-        }
+        if (metadata == null) throw new IllegalStateException("Active profile metadata is missing");
+
         RecordAction action = new RecordAction(this);
         action.open(false);
         List<Record> history;
@@ -190,8 +191,8 @@ public class ProfileTransferActivity extends AppCompatActivity {
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton("Import", null)
                 .create();
-        dialog.setOnShowListener(new android.content.DialogInterface.OnShowListener() {
-            @Override public void onShow(android.content.DialogInterface ignored) {
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override public void onShow(DialogInterface ignored) {
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override public void onClick(View v) {
                         try {
@@ -207,14 +208,60 @@ public class ProfileTransferActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void importDecoded(ProfileTransferCodec.TransferPackage transfer) {
-        ProfileMetadata metadata = transfer.getMetadata();
-        if (!ProfileCatalogPolicy.isValidUserProfileId(metadata.getId())) {
-            throw new IllegalArgumentException("Imported profile ID is invalid");
+    private void importDecoded(final ProfileTransferCodec.TransferPackage transfer) {
+        final ProfileMetadata source = transfer.getMetadata();
+        if (ProfileCatalogPolicy.isValidUserProfileId(source.getId())
+                && ProfileCatalogStore.get(this, source.getId()) == null) {
+            importWithMetadata(transfer, source);
+            return;
         }
-        if (ProfileCatalogStore.get(this, metadata.getId()) != null) {
-            throw new IllegalArgumentException("A profile with this ID already exists");
-        }
+
+        final EditText id = new EditText(this);
+        id.setSingleLine(true);
+        id.setHint("New profile ID");
+        new AlertDialog.Builder(this)
+                .setTitle("Choose imported profile ID")
+                .setMessage("The exported ID is reserved or already exists. Choose a new ID for the imported profile.")
+                .setView(id)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Import", null)
+                .create();
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Choose imported profile ID")
+                .setMessage("The exported ID is reserved or already exists. Choose a new ID for the imported profile.")
+                .setView(id)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Import", null)
+                .create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override public void onShow(DialogInterface ignored) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        String profileId = id.getText().toString().trim();
+                        if (!ProfileCatalogPolicy.isValidUserProfileId(profileId)
+                                || ProfileCatalogStore.get(ProfileTransferActivity.this, profileId) != null) {
+                            Toast.makeText(ProfileTransferActivity.this,
+                                    "Choose a valid unused profile ID", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        ProfileMetadata replacement = new ProfileMetadata(
+                                profileId,
+                                source.getName(),
+                                source.getColor(),
+                                source.getIcon(),
+                                source.getNotes(),
+                                new ArrayList<>(source.getTags()),
+                                source.getGroup());
+                        importWithMetadata(transfer, replacement);
+                        dialog.dismiss();
+                    }
+                });
+            }
+        });
+        dialog.show();
+    }
+
+    private void importWithMetadata(ProfileTransferCodec.TransferPackage transfer, ProfileMetadata metadata) {
         if (!ProfileCatalogStore.save(this, metadata)) {
             throw new IllegalStateException("Unable to save imported profile");
         }
@@ -223,15 +270,9 @@ public class ProfileTransferActivity extends AppCompatActivity {
         RecordAction action = new RecordAction(this);
         action.open(true);
         try {
-            for (Record record : transfer.getHistory()) {
-                action.addHistory(record);
-            }
-            for (Record record : transfer.getBookmarks()) {
-                action.addBookmark(record, metadata.getId());
-            }
-            for (Record record : transfer.getTabs()) {
-                action.addTab(record, metadata.getId());
-            }
+            for (Record record : transfer.getHistory()) action.addHistory(record);
+            for (Record record : transfer.getBookmarks()) action.addBookmark(record, metadata.getId());
+            for (Record record : transfer.getTabs()) action.addTab(record, metadata.getId());
         } finally {
             action.close();
         }
@@ -243,9 +284,7 @@ public class ProfileTransferActivity extends AppCompatActivity {
                 getContentResolver().openInputStream(source), StandardCharsets.UTF_8))) {
             StringBuilder result = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line).append('\n');
-            }
+            while ((line = reader.readLine()) != null) result.append(line).append('\n');
             return result.toString();
         }
     }
