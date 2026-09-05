@@ -29,6 +29,7 @@ import de.baumann.browser.unit.HelperUnit;
 import de.baumann.browser.unit.HttpsOnlyPolicy;
 import de.baumann.browser.unit.SaveDataPolicy;
 import de.baumann.browser.unit.ThirdPartyCookiePolicy;
+import de.baumann.browser.unit.WebViewProfileBinder;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -130,6 +131,8 @@ public class NinjaWebView extends WebView implements AlbumController {
 
     public NinjaWebView(Context context) {
         super(context); // Cannot create a dialog, the WebView context is not an activity
+
+        WebViewProfileBinder.bindActiveProfile(context, this);
 
         this.context = context;
         this.foreground = false;
