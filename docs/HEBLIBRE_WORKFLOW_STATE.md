@@ -1,21 +1,21 @@
 # HebLibre Workflow State
 
 ## Canonical continuity
-GitHub is the source of truth. Chat history, agent memory, plugin memory, and unstated local state are non-authoritative.
+GitHub is the source of truth. Chat history, model memory, plugin memory, and unstated local state are non-authoritative.
 Repository: `brasilia736211600-netizen/HebLibre`
 Branch: `genspark-dev`
 Default branch: `l10n_crowdin`
 
 ## Communication language
-All human-facing conversation about HebLibre is in Arabic unless the user explicitly requests another language. This applies to progress updates, explanations, decisions, questions, status reports, and session handoffs. Repository source code, identifiers, commit messages, CI output, and filenames remain in their native/project language.
+All human-facing conversation about HebLibre is in Arabic unless the user explicitly requests another language. Repository source code, identifiers, commit messages, CI output, and filenames remain in their native/project language.
 
 ## Mandatory continuity documents
-- `docs/HEBLIBRE_AI_AGENT_CONTRACT.md` — durable rules for every AI/human agent.
-- `docs/HEBLIBRE_MASTER_PROJECT_MAP.md` — scope, architecture boundary, completed work, and deferred backlog.
-- `docs/HEBLIBRE_EXECUTION_BOARD.md` — operational task board and final validation checklist.
-- `docs/HEBLIBRE_DECISION_LOG.md` — durable rationale for important decisions and rejected/deferred paths.
-- `docs/HEBLIBRE_RESUME_COMMAND.md` — copy/paste bootstrap for a new chat/session/agent.
-- `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md` — separate WebLibre feature/design comparison; not continuity authority.
+- `docs/HEBLIBRE_AI_AGENT_CONTRACT.md`
+- `docs/HEBLIBRE_MASTER_PROJECT_MAP.md`
+- `docs/HEBLIBRE_EXECUTION_BOARD.md`
+- `docs/HEBLIBRE_DECISION_LOG.md`
+- `docs/HEBLIBRE_RESUME_COMMAND.md`
+- `docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md`
 
 ## Execution protocol
 `READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE`
@@ -30,50 +30,54 @@ All human-facing conversation about HebLibre is in Arabic unless the user explic
 Never conflate these levels.
 
 ## Current repository state
+- Live `genspark-dev` HEAD: `72550bbaa5dfd18d0bc8345b03f3bc0015bf1835`.
 - Latest verified application-source fix: `247768c4e2e442fcb9b42d299d8cf00d3c24b81b` — whitelist import/export resolves the active normalized profile instead of hard-coding the default profile.
 - Consolidated Unit Tests run `33985143542` passed for that source checkpoint.
-- Subsequent commits are documentation/CI hardening only; no unverified third-party-cookie behavior change remains.
-- Current branch now includes the Arabic communication-language rule in the durable AI-agent contract.
-- Android emulator smoke has completed successfully in GitHub Actions on the validation sequence. This is emulator evidence, not physical target-device proof.
-- P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and whitelist profile consistency are recorded as SOURCE/TEST/CI verified.
+- Current HEAD is 9 commits beyond Android emulator checkpoint `48300a4ad2c366e2987cea9949de8e722089c962`; GitHub compare reports those 9 commits changed documentation/control-plane files only. No application-source file changed after the emulator checkpoint.
+- Android Runtime Smoke run `33988773661` (run #15) completed successfully on `48300a4ad2c366e2987cea9949de8e722089c962`; because the current HEAD has no application-source changes after that checkpoint, the current application source retains that emulator runtime evidence.
+- Latest current-HEAD Unit Tests run `33990897505` completed successfully.
+- No unverified third-party-cookie behavior change remains; the compatibility-preserving default is retained.
 
 ## Engineering checkpoint
-The tab overview remains `ScrollView` + `LinearLayout`. `AlbumItem` uses normal click for selection and long-click for tab close. Tab reorder core is implemented via `TabOrderPolicy` + `BrowserContainer.move()` and is tested; dedicated reorder UI remains deferred so the established long-click close behavior is not broken.
+The bounded P2 implementation is complete at the source/test/CI level. Implemented areas include P2.1–P2.11, download-cookie privacy, profile-aware whitelist transfer, tab reorder core, and remote-content default consistency.
 
-Whitelist transfer is profile-aware in both the active settings path and legacy `BrowserUnit` helpers. Bookmark transfer remains unchanged.
+The tab overview remains `ScrollView` + `LinearLayout`. `AlbumItem` uses normal click for selection and long-click for tab close. Tab reorder core uses `TabOrderPolicy` + `BrowserContainer.move()` and preserves controller/WebView identity; dedicated reorder UI remains deferred so long-click close behavior is not broken.
 
-Download cookie privacy is enforced in both the main download and Save As paths with a compatibility-preserving enabled default.
+Whitelist transfer is profile-aware in both the active settings route and legacy `BrowserUnit` helpers. Bookmark transfer remains unchanged.
+
+Download cookie privacy is enforced in both main download and Save As paths with a compatibility-preserving enabled default.
 
 `sp_remote` declared/default behavior is consistent across preference initialization and navigation.
 
 ## Security/architecture decisions
-Do not silently modify the following:
+Do not silently modify:
 - SSL certificate-error override behavior.
 - Application-level `android:usesCleartextTraffic` policy.
 - Automatic Android backup semantics for `Ninja4.db`.
 - Coupling of file-origin access and DOM storage under `sp_remote`.
 - Complete profile/WebView storage isolation.
-- Architectural networking/privacy features such as DoH, per-container proxy/Tor, broad fingerprinting defenses, full WebRTC privacy, extensions/uBlock, and on-device AI.
+- DoH, per-container proxy/Tor, broad fingerprinting defenses, full WebRTC privacy, extensions/uBlock, and on-device AI.
 
-See `docs/HEBLIBRE_DECISION_LOG.md` for rationale.
+See `docs/HEBLIBRE_DECISION_LOG.md` and `docs/HEBLIBRE_SECURITY_AUDIT_2026-09-03.md`.
 
 ## Android validation
 ### Completed
-- ARM debug APK packaging was validated by CI.
-- GitHub-hosted Android emulator smoke executed successfully, including app execution checks.
+- ARM debug APK packaging: CI-verified.
+- GitHub-hosted Android emulator smoke: successful on `48300a4ad2c366e2987cea9949de8e722089c962`.
+- Current HEAD has no application-source changes after that emulator checkpoint.
 
-### Pending
-Physical target-device validation remains the final release-confidence gate for the current bounded scope.
+### Final gate
+Physical target-device validation remains the only remaining release-confidence gate for the bounded scope.
 
-The consolidated device pass should cover navigation/search, tracking cleanup, HTTPS-only, GPC, Save-Data, desktop/custom UA interaction, screenshot protection, media/geolocation permissions, third-party cookies, downloads/Save As, profile/whitelist transfer, tabs/close/reorder core, settings search, history/bookmarks/home/clear-data, lifecycle, rendering, and crash/regression behavior.
+The consolidated pass should cover: launch/relaunch and restoration; navigation/external intents/back-forward; search/bangs; tracking cleanup; HTTPS-only; GPC; Save-Data; custom/desktop UA interaction; screenshot protection; camera/microphone and geolocation permissions; third-party cookies; download/Save As; profile switching + whitelist import/export isolation; tabs/close/overview/reorder core; settings search/persistence; history/bookmarks/home/clear-data; lifecycle/rendering/crash regression.
 
-If runtime defects are found: record reproduction → map to smallest seam → batch related fixes → add tests where possible → CI → one final physical-device recheck.
+Any runtime defect follows one consolidated cycle: reproduce → smallest seam → batch related fixes → deterministic tests → CI → physical recheck.
 
 ## Deferred work
-QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, Reader Mode, and dedicated tab-reorder UI remain explicitly deferred.
+QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, Reader Mode, dedicated tab-reorder UI, broader download-manager UX, translation-service integration, and full-page/Markdown export remain deferred by design.
 
 ## Session handoff rule
-At the end of every meaningful session, update this file with the live HEAD, exact changes, test/CI/runtime evidence, unresolved decisions, and one next executable step. Update the master map and execution board when scope changes.
+Every meaningful session ends with this file synchronized to the live HEAD, exact evidence, unresolved decisions, and one next executable step.
 
 ## Last updated
-2026-09-05 — added the durable rule that all human-facing HebLibre conversation must be conducted in Arabic unless the user explicitly requests another language; repository/source artifacts keep their native language.
+2026-09-06 — reconciled live HEAD `72550...` with source checkpoint `247768...`, current Unit Tests run `33990897505`, and successful Android emulator smoke run `33988773661`; confirmed the post-emulator HEAD delta is documentation/control-plane only and reduced the project to the final physical-device validation gate.
