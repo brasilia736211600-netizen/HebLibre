@@ -28,31 +28,26 @@ Removing it globally could change compatibility for HTTP destinations, so this r
 
 `backup_descriptor.xml` explicitly includes `Ninja4.db`. The browser database contains history, bookmarks, tabs, and whitelist data. Automatic backup is therefore privacy-relevant. Android guidance supports retaining backup while excluding sensitive data with backup rules, but changing this project's backup contract can affect restore continuity and user expectations. No change made.
 
-## Finding: whitelist import/export profile mismatch was already corrected in the active path
+## Finding: whitelist import/export profile mismatch
 
-An earlier source audit identified legacy `BrowserUnit.exportWhitelist()` / `importWhitelist()` methods that use `RecordUnit.DEFAULT_PROFILE_ID`. That finding does **not** represent the active settings transfer path.
+A legacy pair of `BrowserUnit.exportWhitelist()` / `importWhitelist()` methods used `RecordUnit.DEFAULT_PROFILE_ID` for whitelist queries. The active settings transfer path was already correctly routed through `ProfileScopedWhitelistTransfer`, which resolves `ProfileIdentity.PREFERENCE_KEY` before table reads and duplicate checks.
 
-### Active-path verification
-- `ExportWhiteListTask` routes whitelist export (tables 0/1/2/3) through `ProfileScopedWhitelistTransfer.exportWhitelist()`.
-- `ImportWhitelistTask` routes whitelist import (tables 0/1/2/3) through `ProfileScopedWhitelistTransfer.importWhitelist()`.
-- `ProfileScopedWhitelistTransfer` resolves `ProfileIdentity.PREFERENCE_KEY` and normalizes it before whitelist table reads and duplicate checks.
-- Bookmark import/export remains on the existing `BrowserUnit` path and is intentionally unchanged.
-
-Therefore there is **no new runtime patch required for this finding**. The earlier conclusion that this was the next concrete code change was corrected after tracing the actual settings task call path.
+To remove the inconsistency for any remaining legacy callers, the legacy `BrowserUnit` methods were updated to resolve the active normalized profile and pass that profile to all four whitelist tables. The default profile remains the fallback when no profile is stored.
 
 ### Verification status
-- SOURCE-VERIFIED: yes — active transfer path is profile-aware and the legacy default-profile helpers are not used by the settings transfer tasks.
-- TEST-VERIFIED: existing recorded profile/whitelist tests remain the applicable evidence; no new source change was required here.
-- CI-VERIFIED: current HEAD Unit Tests run `33703506073` completed successfully.
+- SOURCE-VERIFIED: yes — the commit diff is limited to active-profile resolution and profile arguments in the two legacy transfer helpers.
+- TEST-VERIFIED: existing `ProfileScopedWhitelistTransferTest` covers null, blank, trimmed, and preserved profile-id normalization.
+- CI-VERIFIED: Unit Tests run `33985143542`, head `247768c4e2e442fcb9b42d299d8cf00d3c24b81b`, completed successfully; the `test` job and `Run unit tests` step both completed successfully.
 - ANDROID-RUNTIME-VERIFIED: not yet; remains deferred to final consolidated device validation.
 
-## Finding: download cookie policy has a second download path that bypasses it
+## Finding: download-cookie bypass status
 
-The main `BrowserUnit.download()` path now gates the `Cookie` request header behind `DownloadCookiePolicy` and the `send_download_cookies` preference. However, `HelperUnit.save_as()` constructs `DownloadManager.Request` directly and still unconditionally adds `CookieManager.getInstance().getCookie(url)` as a request header.
+The audit previously identified `HelperUnit.save_as()` as a second download path that could bypass the download-cookie policy. Current source has already been updated in both SDK branches so the `Cookie` request header is added only when `DownloadCookiePolicy` permits it. The main `BrowserUnit.download()` path is likewise policy-gated.
 
-This creates a concrete policy bypass: disabling download-cookie forwarding does not guarantee that the alternate "Save as" download path stops sending cookies.
-
-This is a bounded correctness/privacy issue and is a higher-value runtime candidate than the already-resolved whitelist audit item. The safest fix is to route this second path through the same cookie-forwarding policy without changing the existing Save As UI or download destination behavior, then add deterministic policy coverage where practical and run CI before any Android runtime validation.
+### Verification status
+- SOURCE-VERIFIED: current `HelperUnit.save_as()` and `BrowserUnit.download()` both consult `send_download_cookies` before forwarding the cookie header.
+- CI-VERIFIED: the relevant download-cookie integration/unit-test run `33692045747` completed successfully; the currently consolidated branch test run `33985143542` also completed successfully.
+- ANDROID-RUNTIME-VERIFIED: not yet; remains deferred to final consolidated device validation.
 
 ## Official Android cross-checks
 
@@ -62,4 +57,4 @@ This is a bounded correctness/privacy issue and is a higher-value runtime candid
 - Android application backup guidance supports selective `dataExtractionRules`/backup configuration for sensitive app data: https://developer.android.com/guide/topics/manifest/application-element
 
 ## Next bounded work
-Prioritize closing the `HelperUnit.save_as()` download-cookie policy bypass with the smallest shared-policy seam. Keep SSL override, global cleartext policy, backup semantics, and `sp_remote` file-origin coupling as explicit product/architecture decisions until their contracts are approved.
+Prioritize deterministic source/UX work that can be validated without changing unresolved security contracts. Keep SSL override, global cleartext policy, backup semantics, and `sp_remote` file-origin coupling as explicit product/architecture decisions until their contracts are approved.
