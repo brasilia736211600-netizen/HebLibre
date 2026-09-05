@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.RecordUnit;
@@ -239,7 +240,7 @@ public class RecordAction {
                                         String profileId) {
         if (database == null || !database.isOpen()
                 || history == null || bookmarks == null || tabs == null
-                || !ProfileCatalogPolicyForRecords.isValidProfileId(profileId)) {
+                || !ProfileCatalogPolicy.isValidUserProfileId(profileId)) {
             return false;
         }
         String normalizedProfileId = ProfileIdentity.normalize(profileId);
@@ -413,13 +414,5 @@ public class RecordAction {
         list.addAll(action.listBookmark(activity, false, 0));
         action.close();
         return list;
-    }
-
-    /** Small validation boundary kept local to RecordAction to avoid coupling DB imports to the catalog store. */
-    private static final class ProfileCatalogPolicyForRecords {
-        private static boolean isValidProfileId(String profileId) {
-            String normalized = ProfileIdentity.normalize(profileId);
-            return !normalized.isEmpty() && normalized.length() <= 64;
-        }
     }
 }
