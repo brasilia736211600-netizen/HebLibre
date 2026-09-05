@@ -6,7 +6,9 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -91,6 +93,52 @@ public final class ProfilePreferencesStore {
             }
         }
         editor.apply();
+    }
+
+    /** Returns a typed, portable snapshot of only the settings explicitly owned by profiles. */
+    public static Map<String, String> snapshot(Context context, String profileId) {
+        Map<String, String> result = new HashMap<>();
+        if (context == null || !isSupportedProfileId(profileId)) {
+            return result;
+        }
+        initializeProfile(context, profileId);
+        SharedPreferences profile = profilePreferences(context, profileId);
+        for (String key : BOOLEAN_KEYS) {
+            result.put(key, "b:" + profile.getBoolean(key, defaultBoolean(key)));
+        }
+        for (String key : STRING_KEYS) {
+            result.put(key, "s:" + profile.getString(key, defaultString(key)));
+        }
+        return result;
+    }
+
+    /** Restores only recognized profile-owned settings; unknown entries are ignored safely. */
+    public static void restore(Context context, String profileId, Map<String, String> values) {
+        if (context == null || !isSupportedProfileId(profileId) || values == null) {
+            return;
+        }
+        initializeProfile(context, profileId);
+        SharedPreferences.Editor editor = profilePreferences(context, profileId).edit();
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (value == null) {
+                continue;
+            }
+            try {
+                if (BOOLEAN_KEYS.contains(key) && value.startsWith("b:")) {
+                    String raw = value.substring(2);
+                    if ("true".equals(raw) || "false".equals(raw)) {
+                        editor.putBoolean(key, Boolean.parseBoolean(raw));
+                    }
+                } else if (STRING_KEYS.contains(key) && value.startsWith("s:")) {
+                    editor.putString(key, value.substring(2));
+                }
+            } catch (RuntimeException ignored) {
+                // Ignore malformed imported preference entries without aborting the import.
+            }
+        }
+        editor.putBoolean(INITIALIZED_KEY, true).apply();
     }
 
     public static void deleteProfile(Context context, String profileId) {
