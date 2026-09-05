@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import de.baumann.browser.R;
 import de.baumann.browser.database.Record;
 import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogPolicy;
@@ -73,6 +74,11 @@ public class ProfileTransferActivity extends AppCompatActivity {
     }
 
     private void beginExport(boolean encrypted) {
+        pendingExportPassword = null;
+        startDocumentCreation(encrypted);
+    }
+
+    private void startDocumentCreation(boolean encrypted) {
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/octet-stream");
@@ -83,30 +89,34 @@ public class ProfileTransferActivity extends AppCompatActivity {
 
     private void promptExportPassword() {
         final EditText password = passwordField();
-        new AlertDialog.Builder(this)
+        final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Encryption password")
                 .setView(password)
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton("Continue", null)
-                .setOnDismissListener(null)
-                .show();
-        final AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Encryption password")
-                .setView(passwordField())
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton("Continue", null)
                 .create();
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            EditText field = (EditText) dialog.findViewById(0);
-            // The second dialog is replaced below; retained only to keep Android 5.x compatibility.
-            dialog.dismiss();
-        }));
+        dialog.setOnShowListener(new android.content.DialogInterface.OnShowListener() {
+            @Override public void onShow(android.content.DialogInterface ignored) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        String value = password.getText().toString();
+                        if (value.length() < 8) {
+                            Toast.makeText(ProfileTransferActivity.this,
+                                    "Password must contain at least 8 characters", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        pendingExportPassword = value;
+                        dialog.dismiss();
+                        startDocumentCreation(true);
+                    }
+                });
+            }
+        });
         dialog.show();
     }
 
     private EditText passwordField() {
         EditText password = new EditText(this);
-        password.setId(android.R.id.text1);
         password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         password.setHint("At least 8 characters");
         return password;
@@ -129,8 +139,7 @@ public class ProfileTransferActivity extends AppCompatActivity {
             if (requestCode == CREATE_DOCUMENT) {
                 writeExport(data.getData());
             } else if (requestCode == OPEN_DOCUMENT) {
-                String content = readDocument(data.getData());
-                handleImport(content);
+                handleImport(readDocument(data.getData()));
             }
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage() == null ? "Transfer failed" : e.getMessage(), Toast.LENGTH_LONG).show();
@@ -175,20 +184,26 @@ public class ProfileTransferActivity extends AppCompatActivity {
 
     private void promptImportPassword(final String content) {
         final EditText password = passwordField();
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Import password")
                 .setView(password)
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton("Import", null)
                 .create();
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            try {
-                importDecoded(ProfileTransferCodec.decode(content, password.getText().toString()));
-                dialog.dismiss();
-            } catch (Exception e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+        dialog.setOnShowListener(new android.content.DialogInterface.OnShowListener() {
+            @Override public void onShow(android.content.DialogInterface ignored) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        try {
+                            importDecoded(ProfileTransferCodec.decode(content, password.getText().toString()));
+                            dialog.dismiss();
+                        } catch (Exception e) {
+                            Toast.makeText(ProfileTransferActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
             }
-        }));
+        });
         dialog.show();
     }
 
@@ -220,7 +235,6 @@ public class ProfileTransferActivity extends AppCompatActivity {
         } finally {
             action.close();
         }
-        getPreferences(MODE_PRIVATE).edit().clear().apply();
         Toast.makeText(this, "Profile imported. Restart the browser to apply it.", Toast.LENGTH_LONG).show();
     }
 
