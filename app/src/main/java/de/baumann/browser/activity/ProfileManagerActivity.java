@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.baumann.browser.R;
+import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileIdentity;
@@ -197,6 +198,12 @@ public class ProfileManagerActivity extends AppCompatActivity {
                 .setNegativeButton(android.R.string.cancel, null)
                 .setPositiveButton(R.string.profile_delete, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            RecordAction.deleteProfileRecords(ProfileManagerActivity.this, profile.getId());
+                        } catch (RuntimeException e) {
+                            Toast.makeText(ProfileManagerActivity.this, "Unable to delete profile data", Toast.LENGTH_LONG).show();
+                            return;
+                        }
                         if (ProfileCatalogStore.delete(ProfileManagerActivity.this, profile.getId())) {
                             Toast.makeText(ProfileManagerActivity.this, R.string.profile_deleted, Toast.LENGTH_SHORT).show();
                             renderProfiles();
