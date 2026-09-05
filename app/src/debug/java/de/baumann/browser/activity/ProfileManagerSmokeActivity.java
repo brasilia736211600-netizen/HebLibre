@@ -2,6 +2,7 @@ package de.baumann.browser.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import java.util.Collections;
@@ -16,9 +17,36 @@ public class ProfileManagerSmokeActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        verifyLegacyDatabaseMigration();
         verifyProfileScopedRecords();
         startActivity(new Intent(this, ProfileManagerActivity.class));
         finish();
+    }
+
+    private void verifyLegacyDatabaseMigration() {
+        deleteDatabase("Ninja4.db");
+        SQLiteDatabase legacy = SQLiteDatabase.openOrCreateDatabase(
+                getDatabasePath("Ninja4.db"), null);
+        legacy.execSQL("CREATE TABLE HISTORY ( TITLE text, URL text, TIME integer )");
+        legacy.execSQL("CREATE TABLE BOOKAMRK ( TITLE text, URL text, TIME integer )");
+        legacy.execSQL("CREATE TABLE TAB ( TITLE text, URL text, TIME integer )");
+        legacy.execSQL("CREATE TABLE GRID ( TITLE text, URL text, FILENAME text, ORDINAL integer )");
+        legacy.execSQL("CREATE TABLE WHITELIST ( DOMAIN text, PROFILE_ID text DEFAULT 'default' )");
+        legacy.execSQL("CREATE TABLE JAVASCRIPT ( DOMAIN text, PROFILE_ID text DEFAULT 'default' )");
+        legacy.execSQL("CREATE TABLE COOKIE ( DOMAIN text, PROFILE_ID text DEFAULT 'default' )");
+        legacy.execSQL("CREATE TABLE REMOTE ( DOMAIN text, PROFILE_ID text DEFAULT 'default' )");
+        legacy.execSQL("INSERT INTO HISTORY(TITLE,URL,TIME) VALUES ('Legacy history','https://legacy.example/history',11)");
+        legacy.execSQL("INSERT INTO BOOKAMRK(TITLE,URL,TIME) VALUES ('Legacy bookmark','https://legacy.example/bookmark',12)");
+        legacy.execSQL("INSERT INTO TAB(TITLE,URL,TIME) VALUES ('Legacy tab','https://legacy.example/tab',13)");
+        legacy.setVersion(5);
+        legacy.close();
+
+        RecordAction action = new RecordAction(this);
+        action.open(false);
+        require(action.listHistory().size() == 1, "legacy history migration lost data");
+        require(action.listBookmark(this, false, 0L).size() == 1, "legacy bookmark migration lost data");
+        require(action.listTab().size() == 1, "legacy tab migration lost data");
+        action.close();
     }
 
     private void verifyProfileScopedRecords() {
