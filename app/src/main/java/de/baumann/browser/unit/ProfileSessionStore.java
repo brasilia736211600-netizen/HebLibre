@@ -9,18 +9,26 @@ import de.baumann.browser.database.Record;
 import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.view.NinjaWebView;
 
-/** Persists the last browser tab set for the active profile. */
+/** Persists the last browser tab set for a specific profile. */
 public final class ProfileSessionStore {
 
     private ProfileSessionStore() {
     }
 
     public static void save(Context context, List<AlbumController> controllers) {
+        if (context == null) {
+            return;
+        }
+        save(context, controllers, ProfileCatalogStore.getActiveProfileId(context));
+    }
+
+    public static void save(Context context, List<AlbumController> controllers, String sessionProfileId) {
         if (context == null || controllers == null) {
             return;
         }
 
-        final String profileId = ProfileCatalogStore.getActiveProfileId(context);
+        final String profileId = ProfileSessionPolicy.persistenceProfileId(
+                sessionProfileId, ProfileCatalogStore.getActiveProfileId(context));
         RecordAction action = new RecordAction(context);
         action.open(true);
         action.clearTable(RecordUnit.TABLE_TAB, profileId);
