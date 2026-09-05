@@ -45,6 +45,13 @@ public class ProfileCatalogPolicyTest {
     }
 
     @Test
+    public void activeProfileMustBelongToCatalog() {
+        List<String> ids = Arrays.asList("default", "work");
+        assertEquals("work", ProfileCatalogPolicy.selectActiveId(ids, " work "));
+        assertEquals("default", ProfileCatalogPolicy.selectActiveId(ids, "private"));
+    }
+
+    @Test
     public void addAndRemoveKeepDefaultAndOrder() {
         List<String> initial = Arrays.asList("default", "work");
         assertEquals(Arrays.asList("default", "work", "private"),
