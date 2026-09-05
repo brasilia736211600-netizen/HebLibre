@@ -70,6 +70,7 @@ Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.
 - Profile export/import using a versioned format, optional AES-GCM encryption, PBKDF2 password derivation, wrong-password/tamper rejection, document picker UI, and explicit exclusion of WebView-internal cookies/storage/login secrets — SOURCE-VERIFIED on current branch.
 - Database deletion hardening: profile-domain and URL deletion paths now bind data values through SQLite selection arguments rather than interpolating them into SQL predicates — SOURCE-VERIFIED in `ad5cec1d0c2be694c9b732ec8ba0ecb69b6ac143`.
 - CI diagnostic hardening: Unit and Runtime Smoke workflows pinned to `ubuntu-24.04`; a minimal `ubuntu-22.04` runner probe was added to isolate runner startup from Android/toolchain execution.
+- Runtime Smoke coverage expanded with a debug-only Profile Transfer launcher that verifies the production transfer screen can be opened without exporting that production activity.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -119,15 +120,15 @@ Current 2026 market references repeatedly identify Multilogin, GoLogin, AdsPower
 `P0/P1 portability implementation → CI/runtime recovery → settings/proxy architecture decisions`
 
 ## Current blocking items
-- GitHub Actions jobs for the latest checkpoints still fail before any job step; current Unit and Android Runtime Smoke jobs have `steps: null` and no application logs. This is not treated as a code failure.
-- A successful current x86_64 GitHub Actions artifact is therefore not yet available for consolidated Android validation.
-- Runner Probe was added on `ubuntu-22.04` to isolate whether the failure occurs before any project action executes; its result still needs to be observed through GitHub Actions.
+- The minimal `ubuntu-22.04` Runner Probe also fails before its first step on a fresh push. Its job metadata reports `runner_id=0`, an empty runner name, zero steps, and a two-second failure window. This independently confirms the failure is occurring before project/toolchain execution.
+- A successful current x86_64 GitHub Actions artifact is therefore not yet available for consolidated emulator validation.
+- Complete profile-local settings and per-profile proxy routing remain architectural work and are intentionally not represented as completed features.
 
 ## Current next executable step
-Observe the Runner Probe result. If it executes, use its evidence to isolate the existing workflow startup problem; then rerun Unit Tests and Runtime Smoke, download the exact x86_64 artifact from the first successful runtime build, verify SHA-256, and perform one consolidated emulator validation. In parallel, continue only bounded source inventory for profile settings and preserve the proxy architecture boundary.
+Use the next fresh GitHub Actions capacity that successfully assigns a hosted runner: verify the Runner Probe or Unit Tests first, then run Runtime Smoke on the latest checkpoint, download the exact x86_64 APK + checksum, verify SHA-256, and perform one consolidated emulator validation. Keep profile-settings work limited to source inventory/design until its full reader/writer and migration contract is explicit.
 
 ## Android validation gate
 Do not repeatedly build/install APKs during feature development. Complete source review, deterministic tests, CI, and documentation first. Then perform consolidated physical-device validation. Emulator evidence remains separate from physical-device evidence.
 
 ## Last synchronized
-2026-09-06 — synchronized toolchain truth, profile portability/security hardening, runner diagnostics, and explicit settings/proxy boundaries.
+2026-09-06 — synchronized the master map to HEAD `a8626da1cc7e6ad9551c6c14207dc8e5cb8ca098`, including the expanded Profile Transfer smoke coverage and confirmed hosted-runner pre-step failure signature.
