@@ -98,7 +98,14 @@ jobs:
             adb shell am start -W -a android.intent.action.VIEW -d 'https://example.com' -p de.baumann.browser
             sleep 8
             test -n "$(adb shell pidof de.baumann.browser)"
-            adb shell uiautomator dump /sdcard/window.xml >/dev/null
-            adb shell cat /sdcard/window.xml | grep -F 'Example Domain' >/dev/null
-            ! adb shell logcat -d -t 4000 | grep -E 'FATAL EXCEPTION|Process: de\.baumann\.browser' >/dev/null
+            adb shell uiautomator dump /sdcard/browser.xml >/dev/null
+            adb shell cat /sdcard/browser.xml | grep -F 'Example Domain' >/dev/null
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileManagerActivity
+            sleep 3
+            adb shell uiautomator dump /sdcard/profile.xml >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -F 'Profiles' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -F 'Default' >/dev/null
+            adb shell input keyevent 4
+            sleep 1
+            ! adb shell logcat -d -t 5000 | grep -E 'FATAL EXCEPTION|Process: de\.baumann\.browser' >/dev/null
             adb shell dumpsys package de.baumann.browser | grep -E 'versionName|versionCode|enabled=' || true
