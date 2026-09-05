@@ -24,4 +24,12 @@ public class ProfileSessionPolicyTest {
         assertEquals("https://example.com", ProfileSessionPolicy.normalizeTitle(" ", "https://example.com"));
         assertEquals("", ProfileSessionPolicy.normalizeTitle(null, null));
     }
+
+    @Test
+    public void keepsSessionBoundToOriginalProfile() {
+        assertEquals("work", ProfileSessionPolicy.persistenceProfileId("work", "personal"));
+        assertEquals("default", ProfileSessionPolicy.persistenceProfileId("default", "personal"));
+        assertEquals("personal", ProfileSessionPolicy.persistenceProfileId("", "personal"));
+        assertEquals("default", ProfileSessionPolicy.persistenceProfileId(null, null));
+    }
 }
