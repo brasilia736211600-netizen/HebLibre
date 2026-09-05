@@ -26,7 +26,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install required Android components
-        run: sdkmanager "platforms;android-29" "build-tools;28.0.3"
+        run: sdkmanager "platforms;android-33" "build-tools;33.0.2"
 
       - name: Set up JDK 11 for Gradle
         uses: actions/setup-java@v4
