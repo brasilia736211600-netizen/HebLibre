@@ -9,7 +9,7 @@ import de.baumann.browser.unit.RecordUnit;
 
 class RecordHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "Ninja4.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     RecordHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -40,16 +40,17 @@ class RecordHelper extends SQLiteOpenHelper {
             case 4:
                 // P1 step 4: add PROFILE_ID to the four existing whitelist
                 // tables, defaulting all pre-existing rows to "default".
-                // Each ALTER TABLE only adds a column - no table is
-                // dropped or recreated, and no other table is touched.
-                // Wrapped individually so a partially-upgraded database
-                // (e.g. PROFILE_ID already added by a previous, interrupted
-                // upgrade attempt) cannot crash-loop the app.
                 safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_WHITELIST);
                 safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_JAVASCRIPT);
                 safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_COOKIE);
                 safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_REMOTE);
-                // we want all updates, so no break statement here...
+            case 5:
+                // P1 step 5: app-owned browsing records become profile-local.
+                // ADD COLUMN preserves every existing row and assigns it to
+                // the default profile through the SQL DEFAULT clause.
+                safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_HISTORY);
+                safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_BOOKMARK);
+                safeAddProfileIdColumn(database, RecordUnit.ADD_PROFILE_ID_TAB);
         }
     }
 
@@ -57,8 +58,8 @@ class RecordHelper extends SQLiteOpenHelper {
         try {
             database.execSQL(alterTableSql);
         } catch (SQLException alreadyExists) {
-            // Column already present (e.g. re-run of this upgrade step) -
-            // existing rows are preserved either way, nothing further to do.
+            // Tolerate a partially completed upgrade. Existing data remains
+            // intact and the column is already present in this case.
         }
     }
 }
