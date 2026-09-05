@@ -1,0 +1,94 @@
+name: Android Runtime Smoke
+
+on:
+  push:
+    branches:
+      - genspark-dev
+    paths:
+      - 'app/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradle.properties'
+      - 'gradlew'
+      - 'gradle/**'
+      - '.github/workflows/android-runtime-smoke.yml'
+  workflow_dispatch:
+
+jobs:
+  runtime-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm4all"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install build dependencies
+        run: sdkmanager "platforms;android-29" "build-tools;28.0.3"
+
+      - name: Set up JDK 11 for Gradle
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Build x86_64 smoke APK
+        run: |
+          chmod +x ./gradlew
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/build.gradle')
+          s = p.read_text()
+          old = "include 'arm64-v8a', 'armeabi-v7a'"
+          new = "include 'x86_64', 'arm64-v8a', 'armeabi-v7a'"
+          if old not in s:
+              raise SystemExit('Expected ABI include line was not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          ./gradlew :app:assembleDebug --stacktrace
+          test -f app/build/outputs/apk/debug/app-x86_64-debug.apk
+
+      - name: Restore JDK 17 for emulator tooling
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Run app on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          emulator-boot-timeout: 600
+          script: |
+            set -eux
+            adb install -r app/build/outputs/apk/debug/app-x86_64-debug.apk
+            adb shell am force-stop de.baumann.browser
+            adb shell monkey -p de.baumann.browser 1
+            sleep 8
+            test -n "$(adb shell pidof de.baumann.browser)"
+            adb shell am start -W -a android.intent.action.VIEW -d 'https://example.com' -p de.baumann.browser
+            sleep 8
+            test -n "$(adb shell pidof de.baumann.browser)"
+            adb shell uiautomator dump /sdcard/window.xml >/dev/null
+            adb shell cat /sdcard/window.xml | grep -E 'FOSS Browser|Example Domain|Search|Opened Tabs' >/dev/null || true
+            adb logcat -d -t 4000 | grep -E 'FATAL EXCEPTION|Process: de\.baumann\.browser' && exit 1 || true
+            adb shell dumpsys package de.baumann.browser | grep -E 'versionName|versionCode|enabled=' || true
