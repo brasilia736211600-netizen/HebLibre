@@ -102,10 +102,11 @@ jobs:
             adb shell cat /sdcard/browser.xml | grep -F 'Example Domain' >/dev/null
             adb shell am start -W -n de.baumann.browser/.activity.ProfileManagerSmokeActivity
             sleep 3
+            test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileManagerActivity')" -ge 1
             adb shell uiautomator dump /sdcard/profile.xml >/dev/null
-            adb shell cat /sdcard/profile.xml | grep -F 'Profiles' >/dev/null
-            adb shell cat /sdcard/profile.xml | grep -F 'Default' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -F 'Default (default)' >/dev/null
             adb shell input keyevent 4
             sleep 1
+            test -n "$(adb shell pidof de.baumann.browser)"
             ! adb shell logcat -d -t 5000 | grep -E 'FATAL EXCEPTION|Process: de\.baumann\.browser' >/dev/null
             adb shell dumpsys package de.baumann.browser | grep -E 'versionName|versionCode|enabled=' || true
