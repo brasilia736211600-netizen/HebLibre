@@ -19,6 +19,7 @@ public class ProfileManagerSmokeActivity extends Activity {
         super.onCreate(savedInstanceState);
         verifyLegacyDatabaseMigration();
         verifyProfileScopedRecords();
+        seedDefaultSessionForLauncherRestore();
         startActivity(new Intent(this, ProfileManagerActivity.class));
         finish();
     }
@@ -90,6 +91,17 @@ public class ProfileManagerSmokeActivity extends Activity {
                 "cannot restore default profile");
         ProfileCatalogStore.delete(this, firstProfile);
         ProfileCatalogStore.delete(this, secondProfile);
+    }
+
+    private void seedDefaultSessionForLauncherRestore() {
+        require(ProfileCatalogStore.setActiveProfileId(this, RecordUnit.DEFAULT_PROFILE_ID),
+                "cannot select default profile for session restore");
+        RecordAction action = new RecordAction(this);
+        action.open(true);
+        action.clearTable(RecordUnit.TABLE_TAB);
+        action.addTab(new Record(
+                "Smoke restored tab", "https://example.com", 0L, -1), RecordUnit.DEFAULT_PROFILE_ID);
+        action.close();
     }
 
     private void clearRecords(String profileId) {
