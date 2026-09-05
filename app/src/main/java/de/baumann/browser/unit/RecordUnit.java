@@ -18,10 +18,9 @@ public class RecordUnit {
     public static final String COLUMN_FILENAME = "FILENAME";
     public static final String COLUMN_ORDINAL = "ORDINAL";
 
-    // P1 step 4: persisted whitelist profile isolation. Added to the four
-    // whitelist domain tables only (WHITELIST/JAVASCRIPT/COOKIE/REMOTE).
-    // Existing/omitted rows default to DEFAULT_PROFILE_ID, preserving
-    // current single-profile behavior for all pre-existing callers.
+    // Persisted profile identity for every user-scoped browsing record.
+    // Existing rows are migrated to DEFAULT_PROFILE_ID so upgrades preserve
+    // the pre-profile single-browser behavior exactly once.
     public static final String COLUMN_PROFILE_ID = "PROFILE_ID";
     public static final String DEFAULT_PROFILE_ID = "default";
 
@@ -30,7 +29,8 @@ public class RecordUnit {
             + " ("
             + " " + COLUMN_TITLE + " text,"
             + " " + COLUMN_URL + " text,"
-            + " " + COLUMN_TIME + " integer"
+            + " " + COLUMN_TIME + " integer,"
+            + " " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'"
             + ")";
 
     public static final String CREATE_HISTORY = "CREATE TABLE "
@@ -38,7 +38,8 @@ public class RecordUnit {
             + " ("
             + " " + COLUMN_TITLE + " text,"
             + " " + COLUMN_URL + " text,"
-            + " " + COLUMN_TIME + " integer"
+            + " " + COLUMN_TIME + " integer,"
+            + " " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'"
             + ")";
 
     public static final String CREATE_TAB = "CREATE TABLE "
@@ -46,7 +47,8 @@ public class RecordUnit {
             + " ("
             + " " + COLUMN_TITLE + " text,"
             + " " + COLUMN_URL + " text,"
-            + " " + COLUMN_TIME + " integer"
+            + " " + COLUMN_TIME + " integer,"
+            + " " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'"
             + ")";
 
     public static final String CREATE_WHITELIST = "CREATE TABLE "
@@ -77,10 +79,8 @@ public class RecordUnit {
             + " " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'"
             + ")";
 
-    // P1 step 4 migration (DATABASE_VERSION 4 -> 5): add PROFILE_ID to each
-    // pre-existing whitelist table without dropping/recreating it. SQLite's
-    // ADD COLUMN with a DEFAULT applies that default to all existing rows,
-    // so every previously-persisted domain becomes profile "default".
+    // P1 step 4 migration (DATABASE_VERSION 4 -> 5): add PROFILE_ID to the
+    // pre-existing whitelist tables without dropping or recreating them.
     public static final String ADD_PROFILE_ID_WHITELIST = "ALTER TABLE "
             + TABLE_WHITELIST
             + " ADD COLUMN " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'";
@@ -95,6 +95,20 @@ public class RecordUnit {
 
     public static final String ADD_PROFILE_ID_REMOTE = "ALTER TABLE "
             + TABLE_REMOTE
+            + " ADD COLUMN " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'";
+
+    // DATABASE_VERSION 5 -> 6: migrate app-owned browsing records. All old
+    // rows become part of the default profile; no rows are deleted or moved.
+    public static final String ADD_PROFILE_ID_HISTORY = "ALTER TABLE "
+            + TABLE_HISTORY
+            + " ADD COLUMN " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'";
+
+    public static final String ADD_PROFILE_ID_BOOKMARK = "ALTER TABLE "
+            + TABLE_BOOKMARK
+            + " ADD COLUMN " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'";
+
+    public static final String ADD_PROFILE_ID_TAB = "ALTER TABLE "
+            + TABLE_TAB
             + " ADD COLUMN " + COLUMN_PROFILE_ID + " text DEFAULT '" + DEFAULT_PROFILE_ID + "'";
 
     public static final String CREATE_GRID = "CREATE TABLE "
