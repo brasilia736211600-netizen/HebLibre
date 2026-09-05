@@ -4,5 +4,8 @@
         <activity
             android:name="de.baumann.browser.activity.ProfileManagerSmokeActivity"
             android:exported="true" />
+        <activity
+            android:name="de.baumann.browser.activity.ProfileTransferSmokeActivity"
+            android:exported="true" />
     </application>
 </manifest>
