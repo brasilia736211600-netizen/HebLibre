@@ -1,63 +1,71 @@
-# HebLibre ↔ WebLibre Feature Gap Matrix
+# HebLibre Feature Synthesis Matrix
 
 ## Purpose
-Planning artifact comparing current HebLibre with the separate WebLibre feature pool. Current source verification supersedes stale matrix entries.
+This document is a feature/design reference, not the continuity authority. It now reflects the 2026 HebLibre product-scope reset. Current source evidence always overrides this planning matrix.
 
-## Status vocabulary
-- **ALREADY** — already present.
-- **PARTIAL** — partly present.
-- **EASY** — small local change with deterministic JVM coverage.
-- **MEDIUM** — several source/UI changes without new platform architecture.
-- **ARCHITECTURAL** — new storage/network/engine/process architecture.
-- **NOT TARGETED** — intentionally deferred/excluded for the current phase.
+## Core rule
+Use competitor products as requirement evidence, not as implementation templates. Adopt only features that provide legitimate privacy/productivity value, have a viable Android/WebView seam, and satisfy TDD, YAGNI, compatibility, and performance constraints.
 
-## Completed P2 features
-| Feature | Status | Evidence |
+## Completed HebLibre capabilities
+Tracking/query cleanup, HTTPS-only, Global Privacy Control, Desktop Mode, screenshot protection, search bangs, bounded camera/microphone permission guard, third-party cookie control, geolocation guard, Save-Data, global settings search, download-cookie privacy, profile-aware whitelist transfer, tab reorder core, and remote-content default consistency are already implemented at the recorded source/test/CI levels.
+
+## Social Browser feature-source findings
+The public Social Browser GitHub release repository advertises multi-tabs/multi-users, autofill, profile management, custom User-Agent and proxy settings, data import/export, password protection, multi-user site access, password manager, keyboard shortcuts, cloud sync, video downloading, translation, zoom/sound control, PDF export, page edit mode, PDF reader, proxy manager, User-Agent manager, download manager, developer tools, session sharing, and resource blocking. Its README also describes ad/popup/redirect blocking, safety mode, and script-manager support. The project is proprietary, so HebLibre must not copy its implementation. Source: https://github.com/absunstar/Social-Browser-Releases
+
+## 2026 leading anti-detect market pattern synthesis
+Market references repeatedly identify Multilogin, GoLogin, AdsPower, Dolphin Anty, Kameleo, Octo Browser, Incogniton and additional profile-oriented products as leading solutions. Recurring capabilities include isolated reusable profiles, profile metadata and grouping, cookies/session state, proxy association, local/cloud storage choices, synchronization, configuration management, and automation APIs.
+
+The product scope intentionally does not copy anti-fraud evasion functions. It extracts legitimate privacy and profile-isolation concepts.
+
+## Candidate roadmap
+
+| Candidate | Status | Implementation direction |
 |---|---|---|
-| Tracking/query-parameter cleanup | **COMPLETE / CI-VERIFIED** | Conservative dependency-free cleaner + JVM tests. |
-| HTTPS-only mode | **COMPLETE / CI-VERIFIED** | Navigation policy wired into direct/link navigation. |
-| Global Privacy Control | **COMPLETE / CI-VERIFIED** | `Sec-GPC: 1` through existing request-header path. |
-| Desktop mode | **COMPLETE / CI-VERIFIED** | Deterministic UA policy. |
-| Screenshot protection | **COMPLETE / CI-VERIFIED** | Opt-in `FLAG_SECURE`, live preference handling. |
-| Search bangs | **COMPLETE / CI-VERIFIED** | Built-in routing for supported engines. |
-| WebView camera/microphone permission guard | **COMPLETE / CI-VERIFIED** | `WebRtcPermissionPolicy`; CI run `33679583870`. |
-| Third-party cookie blocking | **COMPLETE / CI-VERIFIED** | `ThirdPartyCookiePolicy`; CI run `33679583870`. |
-| Geolocation privacy guard | **COMPLETE / CI-VERIFIED** | Canonical preference key; CI run `33684710168`. |
-| Save-Data preference contract/fallback | **COMPLETE / CI-VERIFIED** | `SaveDataPolicy` + corrected fallback; CI run `33686256788`. |
-| Global settings search | **COMPLETE / CI-VERIFIED** | `SettingsSearchPolicy` + bounded `Fragment_settings` filtering; Unit Tests run `33688160810`. |
-| Download cookie control | **COMPLETE / CI-VERIFIED** | `DownloadCookiePolicy` integrated into `BrowserUnit.download()`; CI run `33692045747`. |
-| Tab reorder core | **COMPLETE CORE / CI-VERIFIED** | `TabOrderPolicy` + `BrowserContainer.move()` and controller-identity JVM tests; CI run `33692092276`. |
-| Remote-content default consistency | **COMPLETE / CI-VERIFIED** | `NinjaWebView.initPreferences()` fallback for `sp_remote` aligned with declared preference default and existing navigation fallback; Unit Tests run `33694722442` completed successfully. |
+| Reusable named profiles | PROMOTE / P1 | Build on existing profile identity; make storage ownership explicit. |
+| Profile groups/tags/notes | PROMOTE / P1 | Lightweight metadata layer. |
+| Profile-local settings | PROMOTE / P1 | Partition settings that can be safely scoped. |
+| Profile-local cookies/login state | PROMOTE / P1/ARCH | Requires real WebView storage separation; do not fake isolation with whitelist state. |
+| Profile-local WebView storage | ARCHITECTURAL | Investigate WebView data-directory support and lifecycle limits before coding. |
+| Profile-local history/bookmarks | PROMOTE / P1 | Define data model and migration semantics. |
+| Profile session restore | PROMOTE / P1 | Reconcile tab/session state with profile ownership. |
+| Profile import/export | PROMOTE / P1 | Explicit security and compatibility contract; sensitive data must be protected. |
+| Optional encrypted profile state | PROMOTE / P1 | Use platform cryptography; measure storage/runtime cost. |
+| Per-profile proxy | ARCHITECTURAL | Android/WebView feasibility must be established before implementation. |
+| Proxy manager/status | P2 candidate | Only after per-profile routing contract exists. |
+| Consistent profile UA/language configuration | P1 candidate | Implement only controls that are truly profile-local on Android. |
+| Site permissions editor | P2 candidate | Build on WebView callbacks and persisted policy state. |
+| Resource-type blocking | P2 candidate | Extend existing interception only where deterministic and measurable. |
+| Popup/redirect controls | P2 candidate | Add bounded rules with tests; preserve legitimate navigation. |
+| Developer/page diagnostics | P2 candidate | Prefer lightweight diagnostics over a permanent heavy devtools runtime. |
+| Page translation | P2 candidate | Avoid mandatory online service dependency for core browsing. |
+| Download manager improvements | P2 candidate | Preserve existing privacy control and keep UI/storage lightweight. |
+| Tab groups/reorder UI | P2 candidate | Add a dedicated non-long-press affordance; preserve close gesture. |
+| Script manager | P3 / ARCH | Android WebView does not provide a full extension-script runtime comparable to desktop Chromium. |
+| Extensions | P3 / ARCH | Requires a real compatible engine/runtime; do not add speculative framework weight. |
+| Cloud sync | P3 / OPTIONAL | Local-first core; synchronization must be additive and explicitly secured. |
+| Session sharing | DEFERRED / SECURITY REVIEW | Sharing cookies/storage can create account leakage; never enable implicitly. |
+| Automation API | P3 / OPTIONAL | Evaluate only for legitimate testing/accessibility/development workflows. |
+| Password protection | P2 candidate | Protect app/profile management without inventing a custom weak crypto layer. |
+| QR/barcode scanning | DEFERRED | Requires camera/decoder integration; not core to current lightweight target. |
+| PWA | DEFERRED / ARCH | Requires lifecycle and storage design. |
+| Reader Mode | DEFERRED | Requires safe extraction architecture. |
+| Multi-window | DEFERRED / ARCH | Lifecycle/state ownership change. |
+| DoH | DEFERRED / ARCH | Network resolver architecture. |
+| Full WebRTC privacy | DEFERRED / ARCH | Engine-level work; current media guard remains bounded. |
 
-## Remaining feature pool
-| Feature | HebLibre status | Decision |
-|---|---|---|
-| Reader Mode | **NOT TARGETED** | Source-traced; no bounded dependency-free reader-extraction seam was established in the native WebView architecture. Do not add speculative HTML/JS injection. |
-| QR scanner | **SOURCE-VERIFIED / MEDIUM** | No existing QR/barcode scanner, decoder, camera permission, scanner intent, or QR-specific dependency was found. A complete scanner needs a new camera/decoder integration. Defer until a concrete platform/library decision is justified. |
-| PWA support | **SOURCE-VERIFIED / MEDIUM** | Current WebView has no manifest/install/standalone lifecycle seam or deterministic dependency-free contract. Defer until lifecycle scope is explicit. |
-| Tab hierarchy | **SOURCE-VERIFIED / MEDIUM** | Current tab model is flat with no parent/opener metadata; true hierarchy requires a new model contract plus UI/lifecycle integration. |
-| Tab stacking/advanced switcher UI | **PARTIAL / MEDIUM** | Core reorder is implemented and CI-verified. Dedicated non-long-press UI wiring remains; do not alter long-press close behavior. |
-| Container site assignment | MISSING → MEDIUM | Requires container metadata/routing. |
-| Container strict/history exclusion | MISSING → MEDIUM | Depends on containers. |
-| Tracking Protection engine | PARTIAL → MEDIUM/ARCHITECTURAL | Existing AdBlock; broader engine/filter expansion deferred. |
-| DNS over HTTPS | MISSING → ARCHITECTURAL | New resolver/network architecture. |
-| Broad fingerprinting defenses | MISSING → ARCHITECTURAL | Engine-level privacy architecture. |
-| Full WebRTC engine privacy | PARTIAL → ARCHITECTURAL | Only bounded media-permission guard is implemented. |
-| Complete profile storage isolation | PARTIAL → ARCHITECTURAL | Cookies/WebView storage/history/bookmarks remain shared. |
-| Isolated tabs | MISSING → ARCHITECTURAL | Storage/process isolation. |
-| Per-container proxy/Tor | MISSING → ARCHITECTURAL | Networking architecture. |
-| Extensions/uBlock | MISSING → ARCHITECTURAL | Android WebView is not a Firefox extension runtime. |
-| On-device AI | MISSING → ARCHITECTURAL | New model/runtime/storage architecture. |
-| Translation | MISSING → MEDIUM/ARCHITECTURAL | Service/engine decision. |
-| PDF/Markdown/full-page export | PARTIAL | PDF/print exists; Markdown/full-page export remains. |
-| Download manager enhancements | PARTIAL | Download handling exists; cookie privacy control is complete; broader manager enhancements remain unscoped. |
-| Multi-window | **SOURCE-VERIFIED / MEDIUM** | `BrowserActivity` uses `launchMode="singleInstance"`; true concurrent windows would change task/lifecycle/state ownership. Defer. |
+## Anti-detect-derived privacy boundary
+HebLibre may reduce unwanted tracking and cross-profile correlation by isolating state, minimizing unnecessary persistent identifiers, keeping profile configuration internally consistent, and exposing user-controlled privacy settings.
 
-## Selection rule
-Prefer the smallest high-value bounded feature with a deterministic seam. Avoid architectural gaps until demonstrated need. Do not install the Android APK during feature development; reserve device testing for the final validation phase.
+HebLibre must not add mechanisms whose primary purpose is to evade fraud detection, defeat identity verification, circumvent bans, disguise automated behavior as a real user, or bypass platform security controls.
 
-## Current checkpoint
-P2.1–P2.11 are CI-VERIFIED. Download-cookie integration, tab reorder core, and remote-content default consistency are CI-VERIFIED. Tab reorder UI remains the next bounded implementation candidate, but its complete mutation path is not yet safely exposed without a BrowserActivity/BrowserController change. QR, PWA, hierarchy and multi-window remain deferred. Android runtime remains deferred.
+## Lightweight performance gate
+A candidate feature is rejected or deferred when its memory, startup, storage, battery, dependency, or lifecycle cost is disproportionate to its user value. Large browser engines, mandatory cloud services, permanently running background agents, or heavy libraries require explicit architecture approval.
+
+## Current phase
+`2026 Product Scope Reset → P0/P1 architecture and bounded implementation planning`
+
+## Next selection rule
+Select the smallest high-value candidate with the clearest Android seam. Prefer deterministic JVM policy extraction first. Architectural candidates must first produce a feasibility/design record with performance and isolation constraints before source implementation.
 
 ## Last synchronized
-2026-09-03 — reconciled current `genspark-dev` source and direct CI evidence; remote-content default correction is now CI-VERIFIED. The attempted reorder controller seam was reverted because it was incomplete and left no source mutation behind.
+2026-09-06 — converted the old WebLibre comparison matrix into the active 2026 feature-synthesis matrix and added the Social Browser plus leading anti-detect market research boundary.
