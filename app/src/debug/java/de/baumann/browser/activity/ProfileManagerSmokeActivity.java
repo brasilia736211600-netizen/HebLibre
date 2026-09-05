@@ -69,6 +69,7 @@ public class ProfileManagerSmokeActivity extends Activity {
         writer.addHistory(new Record("A history", "https://profile-a.example/history", 1L, -1));
         writer.addBookmark(new Record("A bookmark", "https://profile-a.example/bookmark", 2L, -1));
         writer.addTab(new Record("A tab", "https://profile-a.example/tab", 3L, -1));
+        writer.addDomain("profile-a.example", RecordUnit.TABLE_WHITELIST, firstProfile);
         writer.close();
 
         require(ProfileCatalogStore.setActiveProfileId(this, secondProfile), "cannot select second profile");
@@ -77,6 +78,9 @@ public class ProfileManagerSmokeActivity extends Activity {
         require(reader.listHistory().isEmpty(), "history leaked across profiles");
         require(reader.listBookmark(this, false, 0L).isEmpty(), "bookmark leaked across profiles");
         require(reader.listTab().isEmpty(), "tab leaked across profiles");
+        require(reader.listDomains(RecordUnit.TABLE_WHITELIST, firstProfile).isEmpty() == false ||
+                        reader.listDomains(RecordUnit.TABLE_WHITELIST, secondProfile).isEmpty(),
+                "unexpected whitelist profile state");
         reader.close();
 
         require(ProfileCatalogStore.setActiveProfileId(this, firstProfile), "cannot restore first profile");
@@ -85,6 +89,7 @@ public class ProfileManagerSmokeActivity extends Activity {
         require(reader.listHistory().size() == 1, "first profile history missing");
         require(reader.listBookmark(this, false, 0L).size() == 1, "first profile bookmark missing");
         require(reader.listTab().size() == 1, "first profile tab missing");
+        require(reader.listDomains(RecordUnit.TABLE_WHITELIST, firstProfile).size() == 1, "first profile whitelist missing");
         reader.close();
 
         verifyProfileImportRollback(firstProfile);
@@ -136,15 +141,23 @@ public class ProfileManagerSmokeActivity extends Activity {
         action.addHistory(new Record("delete history", "https://delete.example/history", 31L, -1));
         action.addBookmark(new Record("delete bookmark", "https://delete.example/bookmark", 32L, -1));
         action.addTab(new Record("delete tab", "https://delete.example/tab", 33L, -1));
+        action.addDomain("delete.example", RecordUnit.TABLE_WHITELIST, profileId);
+        action.addDomain("delete.example", RecordUnit.TABLE_JAVASCRIPT, profileId);
+        action.addDomain("delete.example", RecordUnit.TABLE_COOKIE, profileId);
+        action.addDomain("delete.example", RecordUnit.TABLE_REMOTE, profileId);
         action.close();
 
         RecordAction.deleteProfileRecords(this, profileId);
+        require(ProfileCatalogStore.setActiveProfileId(this, profileId), "cannot select deletion profile");
         action = new RecordAction(this);
         action.open(false);
-        require(ProfileCatalogStore.setActiveProfileId(this, profileId), "cannot select deletion profile");
         require(action.listHistory().isEmpty(), "profile deletion left history records");
         require(action.listBookmark(this, false, 0L).isEmpty(), "profile deletion left bookmark records");
         require(action.listTab().isEmpty(), "profile deletion left tab records");
+        require(action.listDomains(RecordUnit.TABLE_WHITELIST, profileId).isEmpty(), "profile deletion left whitelist records");
+        require(action.listDomains(RecordUnit.TABLE_JAVASCRIPT, profileId).isEmpty(), "profile deletion left javascript records");
+        require(action.listDomains(RecordUnit.TABLE_COOKIE, profileId).isEmpty(), "profile deletion left cookie records");
+        require(action.listDomains(RecordUnit.TABLE_REMOTE, profileId).isEmpty(), "profile deletion left remote records");
         action.close();
 
         require(ProfileCatalogStore.setActiveProfileId(this, RecordUnit.DEFAULT_PROFILE_ID),
@@ -171,6 +184,10 @@ public class ProfileManagerSmokeActivity extends Activity {
         action.clearTable(RecordUnit.TABLE_HISTORY);
         action.clearTable(RecordUnit.TABLE_BOOKMARK);
         action.clearTable(RecordUnit.TABLE_TAB);
+        action.clearTable(RecordUnit.TABLE_WHITELIST);
+        action.clearTable(RecordUnit.TABLE_JAVASCRIPT);
+        action.clearTable(RecordUnit.TABLE_COOKIE);
+        action.clearTable(RecordUnit.TABLE_REMOTE);
         action.close();
     }
 
