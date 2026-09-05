@@ -20,4 +20,5 @@
     <string name="profile_deleted">Profile deleted</string>
     <string name="profile_invalid_id">Use 1–64 letters, numbers, dot, underscore, or hyphen for the profile ID.</string>
     <string name="profile_required_fields">Profile ID and name are required.</string>
+    <string name="profile_duplicate_id">That profile ID already exists.</string>
 </resources>
