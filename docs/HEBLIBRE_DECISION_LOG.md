@@ -72,5 +72,24 @@ This is the durable record of important project decisions. A future agent must r
 **Decision:** GitHub-hosted emulator smoke is useful evidence but does not replace physical target-device validation.
 **Reason:** Device-specific WebView, Android, rendering, storage, and lifecycle behavior can differ.
 
+## D-018 — 2026 product scope supersedes older chat-only feature requests
+**Decision:** The active product direction is defined by `docs/HEBLIBRE_PRODUCT_SCOPE_2026-09-06.md`.
+**Reason:** The feature backlog had accumulated across conversations and needed one durable, explicit scope.
+**Implication:** Older chat-only feature lists are historical context, not active requirements.
+
+## D-019 — Anti-detect inspiration is bounded by legitimate privacy use
+**Decision:** HebLibre may adopt legitimate profile-management, privacy, session, configuration, and isolation patterns observed in leading anti-detect and social/multi-profile browsers, but must not implement functionality whose primary purpose is defeating fraud systems, security controls, bans, identity verification, or platform enforcement.
+**Reason:** Preserve legitimate privacy and multi-profile value without turning the browser into a security-evasion tool.
+
+## D-020 — Lightweight performance is a first-class product constraint
+**Decision:** Every new feature must justify memory, startup, storage, dependency, and lifecycle cost before implementation.
+**Reason:** The product target is a lightweight, fast, reliable Android browser.
+**Implication:** Large frameworks, always-on services, cloud dependencies, and speculative abstractions require explicit justification.
+
+## D-021 — Durable continuity is a release requirement
+**Decision:** Every material step must be recoverable from GitHub without chat context.
+**Reason:** Sessions can terminate, freeze, lose network, or otherwise interrupt work.
+**Implication:** Persist material decisions, blockers, test conclusions, source checkpoints, CI evidence, and the next executable step in the durable control plane.
+
 ## Change control
 To supersede any decision above, create a new dated decision entry explaining the new contract, evidence, affected files, tests/CI plan, and migration/compatibility impact. Do not silently overwrite historical rationale.
