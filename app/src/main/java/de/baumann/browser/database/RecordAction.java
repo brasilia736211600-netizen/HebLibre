@@ -182,33 +182,6 @@ public class RecordAction {
         database.insert(RecordUnit.TABLE_TAB, null, values);
     }
 
-    public List<Record> listTab () {
-        List<Record> list = new ArrayList<>();
-        Cursor cursor;
-        cursor = database.query(
-                RecordUnit.TABLE_TAB,
-                new String[] {
-                        RecordUnit.COLUMN_TITLE,
-                        RecordUnit.COLUMN_URL,
-                        RecordUnit.COLUMN_TIME
-                },
-                RecordUnit.COLUMN_PROFILE_ID + "=?",
-                new String[] {activeProfileId()},
-                null,
-                null,
-                RecordUnit.COLUMN_TIME + " asc"
-        );
-
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            list.add(getRecord(cursor));
-            cursor.moveToNext();
-        }
-        cursor.close();
-
-        return list;
-    }
-
     //History
 
     public void addHistory(Record record) {
@@ -256,6 +229,54 @@ public class RecordAction {
         return list;
     }
 
+    /**
+     * Imports all app-owned profile records as one database transaction. A failure in
+     * any insert rolls back every inserted history/bookmark/tab record for the profile.
+     */
+    public boolean importProfileRecords(List<Record> history,
+                                        List<Record> bookmarks,
+                                        List<Record> tabs,
+                                        String profileId) {
+        if (database == null || !database.isOpen()
+                || history == null || bookmarks == null || tabs == null
+                || !ProfileCatalogPolicyForRecords.isValidProfileId(profileId)) {
+            return false;
+        }
+        String normalizedProfileId = ProfileIdentity.normalize(profileId);
+        database.beginTransaction();
+        try {
+            for (Record record : history) {
+                insertProfileRecordOrThrow(RecordUnit.TABLE_HISTORY, record, normalizedProfileId);
+            }
+            for (Record record : bookmarks) {
+                insertProfileRecordOrThrow(RecordUnit.TABLE_BOOKMARK, record, normalizedProfileId);
+            }
+            for (Record record : tabs) {
+                insertProfileRecordOrThrow(RecordUnit.TABLE_TAB, record, normalizedProfileId);
+            }
+            database.setTransactionSuccessful();
+            return true;
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    private void insertProfileRecordOrThrow(String table, Record record, String profileId) {
+        if (record == null
+                || record.getTitle() == null
+                || record.getTitle().trim().isEmpty()
+                || record.getURL() == null
+                || record.getURL().trim().isEmpty()
+                || record.getTime() < 0L) {
+            throw new IllegalArgumentException("Invalid imported profile record");
+        }
+        ContentValues values = new ContentValues();
+        values.put(RecordUnit.COLUMN_TITLE, record.getTitle().trim());
+        values.put(RecordUnit.COLUMN_URL, record.getURL().trim());
+        values.put(RecordUnit.COLUMN_TIME, record.getTime());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, profileId);
+        database.insertOrThrow(table, null, values);
+    }
 
     // General
     //
@@ -392,5 +413,13 @@ public class RecordAction {
         list.addAll(action.listBookmark(activity, false, 0));
         action.close();
         return list;
+    }
+
+    /** Small validation boundary kept local to RecordAction to avoid coupling DB imports to the catalog store. */
+    private static final class ProfileCatalogPolicyForRecords {
+        private static boolean isValidProfileId(String profileId) {
+            String normalized = ProfileIdentity.normalize(profileId);
+            return !normalized.isEmpty() && normalized.length() <= 64;
+        }
     }
 }
