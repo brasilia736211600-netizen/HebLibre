@@ -1,5 +1,7 @@
 # HebLibre Resume Command
 
+Use this exact bootstrap whenever work resumes in a new chat, session, model, or AI agent.
+
 ```text
 @GitHub @Thinking
 
@@ -8,42 +10,60 @@ Resume HebLibre from GitHub only. Do NOT rely on chat memory, prior-agent memory
 Repository: brasilia736211600-netizen/HebLibre
 Active branch: genspark-dev
 
-Read first:
-1. docs/HEBLIBRE_WORKFLOW_STATE.md
-2. docs/HEBLIBRE_MASTER_PROJECT_MAP.md
-3. docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md
-4. Verify current branch and HEAD directly from GitHub
-5. Verify latest relevant CI/check state
+READ THESE DURABLE FILES FIRST, IN ORDER:
+1. docs/HEBLIBRE_AI_AGENT_CONTRACT.md
+2. docs/HEBLIBRE_WORKFLOW_STATE.md
+3. docs/HEBLIBRE_MASTER_PROJECT_MAP.md
+4. docs/HEBLIBRE_EXECUTION_BOARD.md
+5. docs/HEBLIBRE_DECISION_LOG.md
+6. docs/HEBLIBRE_WEBLIBRE_GAP_MATRIX.md
+7. Verify refs/current HEAD directly from GitHub.
+8. Verify relevant CI/runtime evidence against the actual HEAD/checkpoint.
 
-Execute:
+EXECUTE:
 READ → VERIFY → RECONCILE → PLAN → EXECUTE → TEST → DIFF → REVIEW → COMMIT → SAVE STATE
 
-Rules:
-- `استمر` / `continue` means continue autonomously; do not emit routine progress logs.
-- Apply YAGNI and evidence-based claims.
+CONTINUITY RULES:
+- GitHub is the source of truth.
+- `استمر` / `continue` means continue autonomously from the repository state; do not wait for routine confirmation.
+- Every meaningful change must end with a durable Git commit and synchronized workflow state.
+- Never claim work was done, tested, reviewed, or runtime-validated without repository/evidence support.
 - Keep SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, and DOCUMENTED distinct.
-- TDD first when deterministic JVM testing is possible.
-- Re-read current source before implementing candidates; old matrix entries may be stale.
+- TDD first when a useful deterministic JVM seam exists.
+- Apply YAGNI and compatibility-first engineering.
+- Re-read current source before implementing; documentation may be stale.
+- Rejected/reverted experiments are not completed features.
+- Preserve established UX contracts unless a complete replacement path is explicitly justified.
 - WebLibre is a separate feature/design source pool, not continuity authority.
-- Do not repeatedly build/install/test the APK. Reserve Android runtime verification for one consolidated final device-validation phase after source, JVM, CI, review, and documentation work is mature.
-- Use CodeRabbit only when its required local CLI/repository surface is actually available; never claim a result when unavailable.
+- Use process/coordinator/advisor/memory/prompt tooling only when actually available and useful; never fabricate tool results.
+- Use CodeRabbit only when its real review surface is available; never claim a CodeRabbit result otherwise.
 
-Current verified state:
-- P2.1–P2.11 are CI-VERIFIED.
-- P2.9 Geolocation: Unit Tests run `33684710168` success.
-- P2.10 Save-Data: Unit Tests run `33686256788` success.
-- P2.11 Global settings search: Unit Tests run `33688160810` success.
-- Download cookie control: `DownloadCookiePolicy` + integrated `BrowserUnit.download()` path; CI run `33692045747` success.
-- Tab reorder core: `TabOrderPolicy` + `BrowserContainer.move()` + controller-identity JVM tests; CI run `33692092276` success.
-- Remote-content default consistency: `sp_remote` fallback aligned across preference/navigation/init paths; CI run `33694722442` success.
-- Tab reorder UI is intentionally PARTIAL: source tracing confirms `BrowserActivity` owns both the container/model and tab view container, while `AlbumItem` owns the tab item and long-click close behavior. A temporary incomplete controller seam was reverted and must not be resurrected without the full mutation path.
-- QR scanner, PWA, true tab hierarchy, and true multi-window are deferred.
-- Reader Mode remains NOT TARGETED for the current P2 cycle.
-- Android runtime remains deferred to final consolidated device validation.
+ANDROID RULE:
+Do not repeatedly build/install/test the APK during feature work. Finish source review, deterministic tests, CI, review, and documentation first. Then perform one consolidated physical-device validation pass. Emulator evidence does not equal physical-device evidence.
 
-Next execution:
-Continue parallel source verification on independent bounded privacy/UX seams while keeping tab reorder UI deferred until a complete non-breaking mutation path can be edited safely. Preserve long-click close behavior. Prefer deterministic JVM coverage and CI before any Android runtime work. Do not install the APK.
+CURRENT VERIFIED SCOPE:
+- P2.1–P2.11 complete at recorded SOURCE/TEST/CI levels.
+- Download cookie privacy complete and CI-VERIFIED.
+- Tab reorder core complete and CI-VERIFIED; dedicated UI remains partial.
+- Remote-content default consistency complete and CI-VERIFIED.
+- Whitelist import/export is profile-aware in both active and legacy paths and CI-VERIFIED; latest source fix: `247768c4e2e442fcb9b42d299d8cf00d3c24b81b`; consolidated Unit Tests run `33985143542` passed.
+- GitHub-hosted Android emulator smoke completed successfully on a CI checkpoint; this is not physical-device validation.
+- Current branch may contain documentation/CI hardening commits after the source checkpoint; always verify actual HEAD.
+
+DO NOT SILENTLY REOPEN:
+- SSL certificate override policy.
+- Application-level cleartext traffic policy.
+- Automatic backup semantics for `Ninja4.db`.
+- `sp_remote` coupling of file-origin access and DOM storage.
+- Complete profile/WebView storage isolation.
+- DoH, per-container proxy/Tor, broad fingerprinting defenses, full WebRTC privacy, extensions/uBlock, and on-device AI architecture.
+
+CURRENT RELEASE GATE:
+Read `docs/HEBLIBRE_EXECUTION_BOARD.md`. The bounded implementation scope is complete for the recorded feature set. The next major executable gate is physical target-device validation. Record any runtime defects, batch related fixes, run CI, and perform one final physical-device recheck.
 ```
 
-## Current authoritative checkpoint
-P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency are CI-VERIFIED. Tab reorder UI remains PARTIAL because its complete BrowserActivity/AlbumItem mutation path has not yet been safely implemented. QR/PWA/hierarchy/multi-window remain deferred. Android runtime remains deferred.
+## Handoff requirement
+At the end of a session, update `docs/HEBLIBRE_WORKFLOW_STATE.md` with the exact HEAD, completed work, evidence, unresolved decisions, and next executable step. Update the master map/execution board when scope changes.
+
+## Historical rule
+Do not trust old resume snippets that conflict with current GitHub state. The current branch, current source, current tests/CI, and these durable documents win.
