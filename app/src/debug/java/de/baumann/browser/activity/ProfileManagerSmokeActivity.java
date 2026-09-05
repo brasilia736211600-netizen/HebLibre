@@ -20,6 +20,7 @@ public class ProfileManagerSmokeActivity extends Activity {
         super.onCreate(savedInstanceState);
         verifyLegacyDatabaseMigration();
         verifyProfileScopedRecords();
+        verifyProfileDeletionPurgesRecords();
         seedDefaultSessionForLauncherRestore();
         startActivity(new Intent(this, ProfileManagerActivity.class));
         finish();
@@ -122,6 +123,33 @@ public class ProfileManagerSmokeActivity extends Activity {
         require(action.listBookmark(this, false, 0L).size() == 1, "failed profile import left partial bookmarks");
         require(action.listTab().size() == 1, "failed profile import left partial tabs");
         action.close();
+    }
+
+    private void verifyProfileDeletionPurgesRecords() {
+        final String profileId = "smoke-delete";
+        ProfileCatalogStore.save(this, new ProfileMetadata(
+                profileId, "Smoke Delete", "", "", "", Collections.<String>emptyList(), ""));
+        clearRecords(profileId);
+
+        RecordAction action = new RecordAction(this);
+        action.open(true);
+        action.addHistory(new Record("delete history", "https://delete.example/history", 31L, -1));
+        action.addBookmark(new Record("delete bookmark", "https://delete.example/bookmark", 32L, -1));
+        action.addTab(new Record("delete tab", "https://delete.example/tab", 33L, -1));
+        action.close();
+
+        RecordAction.deleteProfileRecords(this, profileId);
+        action = new RecordAction(this);
+        action.open(false);
+        require(ProfileCatalogStore.setActiveProfileId(this, profileId), "cannot select deletion profile");
+        require(action.listHistory().isEmpty(), "profile deletion left history records");
+        require(action.listBookmark(this, false, 0L).isEmpty(), "profile deletion left bookmark records");
+        require(action.listTab().isEmpty(), "profile deletion left tab records");
+        action.close();
+
+        require(ProfileCatalogStore.setActiveProfileId(this, RecordUnit.DEFAULT_PROFILE_ID),
+                "cannot restore default after delete smoke");
+        require(ProfileCatalogStore.delete(this, profileId), "profile catalog deletion failed");
     }
 
     private void seedDefaultSessionForLauncherRestore() {
