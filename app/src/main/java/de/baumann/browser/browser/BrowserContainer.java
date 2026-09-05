@@ -2,6 +2,7 @@ package de.baumann.browser.browser;
 
 import android.content.Context;
 
+import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileSessionStore;
 import de.baumann.browser.unit.TabOrderPolicy;
 import de.baumann.browser.view.NinjaWebView;
@@ -11,15 +12,19 @@ import java.util.List;
 
 public class BrowserContainer {
     private final List<AlbumController> list = new LinkedList<>();
+    private String sessionProfileId;
 
     public AlbumController get(int index) {
         return list.get(index);
     }
 
     public synchronized void add(AlbumController controller) {
+        bindSessionProfile(controller);
         list.add(controller);
     }
+
     public synchronized void add(AlbumController controller, int index) {
+        bindSessionProfile(controller);
         list.add(index, controller);
     }
 
@@ -57,6 +62,15 @@ public class BrowserContainer {
             ((NinjaWebView) albumController).destroy();
         }
         list.clear();
+        sessionProfileId = null;
+    }
+
+    private void bindSessionProfile(AlbumController controller) {
+        if (sessionProfileId != null || controller == null || controller.getAlbumView() == null) {
+            return;
+        }
+        Context context = controller.getAlbumView().getContext().getApplicationContext();
+        sessionProfileId = ProfileCatalogStore.getActiveProfileId(context);
     }
 
     private void persistSession() {
@@ -64,6 +78,6 @@ public class BrowserContainer {
             return;
         }
         Context context = list.get(0).getAlbumView().getContext().getApplicationContext();
-        ProfileSessionStore.save(context, list);
+        ProfileSessionStore.save(context, list, sessionProfileId);
     }
 }
