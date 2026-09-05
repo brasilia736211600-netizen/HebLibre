@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import de.baumann.browser.database.Record;
@@ -85,12 +86,42 @@ public class ProfileManagerSmokeActivity extends Activity {
         require(reader.listTab().size() == 1, "first profile tab missing");
         reader.close();
 
+        verifyProfileImportRollback(firstProfile);
+
         clearRecords(firstProfile);
         clearRecords(secondProfile);
         require(ProfileCatalogStore.setActiveProfileId(this, RecordUnit.DEFAULT_PROFILE_ID),
                 "cannot restore default profile");
         ProfileCatalogStore.delete(this, firstProfile);
         ProfileCatalogStore.delete(this, secondProfile);
+    }
+
+    private void verifyProfileImportRollback(String profileId) {
+        Record valid = new Record("transaction-valid", "https://transaction.example/valid", 21L, -1);
+        Record invalid = new Record("", "https://transaction.example/invalid", 22L, -1);
+        RecordAction action = new RecordAction(this);
+        action.open(true);
+        try {
+            try {
+                action.importProfileRecords(
+                        Arrays.asList(valid, invalid),
+                        Collections.singletonList(valid),
+                        Collections.singletonList(valid),
+                        profileId);
+                throw new IllegalStateException("invalid profile import unexpectedly succeeded");
+            } catch (IllegalArgumentException expected) {
+                // expected: transaction must roll back the first valid history record too
+            }
+        } finally {
+            action.close();
+        }
+
+        action = new RecordAction(this);
+        action.open(false);
+        require(action.listHistory().size() == 1, "failed profile import left partial history");
+        require(action.listBookmark(this, false, 0L).size() == 1, "failed profile import left partial bookmarks");
+        require(action.listTab().size() == 1, "failed profile import left partial tabs");
+        action.close();
     }
 
     private void seedDefaultSessionForLauncherRestore() {
