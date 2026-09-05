@@ -22,8 +22,7 @@ public class SessionRestoreActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (hasExistingBrowserTask()) {
-            launchBrowser(new Intent(Intent.ACTION_MAIN));
+        if (moveExistingBrowserTaskToFront()) {
             finish();
             return;
         }
@@ -55,7 +54,7 @@ public class SessionRestoreActivity extends Activity {
         }
     }
 
-    private boolean hasExistingBrowserTask() {
+    private boolean moveExistingBrowserTaskToFront() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         if (manager == null) {
             return false;
@@ -68,6 +67,7 @@ public class SessionRestoreActivity extends Activity {
                 continue;
             }
             if (browser.equals(info.topActivity) || browser.equals(info.baseActivity)) {
+                task.moveToFront();
                 return true;
             }
         }
