@@ -288,13 +288,19 @@ public class RecordAction {
         action.open(true);
         try {
             String normalizedProfileId = ProfileIdentity.normalize(profileId);
-            action.clearTable(RecordUnit.TABLE_HISTORY, normalizedProfileId);
-            action.clearTable(RecordUnit.TABLE_BOOKMARK, normalizedProfileId);
-            action.clearTable(RecordUnit.TABLE_TAB, normalizedProfileId);
-            action.clearTable(RecordUnit.TABLE_WHITELIST, normalizedProfileId);
-            action.clearTable(RecordUnit.TABLE_JAVASCRIPT, normalizedProfileId);
-            action.clearTable(RecordUnit.TABLE_COOKIE, normalizedProfileId);
-            action.clearTable(RecordUnit.TABLE_REMOTE, normalizedProfileId);
+            action.database.beginTransaction();
+            try {
+                action.clearTable(RecordUnit.TABLE_HISTORY, normalizedProfileId);
+                action.clearTable(RecordUnit.TABLE_BOOKMARK, normalizedProfileId);
+                action.clearTable(RecordUnit.TABLE_TAB, normalizedProfileId);
+                action.clearTable(RecordUnit.TABLE_WHITELIST, normalizedProfileId);
+                action.clearTable(RecordUnit.TABLE_JAVASCRIPT, normalizedProfileId);
+                action.clearTable(RecordUnit.TABLE_COOKIE, normalizedProfileId);
+                action.clearTable(RecordUnit.TABLE_REMOTE, normalizedProfileId);
+                action.database.setTransactionSuccessful();
+            } finally {
+                action.database.endTransaction();
+            }
         } finally {
             action.close();
         }
