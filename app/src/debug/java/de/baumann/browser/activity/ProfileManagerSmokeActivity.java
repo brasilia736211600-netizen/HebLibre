@@ -2,22 +2,24 @@ package de.baumann.browser.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
+import androidx.preference.PreferenceManager;
+
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
-import de.baumann.browser.R;
 import de.baumann.browser.database.Record;
 import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileMetadata;
 import de.baumann.browser.unit.ProfilePreferencesStore;
+import de.baumann.browser.unit.ProfileTransferCodec;
 import de.baumann.browser.unit.RecordUnit;
-import android.content.SharedPreferences;
-import androidx.preference.PreferenceManager;
 
 public class ProfileManagerSmokeActivity extends Activity {
     @Override
@@ -26,6 +28,7 @@ public class ProfileManagerSmokeActivity extends Activity {
         verifyLegacyDatabaseMigration();
         verifyProfileScopedRecords();
         verifyProfilePreferencesIsolation();
+        verifyProfilePreferenceTransferRoundTrip();
         verifyProfileDeletionPurgesRecords();
         seedDefaultSessionForLauncherRestore();
         startActivity(new Intent(this, ProfileManagerActivity.class));
@@ -144,6 +147,43 @@ public class ProfileManagerSmokeActivity extends Activity {
         ProfileCatalogStore.delete(this, secondProfile);
         require(ProfileCatalogStore.setActiveProfileId(this, ProfileIdentity.DEFAULT_PROFILE_ID),
                 "cannot restore default after preference smoke");
+    }
+
+    private void verifyProfilePreferenceTransferRoundTrip() {
+        final String profileId = "prefs-transfer";
+        ProfileCatalogStore.save(this, new ProfileMetadata(
+                profileId, "Prefs Transfer", "", "", "", Collections.<String>emptyList(), ""));
+        require(ProfileCatalogStore.setActiveProfileId(this, profileId), "cannot select transfer profile");
+
+        SharedPreferences global = PreferenceManager.getDefaultSharedPreferences(this);
+        global.edit().putBoolean("desktop_mode", true).putString("userAgent", "Transfer-UA").commit();
+        ProfilePreferencesStore.saveGlobalToProfile(this, profileId);
+        Map<String, String> snapshot = ProfilePreferencesStore.snapshot(this, profileId);
+        String encoded = ProfileTransferCodec.encodePlain(
+                ProfileCatalogStore.get(this, profileId),
+                Collections.<Record>emptyList(),
+                Collections.<Record>emptyList(),
+                Collections.<Record>emptyList(),
+                snapshot);
+        ProfileTransferCodec.TransferPackage decoded = ProfileTransferCodec.decode(encoded, null);
+        require("b:true".equals(decoded.getPreferences().get("desktop_mode")),
+                "profile preference snapshot lost desktop mode");
+        require("s:Transfer-UA".equals(decoded.getPreferences().get("userAgent")),
+                "profile preference snapshot lost user agent");
+
+        String importedId = "prefs-transfer-import";
+        ProfileCatalogStore.save(this, new ProfileMetadata(
+                importedId, "Prefs Transfer Import", "", "", "", Collections.<String>emptyList(), ""));
+        ProfilePreferencesStore.restore(this, importedId, decoded.getPreferences());
+        require(ProfileCatalogStore.setActiveProfileId(this, importedId), "cannot select restored preference profile");
+        require(global.getBoolean("desktop_mode", false), "restored profile desktop mode missing");
+        require("Transfer-UA".equals(global.getString("userAgent", "")), "restored profile user agent missing");
+        ProfilePreferencesStore.deleteProfile(this, profileId);
+        ProfilePreferencesStore.deleteProfile(this, importedId);
+        ProfileCatalogStore.delete(this, profileId);
+        ProfileCatalogStore.delete(this, importedId);
+        require(ProfileCatalogStore.setActiveProfileId(this, ProfileIdentity.DEFAULT_PROFILE_ID),
+                "cannot restore default after transfer preference smoke");
     }
 
     private void verifyProfileImportRollback(String profileId) {
