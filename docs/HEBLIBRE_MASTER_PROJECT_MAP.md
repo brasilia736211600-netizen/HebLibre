@@ -63,13 +63,14 @@ Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.
 - Remote-content default consistency — SOURCE/TEST/CI-VERIFIED.
 - Whitelist import/export profile-awareness — SOURCE/TEST/CI-VERIFIED; latest source fix `247768c4e2e442fcb9b42d299d8cf00d3c24b81b`; consolidated Unit Tests run `33985143542` passed.
 - GitHub-hosted Android emulator smoke — successful on checkpoint `48300a4ad2c366e2987cea9949de8e722089c962`; emulator evidence only.
-- Current-HEAD Unit Tests run `33990897505` passed.
+- Current-HEAD Unit Tests run `33990897505` passed on an earlier current checkpoint.
 - Named profile metadata/catalog, WebView multi-profile binding, profile-owned CookieManager path, and profile manager UI — SOURCE-VERIFIED on current branch.
 - Profile-scoped HISTORY/BOOKMARK/TAB storage with real v5→6 migration and leakage smoke coverage — SOURCE-VERIFIED on current branch.
 - Profile-owned session persistence/launcher restore with existing-browser task reuse — SOURCE-VERIFIED on current branch.
 - Profile export/import using a versioned format, optional AES-GCM encryption, PBKDF2 password derivation, wrong-password/tamper rejection, document picker UI, and explicit exclusion of WebView-internal cookies/storage/login secrets — SOURCE-VERIFIED on current branch.
+- Profile-transfer parser hardening: exact version-header validation plus encrypted salt/IV/ciphertext dimension checks, with deterministic malformed-input tests — SOURCE-VERIFIED in `c23297b7d5f1dc106f8e8865294882261fcaa0e2` and test coverage in `1c7b1f395d70c4e07d12bbda37ab9ab1f909cecc`.
 - Database deletion hardening: profile-domain and URL deletion paths now bind data values through SQLite selection arguments rather than interpolating them into SQL predicates — SOURCE-VERIFIED in `ad5cec1d0c2be694c9b732ec8ba0ecb69b6ac143`.
-- CI diagnostic hardening: Unit and Runtime Smoke workflows pinned to `ubuntu-24.04`; a minimal `ubuntu-22.04` runner probe was added to isolate runner startup from Android/toolchain execution.
+- CI diagnostic hardening: Unit and Runtime Smoke workflows pin `ubuntu-24.04`; a minimal runner probe was added to isolate hosted-runner startup from Android/toolchain execution.
 - Runtime Smoke coverage expanded with a debug-only Profile Transfer launcher that verifies the production transfer screen can be opened without exporting that production activity.
 
 ## Existing HebLibre baseline — do not reimplement
@@ -120,15 +121,15 @@ Current 2026 market references repeatedly identify Multilogin, GoLogin, AdsPower
 `P0/P1 portability implementation → CI/runtime recovery → settings/proxy architecture decisions`
 
 ## Current blocking items
-- Fresh GitHub Actions hosted jobs continue to fail before any job step. The minimal Runner Probe also fails in ~2 seconds with `runner_id=0`, an empty runner name, and zero steps, independently ruling out Android/Gradle execution as the immediate cause.
+- GitHub Actions hosted jobs continue to fail before any job step. A retried current Unit job and the latest push run both terminate without an assigned runner or executed steps; this independently rules out Android/Gradle execution as the immediate cause.
 - A successful current x86_64 GitHub Actions artifact is therefore not yet available for consolidated emulator validation.
 - Complete profile-local settings and per-profile proxy routing remain architectural work and are intentionally not represented as completed features.
 
 ## Current next executable step
-Use the next fresh GitHub Actions capacity that successfully assigns a hosted runner: verify Unit Tests and Runtime Smoke on HEAD `f863baeec686d28ebcc2e8b478b36529c5544117`, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation. Keep profile-settings work limited to source inventory/design until its full reader/writer and migration contract is explicit.
+Use the first fresh GitHub Actions capacity that successfully assigns a hosted runner: verify Unit Tests and Runtime Smoke on the latest checkpoint `1c7b1f395d70c4e07d12bbda37ab9ab1f909cecc`, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation. Until that runner is available, continue bounded source work that has deterministic tests and does not widen unresolved profile/storage/networking architecture.
 
 ## Android validation gate
 Do not repeatedly build/install APKs during feature development. Complete source review, deterministic tests, CI, and documentation first. Then perform consolidated physical-device validation. Emulator evidence remains separate from physical-device evidence.
 
 ## Last synchronized
-2026-09-06 — synchronized the master map to HEAD `f863baeec686d28ebcc2e8b478b36529c5544117`, including Profile Transfer smoke coverage and confirmed hosted-runner pre-step failure signature.
+2026-09-06 — synchronized to HEAD `1c7b1f395d70c4e07d12bbda37ab9ab1f909cecc`, including profile-transfer parser hardening and current hosted-runner failure evidence.
