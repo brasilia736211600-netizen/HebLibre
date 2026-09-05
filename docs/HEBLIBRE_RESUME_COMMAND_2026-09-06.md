@@ -13,14 +13,16 @@ Default branch: l10n_crowdin
 
 READ first, in this order:
 1. docs/HEBLIBRE_WORKFLOW_STATE.md
-2. docs/HEBLIBRE_SECURITY_AUDIT_2026-09-03.md
-3. docs/HEBLIBRE_RESUME_COMMAND_2026-09-06.md
+2. docs/HEBLIBRE_PRODUCT_SCOPE_2026-09-06.md
+3. docs/HEBLIBRE_SECURITY_AUDIT_2026-09-03.md
+4. docs/HEBLIBRE_RESUME_COMMAND_2026-09-06.md
 
 Then VERIFY directly from GitHub:
 - current branch HEAD
 - current diff against clean implementation checkpoint 5fffd65e80e2a616a5273befe7cdca6309441490
 - last commits
 - relevant CI runs and their exact head SHAs
+- current application-source checkpoint
 - no unverified runtime change was introduced
 
 Use this execution protocol exactly:
@@ -33,164 +35,182 @@ CI-VERIFIED
 ANDROID-RUNTIME-VERIFIED
 DOCUMENTED
 
-Current engineering baseline:
+CURRENT BASELINE:
 - Clean implementation checkpoint: 5fffd65e80e2a616a5273befe7cdca6309441490
-- Branch currently contains documentation/audit commits after that checkpoint.
-- Existing verified work includes P2.1-P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and profile-scoped whitelist persistence.
-- Android runtime validation is deferred until the final consolidated device-validation phase.
+- Current branch may contain later application-source and documentation commits; determine the exact live HEAD from GitHub every time.
+- Existing verified work includes P2.1-P2.11, download-cookie privacy, profile-aware whitelist transfer, tab reorder core, remote-content default consistency, and other recorded bounded changes.
+- Android runtime validation remains consolidated near the final coherent product checkpoint.
 
-NEW PRODUCT/ARCHITECTURE REQUIREMENTS TO INCORPORATE:
+ACTIVE PRODUCT REQUIREMENTS:
 
-A) Real profile/container isolation
-Each browser profile/container must have its own browser identity and state, including:
+1) TRUE PROFILES / CONTAINERS
+Each named profile/container is a reusable browsing identity with explicit separation of:
 - cookies/session state
-- web storage and service-worker state where supported
-- history/bookmarks/tabs or other app-owned records according to the chosen isolation contract
+- WebView storage and service-worker state where technically supported
+- profile-owned history/bookmarks/tabs/session state according to the defined contract
 - whitelist state
-- user-agent profile
-- proxy configuration or an explicitly documented limitation if the platform cannot provide true per-profile proxying
-- profile-specific privacy/security settings
-
-Prefer AndroidX WebKit multi-profile support over a home-grown imitation when supported. Profile isolation must be feature-detected and must not silently claim isolation where the runtime does not support it.
-
-B) Account/login-cookie management
-Provide a first-class per-profile cookie/session vault for the user's own accounts.
-Required UX:
-- inspect/import/export cookies for the active profile
-- import user-provided cookie data into the selected profile
-- capture/backup the active profile's cookie state using supported WebView APIs; do not scrape or steal credentials from other apps
-- secure storage for exported/imported session material
-- explicit confirmation before exporting authentication material
-- never log cookie values, Authorization headers, passwords, or session tokens
-- support a portable browser-owned cookie format with at least domain, path, name, value, expiry, secure, HttpOnly, SameSite and partition-related fields when the platform/API exposes them
-- clearly distinguish cookies that cannot be exported or replayed exactly because of platform/site security constraints
-
-C) Proxy
-The product requirement is per-profile/per-container proxy configuration with:
-- HTTP/HTTPS/SOCKS forms where supported
-- host, port, optional credentials handled securely
-- bypass rules
-- enable/disable and direct mode
-- validation/test state before activation
-
-Do NOT implement fake per-tab/per-profile proxying using a single global WebView proxy. AndroidX WebKit ProxyController is process-scoped and applies to all WebViews in the app. Treat true per-profile proxying as an architecture decision requiring a verified solution (for example, process-level isolation/tunneling) before implementation.
-
-D) Professional User-Agent management
-Each profile/container can use:
-- system/default WebView UA
-- custom UA
-- curated presets for major desktop/mobile operating systems and major browser families/versions
-- logically consistent UA metadata/client hints where supported
-- editable custom preset
-- validation to avoid contradictory combinations
-
-Preset catalog must use real, current, internally consistent platform/browser/version combinations. Do not invent impossible UA strings merely to enlarge the list.
-
-E) Time policy
-Each profile/container needs a time policy:
-- device time (default)
-- explicit timezone selection
-- proxy/network-derived time as an optional informational or policy source when technically available
-- never pretend that changing browser timezone changes the Android system clock
-- keep language/locale/timezone behavior explicit and internally consistent
-
-F) Same-URL profile/container switching
-Core UX requirement:
-- while viewing URL U in profile/container A, user can switch to B
-- the current URL U is retained
-- the active WebView/profile context is switched
-- U is reloaded under B's cookies/storage/UA/proxy/privacy state
-- switching must not mutate A's state into B's state
-- preserve back/forward semantics only where the selected profile has a valid history stack
-- switching should be fast and visually light
-
-Design this as a controlled navigation/reload operation, not as mutation of an existing WebView into another identity unless the underlying WebView API explicitly supports it safely.
-
-G) Import/export hierarchy
-Provide two levels:
-1. Profile/container export/import
-2. Whole-browser export/import
-
-Profile/container bundle should define a versioned manifest and include, according to the isolation contract:
-- profile metadata/settings
-- app-owned tabs/session metadata
-- history/bookmarks where scoped
-- whitelist data
-- cookies/session data where supported
-- UA preset/custom UA
-- proxy configuration with credentials protected or separately encrypted
+- profile privacy/security settings
+- user-agent configuration
+- proxy configuration only when true profile scope can be guaranteed
 - timezone/time policy
-- other profile-owned settings
+- metadata: name, color/icon, notes, tags, group
 
-Whole-browser export/import should include all profile/container bundles plus global browser settings and a versioned manifest.
+Prefer AndroidX WebKit MULTI_PROFILE where supported. Never simulate full storage isolation using only app-owned database rows and then label it as complete browser isolation.
 
-Never export secrets by accident. Sensitive fields need an explicit opt-in and protected representation. Imports must validate schema/version, reject malformed entries safely, and avoid partial destructive replacement by default.
+2) LOGIN / COOKIE / SESSION MANAGEMENT
+The browser must support user-controlled per-profile session portability.
+- import cookies/session data into the selected profile
+- export the selected profile's cookie/session data with an explicit confirmation
+- capture/backup cookie state through supported WebView/profile APIs
+- secure local handling; never log, upload, or silently exfiltrate authentication material
+- clearly disclose fields that cannot be exported/replayed exactly
+- use a versioned portable cookie format and validate imports before mutation
+- cookie handling must respect SameSite, Secure, HttpOnly, partitioned-cookie and expiry semantics where exposed by platform APIs
+- do not implement cross-app cookie theft or hidden credential extraction
 
-H) Modern lightweight UI
-UI goals:
-- modern, compact, responsive
-- low memory and low view-hierarchy overhead
-- profile/container switcher always easy to reach
-- current profile identity visible without consuming excessive space
-- quick switcher supports search/favorite/pinned profiles where useful
-- clear active-state indicator
-- no large framework added solely for cosmetic UI
-- preserve current browser's stable interaction patterns unless a measured UX problem justifies change
+3) PROXY
+Required UI model: proxy belongs to a profile/container.
+However, AndroidX WebKit ProxyController is process-specific and applies to all WebViews in the app. Therefore:
+- do not fake per-profile proxying with one process-global ProxyController
+- perform a capability/architecture study first
+- evaluate process-level isolation, network tunneling/VPN-style routing, or another verifiable architecture
+- expose scope honestly when only process-wide routing is available
+- support HTTP/HTTPS/SOCKS forms, bypass rules, direct mode, credential protection, validation state where supported
 
-I) Development/workflow requirements
-For every new subsystem:
-- define an explicit contract before implementation
-- create dependency-free JVM policy tests first where practical
-- implement the smallest vertical slice
-- verify source and tests
-- run CI before considering it complete
-- review diff against the clean checkpoint and reject unrelated churn
-- update workflow state after every completed bounded slice
-- document unsupported/partial behavior instead of silently approximating it
-- no repeated APK installs; reserve Android runtime for consolidated final validation
+4) PROFESSIONAL USER-AGENT
+Each profile/container supports:
+- system/default UA
+- custom UA
+- curated real presets for major browser families and operating systems/versions
+- logically consistent UA metadata/client hints where supported
+- editable preset copies
+- validation against contradictory browser/OS/version combinations
 
-PARALLEL WORK RULE:
-Work independent bounded streams in parallel where safe:
-1. profile/container data model + isolation contract
-2. cookie/session import/export format and policy
-3. UA catalog/policy
-4. proxy capability audit/architecture
-5. time policy
-6. profile switch/reload UX contract
-7. import/export manifest contract
-8. lightweight UI information architecture
+Do not create impossible or obsolete-looking combinations just to inflate the preset catalog.
 
-Serialize all dependent branch/file mutations.
-Do not start a large architectural rewrite until the capability matrix and contracts are verified.
+5) TIMEZONE / TIME POLICY
+Per profile/container:
+- device timezone default
+- explicit timezone selection
+- optional proxy/network-derived time information only when technically observable and reliable
+- never claim that browser timezone changes the Android system clock
+- keep locale/language/timezone internally consistent
 
-YAGNI:
-Do not add QR scanner, PWA, Reader Mode, true tab hierarchy, extensions/uBlock, DoH, broad fingerprinting defenses, full WebRTC privacy, per-container Tor, or other deferred features merely because they are technically interesting. Re-evaluate only when the current product contract requires them.
+6) SAME-URL PROFILE SWITCH
+Core UX:
+- current URL U remains selected while the user changes from profile A to profile B
+- B becomes active
+- B's cookies/storage/UA/proxy/privacy state applies
+- U is reloaded under B
+- A is left untouched
+- do not corrupt back/forward history semantics
+- switch should be fast and visually lightweight
 
-IMPORTANT SECURITY RULE:
-Cookie/session material is equivalent to authentication material. Handle only data explicitly supplied by or owned by the user. Never implement credential theft, cross-app cookie extraction, hidden exfiltration, or logging of authentication secrets.
+This should be implemented as a controlled profile/context switch plus reload, not as unsafe mutation of one WebView identity unless the platform explicitly supports it.
 
-When finished with a bounded slice:
-- report exact files changed
-- report source/test/CI status separately
-- report exact commit SHA
+7) PROFILE + WHOLE-BROWSER IMPORT/EXPORT
+Profile/container bundle:
+- versioned manifest
+- profile metadata/settings
+- scoped tabs/session state
+- history/bookmarks according to scope
+- whitelist data
+- cookies/session material where supported
+- UA settings
+- proxy settings with protected secret material
+- timezone/time policy
+
+Whole-browser bundle:
+- all profile/container bundles
+- global browser settings
+- global metadata
+- versioned top-level manifest
+
+Security rules:
+- secrets are opt-in for export
+- sensitive fields are encrypted/protected where feasible
+- imports are schema/version validated
+- malformed input is rejected safely
+- default import mode must not destructively overwrite existing data without explicit confirmation
+- partial-failure semantics must be defined and tested
+
+8) LIGHTWEIGHT MODERN UI
+UI must remain fast and dependable on constrained Android devices:
+- compact profile/container switcher
+- current identity clearly visible
+- quick switch with search/filter
+- easy create/duplicate/delete/rename
+- clear active profile indicator
+- modern but low-overhead layouts
+- no large framework for cosmetic purposes only
+- preserve proven browser interactions, especially existing tab close behavior
+
+9) PERFORMANCE / RELIABILITY
+Profile switching and creation must not become a reason to keep every profile renderer permanently active.
+Measure memory/startup implications before adopting concurrent live WebViews or multiple processes.
+Prefer lazy activation and bounded lifecycle management.
+
+10) WORKFLOW / DELIVERY
+For every bounded subsystem:
+- contract first
+- capability audit first when platform limitations exist
+- dependency-free JVM tests first where practical
+- minimal implementation
+- tests
+- GitHub diff review
+- CI
+- documentation/state update
+
+Parallelize only independent streams; serialize dependent file/ref mutations.
+Never claim a feature is complete solely because the UI exists.
+
+PARALLEL STREAMS TO USE WHEN INDEPENDENT:
+A. Profile metadata/model and ownership contract
+B. Real WebView multi-profile feasibility + dependency compatibility
+C. Cookie/session portable format and secure import/export contract
+D. UA catalog/policy
+E. Proxy architecture feasibility
+F. Timezone policy
+G. Same-URL switching lifecycle design
+H. Profile/whole-browser bundle manifest and migration rules
+I. Lightweight switcher UI information architecture
+J. Performance/memory instrumentation plan
+
+Do not start a broad architectural rewrite until B/E/J are resolved enough to define safe boundaries.
+
+YAGNI / EXCLUSIONS:
+QR scanner, PWA, Reader Mode, extensions/uBlock, DoH, full WebRTC privacy, per-container Tor, broad anti-fingerprinting/evasion machinery, stealth automation, fraud/security-control bypass, identity-verification bypass, covert session sharing, and credential theft remain excluded or deferred unless the active product scope explicitly changes.
+
+SECURITY BOUNDARY:
+Only handle authentication/session data explicitly owned or supplied by the user. Never steal cookies from other apps, bypass platform protections to obtain credentials, exfiltrate sessions, or log secrets.
+
+SESSION CLOSEOUT:
+After each meaningful step:
+- record exact changed files
+- record SOURCE/TEST/CI/ANDROID-RUNTIME status separately
+- record exact application-source checkpoint and live HEAD
+- record design decisions and rejected approaches
 - update docs/HEBLIBRE_WORKFLOW_STATE.md
-- state exactly one next highest-value action
+- state exactly one executable next action
 ```
 
-## Technical direction confirmed by current platform research
+## Platform research baseline
 
-AndroidX WebKit provides a `Profile` abstraction representing a WebView browsing session with separate data, and `WebViewCompat.setProfile()` can associate a WebView with a named profile when the `MULTI_PROFILE` feature is supported. The profile owns profile-specific cookie manager, WebStorage, service-worker controller and related browsing state. This is the preferred foundation for true browser-profile isolation rather than continuing to emulate isolation only through app-owned tables. Source: Android Developers, WebView/Profile/WebViewCompat documentation.
+AndroidX WebKit `Profile` represents a WebView browsing session and supports multiple profiles with isolated profile data. `WebViewCompat.setProfile()` associates a WebView with a named profile when `MULTI_PROFILE` is supported. Profile APIs expose profile-specific cookie management, web storage, service-worker control and related browsing state. This is the preferred technical foundation for true profile isolation.
 
-The repository currently declares `androidx.webkit:webkit:1.3.0-alpha03`, so adopting the multi-profile APIs requires an explicit dependency-compatibility assessment rather than an immediate blind upgrade. AndroidX WebKit 1.15.0 adds newer cookie/request APIs but raises minSdk from 21 to 23; therefore a dependency target such as 1.14.x should be evaluated first if API 21 support remains a hard requirement.
+The repository currently declares `androidx.webkit:webkit:1.3.0-alpha03` and `minSdkVersion 21`. Multi-profile APIs start in AndroidX WebKit 1.9.0. WebKit 1.15.0 adds newer cookie interception APIs but raises minSdk from 21 to 23, so dependency migration must be evaluated deliberately. A 1.14.x candidate is preferable to assess first if API 21 compatibility remains mandatory; verify the actual build and runtime support before committing to it.
 
-Per-profile proxying is not provided by `ProxyController`: its `setProxyOverride()` configuration applies to all WebViews in the app and is process-specific. Therefore the product requirement must not be implemented as a pretend profile-local proxy. A real solution needs a verified isolation/tunneling architecture, or the UI must explicitly label proxy scope as process-wide.
+`ProxyController.setProxyOverride()` is process-specific and applies to all WebViews in the app. It must therefore not be presented as a profile-local proxy. True per-profile proxy routing requires a separate verified architecture or an explicitly documented limitation.
 
-User-Agent customization is directly supported by WebView, while newer AndroidX WebKit APIs can also override User-Agent metadata/client hints. UA presets therefore need both string-level and metadata-level consistency testing.
+WebView supports direct User-Agent customization through `setUserAgentString`; newer AndroidX WebKit APIs also expose User-Agent metadata/client-hint control. UA presets should therefore validate both string and metadata consistency where supported.
 
-## Sources
-- https://developer.android.com/reference/androidx/webkit/Profile
-- https://developer.android.com/reference/androidx/webkit/WebViewCompat
-- https://developer.android.com/reference/androidx/webkit/ProxyController
-- https://developer.android.com/reference/androidx/webkit/ProxyConfig
-- https://developer.android.com/jetpack/androidx/releases/webkit
-- https://developer.android.com/reference/android/webkit/CookieManager
+Cookie/session export must use browser-owned/profile-owned APIs and data. Do not bypass another app's sandbox or security model to obtain cookies.
+
+## External technical sources reviewed
+- Android Developers — Profile: https://developer.android.com/reference/androidx/webkit/Profile
+- Android Developers — WebViewCompat: https://developer.android.com/reference/androidx/webkit/WebViewCompat
+- Android Developers — ProxyController: https://developer.android.com/reference/androidx/webkit/ProxyController
+- Android Developers — ProxyConfig: https://developer.android.com/reference/androidx/webkit/ProxyConfig
+- Android Developers — AndroidX WebKit release notes: https://developer.android.com/jetpack/androidx/releases/webkit
+- Android Developers — WebView: https://developer.android.com/reference/android/webkit/WebView
+- Android Developers — WebView security guidance: https://developer.android.com/privacy-and-security/security-tips
