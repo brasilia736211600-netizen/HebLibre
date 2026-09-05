@@ -8,10 +8,6 @@ on:
     branches:
       - genspark-dev
 
-concurrency:
-  group: heb-libre-unit-tests-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   test:
     runs-on: ubuntu-latest
