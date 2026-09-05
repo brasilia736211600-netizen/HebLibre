@@ -88,6 +88,10 @@
             android:label="@string/profile_manager_title"
             android:theme="@style/AppTheme"/>
 
+        <activity android:name="de.baumann.browser.activity.ProfileTransferActivity"
+            android:label="@string/profile_transfer_title"
+            android:theme="@style/AppTheme"/>
+
         <activity android:name="de.baumann.browser.activity.Whitelist_AdBlock"
             android:label="@string/setting_title_whitelist"
             android:theme="@style/AppTheme"/>
