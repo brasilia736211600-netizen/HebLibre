@@ -1,10 +1,8 @@
 package de.baumann.browser.unit;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.webkit.WebView;
 
-import androidx.preference.PreferenceManager;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
@@ -26,10 +24,7 @@ public final class WebViewProfileBinder {
             return false;
         }
 
-        SharedPreferences preferences =
-                PreferenceManager.getDefaultSharedPreferences(context);
-        String profileId = preferences.getString(
-                ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID);
+        String profileId = ProfileCatalogStore.getActiveProfileId(context);
         boolean supported = WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE);
         if (!WebViewProfileBindingPolicy.shouldBind(profileId, supported)) {
             return false;
