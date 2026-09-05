@@ -21,6 +21,12 @@
             android:icon="@drawable/icon_useragent"/>
 
         <Preference
+            android:key="profile_transfer"
+            android:title="@string/profile_transfer_title"
+            android:summary="@string/profile_transfer_summary"
+            android:icon="@drawable/icon_backup"/>
+
+        <Preference
             android:key="settings_start"
             android:title="@string/setting_title_start_control"
             android:summary="@string/setting_summary_start_control"
