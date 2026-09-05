@@ -71,6 +71,9 @@ public final class ProfileCatalogStore {
     }
 
     public static boolean setActiveProfileId(Context context, String profileId) {
+        if (context == null) {
+            return false;
+        }
         SharedPreferences preferences = preferences(context);
         ensureCatalog(preferences);
         String normalizedId = ProfileIdentity.normalize(profileId);
@@ -79,7 +82,19 @@ public final class ProfileCatalogStore {
         if (!ProfileCatalogPolicy.contains(ids, normalizedId)) {
             return false;
         }
+
+        String currentId = ProfileIdentity.normalize(
+                preferences.getString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
+        if (currentId.equals(normalizedId)) {
+            ProfilePreferencesStore.initializeProfile(context, normalizedId);
+            return true;
+        }
+
+        // Persist the outgoing profile before switching the active namespace.
+        ProfilePreferencesStore.saveGlobalToProfile(context, currentId);
+        ProfilePreferencesStore.initializeProfile(context, normalizedId);
         preferences.edit().putString(ProfileIdentity.PREFERENCE_KEY, normalizedId).apply();
+        ProfilePreferencesStore.loadProfileToGlobal(context, normalizedId);
         return true;
     }
 
@@ -105,6 +120,7 @@ public final class ProfileCatalogStore {
         editor.putStringSet(key(metadata.getId(), KEY_TAGS),
                 new LinkedHashSet<>(metadata.getTags()));
         editor.apply();
+        ProfilePreferencesStore.initializeProfile(context, metadata.getId());
         ensureDefaultMetadata(preferences);
         return true;
     }
@@ -140,6 +156,7 @@ public final class ProfileCatalogStore {
             editor.putString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID);
         }
         editor.apply();
+        ProfilePreferencesStore.deleteProfile(context, normalizedId);
         return true;
     }
 
