@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 import de.baumann.browser.unit.ProfileCatalogStore;
+import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.RecordUnit;
 
 public class RecordAction {
@@ -95,6 +96,10 @@ public class RecordAction {
     //BOOKMARK
 
     public void addBookmark (Record record) {
+        addBookmark(record, activeProfileId());
+    }
+
+    public void addBookmark (Record record, String profileId) {
         if (record == null
                 || record.getTitle() == null
                 || record.getTitle().trim().isEmpty()
@@ -108,7 +113,7 @@ public class RecordAction {
         values.put(RecordUnit.COLUMN_TITLE, record.getTitle().trim());
         values.put(RecordUnit.COLUMN_URL, record.getURL().trim());
         values.put(RecordUnit.COLUMN_TIME, record.getTime());
-        values.put(RecordUnit.COLUMN_PROFILE_ID, activeProfileId());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, ProfileIdentity.normalize(profileId));
         database.insert(RecordUnit.TABLE_BOOKMARK, null, values);
     }
 
@@ -156,6 +161,10 @@ public class RecordAction {
     //Tab
 
     public void addTab(Record record) {
+        addTab(record, activeProfileId());
+    }
+
+    public void addTab(Record record, String profileId) {
         if (record == null
                 || record.getTitle() == null
                 || record.getTitle().trim().isEmpty()
@@ -169,7 +178,7 @@ public class RecordAction {
         values.put(RecordUnit.COLUMN_TITLE, record.getTitle().trim());
         values.put(RecordUnit.COLUMN_URL, record.getURL().trim());
         values.put(RecordUnit.COLUMN_TIME, record.getTime());
-        values.put(RecordUnit.COLUMN_PROFILE_ID, activeProfileId());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, ProfileIdentity.normalize(profileId));
         database.insert(RecordUnit.TABLE_TAB, null, values);
     }
 
@@ -187,7 +196,7 @@ public class RecordAction {
                 new String[] {activeProfileId()},
                 null,
                 null,
-                RecordUnit.COLUMN_TITLE + " asc"
+                RecordUnit.COLUMN_TIME + " asc"
         );
 
         cursor.moveToFirst();
@@ -251,9 +260,10 @@ public class RecordAction {
     // General
     //
     // Profile-scoped domain tables are handled by the overloads below, while
-    // HISTORY/BOOKMARK/TAB now obtain the active profile automatically for
-    // all existing callers. This keeps the public RecordAction surface
-    // backwards compatible without allowing cross-profile record leakage.
+    // HISTORY/BOOKMARK/TAB obtain the active profile automatically for all
+    // existing callers. Explicit profile overloads are used by session
+    // persistence so an in-flight old-profile WebView can never be written
+    // into a newly selected active profile during restart.
 
     public void addDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) { return; }
@@ -360,7 +370,7 @@ public class RecordAction {
     }
 
     public void clearTable (String table, String profileId) {
-        database.delete(table, RecordUnit.COLUMN_PROFILE_ID + "=?", new String[] {profileId});
+        database.delete(table, RecordUnit.COLUMN_PROFILE_ID + "=?", new String[] {ProfileIdentity.normalize(profileId)});
     }
 
     private Record getRecord(Cursor cursor) {
