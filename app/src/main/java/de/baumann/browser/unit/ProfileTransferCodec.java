@@ -41,7 +41,7 @@ public final class ProfileTransferCodec {
         line(out, "color", metadata.getColor());
         line(out, "icon", metadata.getIcon());
         line(out, "notes", metadata.getNotes());
-        line(out, "tags", joinTags(metadata.getTags()));
+        line(out, "tags", joinEncodedTags(metadata.getTags()));
         line(out, "group", metadata.getGroup());
         appendRecords(out, "HISTORY", history);
         appendRecords(out, "BOOKMARKS", bookmarks);
@@ -112,7 +112,7 @@ public final class ProfileTransferCodec {
         String color = decode(findValue(lines, "color"));
         String icon = decode(findValue(lines, "icon"));
         String notes = decode(findValue(lines, "notes"));
-        String tagsValue = decode(findValue(lines, "tags"));
+        String tagsValue = findValue(lines, "tags");
         String group = decode(findValue(lines, "group"));
         ProfileMetadata metadata = new ProfileMetadata(
                 id,
@@ -120,7 +120,7 @@ public final class ProfileTransferCodec {
                 color,
                 icon,
                 notes,
-                splitTags(tagsValue),
+                splitEncodedTags(tagsValue),
                 group);
 
         List<Record> history = new ArrayList<>();
@@ -197,7 +197,7 @@ public final class ProfileTransferCodec {
         }
     }
 
-    private static String joinTags(List<String> tags) {
+    private static String joinEncodedTags(List<String> tags) {
         if (tags == null || tags.isEmpty()) {
             return "";
         }
@@ -206,18 +206,20 @@ public final class ProfileTransferCodec {
             if (result.length() > 0) {
                 result.append(',');
             }
-            result.append(tag);
+            result.append(encode(tag));
         }
         return result.toString();
     }
 
-    private static List<String> splitTags(String tags) {
+    private static List<String> splitEncodedTags(String tags) {
         if (tags == null || tags.trim().isEmpty()) {
             return Collections.emptyList();
         }
-        String[] values = tags.split(",");
+        String[] values = tags.split(",", -1);
         List<String> result = new ArrayList<>();
-        Collections.addAll(result, values);
+        for (String value : values) {
+            result.add(decode(value));
+        }
         return result;
     }
 
