@@ -19,6 +19,9 @@ import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
+
 import de.baumann.browser.browser.*;
 import de.baumann.browser.R;
 import de.baumann.browser.unit.BangQueryPolicy;
@@ -238,6 +241,13 @@ public class NinjaWebView extends WebView implements AlbumController {
     private void applyThirdPartyCookiePolicy() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             boolean block = sp.getBoolean("block_third_party_cookies", false);
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)) {
+                CookieManager profileCookieManager =
+                        WebViewCompat.getProfile(this).getCookieManager();
+                profileCookieManager.setAcceptThirdPartyCookies(
+                        this, ThirdPartyCookiePolicy.acceptThirdPartyCookies(block));
+                return;
+            }
             CookieManager.getInstance().setAcceptThirdPartyCookies(
                     this, ThirdPartyCookiePolicy.acceptThirdPartyCookies(block));
         }
