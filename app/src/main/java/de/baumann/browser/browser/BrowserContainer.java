@@ -1,5 +1,8 @@
 package de.baumann.browser.browser;
 
+import android.content.Context;
+
+import de.baumann.browser.unit.ProfileSessionStore;
 import de.baumann.browser.unit.TabOrderPolicy;
 import de.baumann.browser.view.NinjaWebView;
 
@@ -16,7 +19,9 @@ public class BrowserContainer {
     public synchronized void add(AlbumController controller) {
         list.add(controller);
     }
-    public synchronized void add(AlbumController controller, int index) { list.add(index, controller); }
+    public synchronized void add(AlbumController controller, int index) {
+        list.add(index, controller);
+    }
 
     /** Moves an existing tab without destroying its WebView state. */
     public synchronized boolean move(int fromIndex, int direction) {
@@ -47,9 +52,18 @@ public class BrowserContainer {
     }
 
     public synchronized void clear() {
+        persistSession();
         for (AlbumController albumController : list) {
             ((NinjaWebView) albumController).destroy();
         }
         list.clear();
+    }
+
+    private void persistSession() {
+        if (list.isEmpty()) {
+            return;
+        }
+        Context context = list.get(0).getAlbumView().getContext().getApplicationContext();
+        ProfileSessionStore.save(context, list);
     }
 }
