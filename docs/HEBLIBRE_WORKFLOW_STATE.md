@@ -6,6 +6,9 @@ Repository: `brasilia736211600-netizen/HebLibre`
 Branch: `genspark-dev`
 Default branch: `l10n_crowdin`
 
+## Communication language
+All human-facing conversation about HebLibre is in Arabic unless the user explicitly requests another language. This applies to progress updates, explanations, decisions, questions, status reports, and session handoffs. Repository source code, identifiers, commit messages, CI output, and filenames remain in their native/project language.
+
 ## Mandatory continuity documents
 - `docs/HEBLIBRE_AI_AGENT_CONTRACT.md` — durable rules for every AI/human agent.
 - `docs/HEBLIBRE_MASTER_PROJECT_MAP.md` — scope, architecture boundary, completed work, and deferred backlog.
@@ -30,8 +33,8 @@ Never conflate these levels.
 - Latest verified application-source fix: `247768c4e2e442fcb9b42d299d8cf00d3c24b81b` — whitelist import/export resolves the active normalized profile instead of hard-coding the default profile.
 - Consolidated Unit Tests run `33985143542` passed for that source checkpoint.
 - Subsequent commits are documentation/CI hardening only; no unverified third-party-cookie behavior change remains.
-- Current branch HEAD at the time of this checkpoint update is the documentation/CI sequence headed by `69921edf7ec741eafe51956a7c51c89e317bb20b`; always verify the live branch ref before execution.
-- Android emulator smoke has completed successfully in GitHub Actions on the current validation sequence. This is emulator evidence, not physical target-device proof.
+- Current branch now includes the Arabic communication-language rule in the durable AI-agent contract.
+- Android emulator smoke has completed successfully in GitHub Actions on the validation sequence. This is emulator evidence, not physical target-device proof.
 - P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and whitelist profile consistency are recorded as SOURCE/TEST/CI verified.
 
 ## Engineering checkpoint
@@ -73,4 +76,4 @@ QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, 
 At the end of every meaningful session, update this file with the live HEAD, exact changes, test/CI/runtime evidence, unresolved decisions, and one next executable step. Update the master map and execution board when scope changes.
 
 ## Last updated
-2026-09-05 — installed the durable AI-agent continuity contract, persistent decision log, execution board, and strengthened resume bootstrap so future chats/agents can recover from GitHub without relying on conversational memory.
+2026-09-05 — added the durable rule that all human-facing HebLibre conversation must be conducted in Arabic unless the user explicitly requests another language; repository/source artifacts keep their native language.
