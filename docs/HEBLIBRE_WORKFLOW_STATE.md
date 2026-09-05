@@ -12,28 +12,30 @@ Execution protocol:
 Verification levels: SOURCE-VERIFIED, TEST-VERIFIED, CI-VERIFIED, ANDROID-RUNTIME-VERIFIED, DOCUMENTED. Never conflate them.
 
 ## Current repository state
-- `genspark-dev` code is anchored at the last clean verified implementation checkpoint `5fffd65e80e2a616a5273befe7cdca6309441490`.
-- Current branch contains verified source changes plus documentation/audit updates; the latest source fix is `247768c4e2e442fcb9b42d299d8cf00d3c24b81b`.
+- Current branch contains verified source changes plus documentation/audit updates.
+- Latest verified source fix: `247768c4e2e442fcb9b42d299d8cf00d3c24b81b` (`BrowserUnit` whitelist import/export now uses the active normalized profile).
+- Latest source checkpoint was consolidated by Unit Tests run `33985143542`; its `test` job and `Run unit tests` step completed successfully.
+- Latest branch HEAD is `3093466d259a543383bb76fd737ff62e354e0467`; the newest commit is documentation-only and reconciles the project map for the final validation gate.
 - No unverified third-party-cookie behavior change remains.
-- P2.1–P2.11, download-cookie privacy, tab reorder core, and remote-content default consistency remain CI-VERIFIED from the recorded runs.
-- Legacy `BrowserUnit` whitelist import/export helpers now also resolve the active normalized profile instead of hard-coding the default profile.
-- Unit Tests run `33985143542`, head `247768c4e2e442fcb9b42d299d8cf00d3c24b81b`, completed successfully; the `test` job and `Run unit tests` step both completed successfully.
-- Android runtime remains intentionally deferred to final consolidated validation.
+- P2.1–P2.11, download-cookie privacy, tab reorder core, remote-content default consistency, and whitelist profile consistency are recorded as SOURCE/TEST/CI verified.
+- Android runtime remains the only remaining validation level for the current bounded scope.
 
 ## Engineering checkpoint
-The tab overview still uses the existing `LinearLayout` item path; `AlbumItem` uses normal click for selection and long-click for close. Tab reorder UI remains PARTIAL until a complete non-breaking mutation path is ready.
+The tab overview uses the existing `ScrollView` + `LinearLayout` item path; `AlbumItem` uses normal click for selection and long-click for close. Tab reorder core is implemented and tested, but the UI affordance remains partial because long-click cannot be repurposed without changing established close-tab behavior.
 
-The bounded privacy/security audit includes official Android cross-checks for SSL override policy, file-origin settings, cleartext traffic, and backup semantics.
+Whitelist transfer is consistently profile-aware in both the active task path and legacy `BrowserUnit` helpers. Bookmark transfer remains unchanged.
 
-The whitelist transfer path is now consistently profile-aware for both the active settings route (`ProfileScopedWhitelistTransfer`) and the legacy `BrowserUnit` import/export helpers. Bookmark import/export remains unchanged.
+The download-cookie policy is enforced by both the main download path and `HelperUnit.save_as()`, with the compatibility-preserving default enabled.
 
-The download-cookie policy is enforced by both the main `BrowserUnit.download()` path and the `HelperUnit.save_as()` path; both gate the `Cookie` request header on `send_download_cookies`.
+The bounded security audit is complete for the current scope. SSL certificate override, application cleartext policy, automatic backup of `Ninja4.db`, and `sp_remote` file-origin/DOM-storage coupling remain explicit product or architecture decisions and were not changed opportunistically.
+
+## Final validation gate
+Source review, deterministic tests, CI, and documentation are complete for the current bounded scope. The remaining gate is one consolidated Android runtime validation pass. Do not repeatedly build/install during feature development. During the final pass, cover navigation and search, HTTPS-only/GPC/Save-Data, desktop mode, screenshot protection, media/geolocation permissions, third-party-cookie preference behavior, downloads including Save As, profile/whitelist transfer, tab selection/close/reorder-core behavior, settings search, and general regression paths.
+
+If runtime defects appear, fix them as a consolidated batch, run CI again against the resulting source checkpoint, and perform one final device recheck.
 
 ## Deferred work
-QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, and Reader Mode remain deferred.
-
-## Final Android validation rule
-Do not repeatedly build/install/test the APK. Complete source review, deterministic JVM tests, CI, review, and documentation first; reserve Android runtime verification for one consolidated final device-validation phase.
+QR scanner, PWA, true tab hierarchy, multi-window, broader tracking protection, DoH, broad fingerprinting defenses, full WebRTC privacy, complete profile storage isolation, isolated tabs, per-container proxy/Tor, extensions/uBlock, on-device AI, Reader Mode, and a dedicated tab-reorder UI remain deferred by design rather than silently implemented.
 
 ## Last updated
-2026-09-05 — completed the bounded whitelist profile-consistency fix, reconciled the security audit with the actual active paths, confirmed the consolidated Unit Tests workflow passed, and kept Android runtime validation deferred until the final device pass.
+2026-09-05 — synchronized workflow state with the reconciled master map and moved the project to the final consolidated Android validation gate.
