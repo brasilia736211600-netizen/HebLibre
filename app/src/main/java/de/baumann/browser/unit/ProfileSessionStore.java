@@ -3,7 +3,6 @@ package de.baumann.browser.unit;
 import android.content.Context;
 
 import java.util.List;
-import java.util.Locale;
 
 import de.baumann.browser.browser.AlbumController;
 import de.baumann.browser.database.Record;
@@ -33,14 +32,11 @@ public final class ProfileSessionStore {
                 }
                 NinjaWebView webView = (NinjaWebView) controller;
                 String url = webView.getUrl();
-                if (!isRestorableUrl(url)) {
+                if (!ProfileSessionPolicy.isRestorableUrl(url)) {
                     continue;
                 }
-                String title = webView.getTitle();
-                if (title == null || title.trim().isEmpty()) {
-                    title = url;
-                }
-                action.addTab(new Record(title, url, order++, -1), profileId);
+                String title = ProfileSessionPolicy.normalizeTitle(webView.getTitle(), url);
+                action.addTab(new Record(title, url.trim(), order++, -1), profileId);
             }
         } finally {
             action.close();
@@ -55,13 +51,5 @@ public final class ProfileSessionStore {
         } finally {
             action.close();
         }
-    }
-
-    private static boolean isRestorableUrl(String url) {
-        if (url == null) {
-            return false;
-        }
-        String normalized = url.trim().toLowerCase(Locale.ROOT);
-        return normalized.startsWith("http://") || normalized.startsWith("https://");
     }
 }
