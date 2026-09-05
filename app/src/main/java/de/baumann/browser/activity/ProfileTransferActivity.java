@@ -36,12 +36,17 @@ import de.baumann.browser.unit.ProfileTransferCodec;
 public class ProfileTransferActivity extends AppCompatActivity {
     private static final int CREATE_DOCUMENT = 41;
     private static final int OPEN_DOCUMENT = 42;
+    private static final String STATE_ENCRYPTED = "pending_encrypted_export";
+
     private boolean pendingEncryptedExport;
     private String pendingExportPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            pendingEncryptedExport = savedInstanceState.getBoolean(STATE_ENCRYPTED, false);
+        }
         setTitle("Profile transfer");
 
         LinearLayout root = new LinearLayout(this);
@@ -74,6 +79,13 @@ public class ProfileTransferActivity extends AppCompatActivity {
         root.addView(importButton);
 
         setContentView(root);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(STATE_ENCRYPTED, pendingEncryptedExport);
+        // Never persist the export password; it exists only in memory for the current Activity instance.
+        super.onSaveInstanceState(outState);
     }
 
     private void beginPlainExport() {
@@ -121,6 +133,7 @@ public class ProfileTransferActivity extends AppCompatActivity {
                             writeExport(destination);
                         } catch (Exception e) {
                             pendingExportPassword = null;
+                            pendingEncryptedExport = false;
                             Toast.makeText(ProfileTransferActivity.this,
                                     e.getMessage() == null ? "Transfer failed" : e.getMessage(), Toast.LENGTH_LONG).show();
                         }
