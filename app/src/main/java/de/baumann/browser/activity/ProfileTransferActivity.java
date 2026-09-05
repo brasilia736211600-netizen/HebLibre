@@ -219,13 +219,6 @@ public class ProfileTransferActivity extends AppCompatActivity {
         final EditText id = new EditText(this);
         id.setSingleLine(true);
         id.setHint("New profile ID");
-        new AlertDialog.Builder(this)
-                .setTitle("Choose imported profile ID")
-                .setMessage("The exported ID is reserved or already exists. Choose a new ID for the imported profile.")
-                .setView(id)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton("Import", null)
-                .create();
         final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Choose imported profile ID")
                 .setMessage("The exported ID is reserved or already exists. Choose a new ID for the imported profile.")
