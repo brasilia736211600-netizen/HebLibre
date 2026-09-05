@@ -46,7 +46,7 @@ public class ProfileTransferCodecTest {
     }
 
     @Test
-    public void encryptedRoundTripAndWrongPassword() {
+    public void encryptedRoundTripWrongPasswordAndTamperingFail() {
         String encoded = ProfileTransferCodec.encodeEncrypted(
                 metadata(),
                 Collections.singletonList(new Record("H", "https://example.com", 1L, -1)),
@@ -62,6 +62,15 @@ public class ProfileTransferCodecTest {
         try {
             ProfileTransferCodec.decode(encoded, "wrong-password");
             throw new AssertionError("Expected wrong password to fail");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+
+        String tampered = encoded.replaceFirst("ciphertext=([0-9a-f])", "ciphertext=$1")
+                .replace("ciphertext=", "ciphertext=f", 1);
+        try {
+            ProfileTransferCodec.decode(tampered, "correct-horse");
+            throw new AssertionError("Expected tampered ciphertext to fail");
         } catch (IllegalArgumentException expected) {
             // expected
         }
