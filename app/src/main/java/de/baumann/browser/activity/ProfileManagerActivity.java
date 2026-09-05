@@ -27,6 +27,7 @@ import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileMetadata;
+import de.baumann.browser.unit.ProfilePreferencesStore;
 
 /** Lightweight profile catalog UI. */
 public class ProfileManagerActivity extends AppCompatActivity {
@@ -121,8 +122,15 @@ public class ProfileManagerActivity extends AppCompatActivity {
 
     private void selectProfile(String profileId) {
         String current = ProfileCatalogStore.getActiveProfileId(this);
-        if (current.equals(ProfileIdentity.normalize(profileId))) return;
-        if (!ProfileCatalogStore.setActiveProfileId(this, profileId)) return;
+        String normalizedTarget = ProfileIdentity.normalize(profileId);
+        if (current.equals(normalizedTarget)) return;
+
+        // Persist every profile-local browser/privacy preference before changing the active namespace.
+        ProfilePreferencesStore.saveGlobalToProfile(this, current);
+        ProfilePreferencesStore.initializeProfile(this, normalizedTarget);
+        if (!ProfileCatalogStore.setActiveProfileId(this, normalizedTarget)) return;
+        ProfilePreferencesStore.loadProfileToGlobal(this, normalizedTarget);
+
         PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                 .edit().putInt("restart_changed", 1).apply();
         Toast.makeText(this, R.string.profile_switched, Toast.LENGTH_LONG).show();
@@ -182,6 +190,9 @@ public class ProfileManagerActivity extends AppCompatActivity {
                             Toast.makeText(ProfileManagerActivity.this, R.string.profile_invalid_id, Toast.LENGTH_LONG).show();
                             return;
                         }
+                        if (isNew) {
+                            ProfilePreferencesStore.initializeProfile(ProfileManagerActivity.this, profileId);
+                        }
                         dialog.dismiss();
                         renderProfiles();
                     }
@@ -205,6 +216,7 @@ public class ProfileManagerActivity extends AppCompatActivity {
                             return;
                         }
                         if (ProfileCatalogStore.delete(ProfileManagerActivity.this, profile.getId())) {
+                            ProfilePreferencesStore.deleteProfile(ProfileManagerActivity.this, profile.getId());
                             Toast.makeText(ProfileManagerActivity.this, R.string.profile_deleted, Toast.LENGTH_SHORT).show();
                             renderProfiles();
                         }
