@@ -4,7 +4,7 @@
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
 ## Live branch checkpoint
-`659f173e10671cd8d1bb2b1a0280b71c2970c40e` — latest verified branch HEAD after expanding Runtime Smoke with Profile Transfer coverage and synchronizing project documentation.
+`7701bcdff923e75b082c895c28f02a0314a99de2` — latest verified branch HEAD after synchronizing the master project map to the expanded Runtime Smoke checkpoint.
 
 ## Current source checkpoint
 `ad5cec1d0c2be694c9b732ec8ba0ecb69b6ac143` — profile-aware app records, profile-owned launcher session restore, profile transfer with optional AES-GCM encryption, and SQL predicate hardening. Documentation/test-harness commits after the source change are tracked separately.
