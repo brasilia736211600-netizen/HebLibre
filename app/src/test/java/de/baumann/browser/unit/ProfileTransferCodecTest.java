@@ -53,18 +53,25 @@ public class ProfileTransferCodecTest {
     }
 
     @Test
-    public void encryptedRoundTripWrongPasswordAndTamperingFail() {
+    public void encryptedRoundTripPreservesPreferencesAndRejectsWrongPasswordOrTampering() {
+        Map<String, String> preferences = new HashMap<>();
+        preferences.put("desktop_mode", "b:false");
+        preferences.put("userAgent", "s:Encrypted-UA");
+
         String encoded = ProfileTransferCodec.encodeEncrypted(
                 metadata(),
                 Collections.singletonList(new Record("H", "https://example.com", 1L, -1)),
                 Collections.<Record>emptyList(),
                 Collections.<Record>emptyList(),
-                "correct-horse");
+                "correct-horse",
+                preferences);
 
         assertTrue(encoded.startsWith("HEBLIBRE_PROFILE_V1_AES_GCM"));
         ProfileTransferCodec.TransferPackage decoded = ProfileTransferCodec.decode(encoded, "correct-horse");
         assertEquals("work", decoded.getMetadata().getId());
         assertEquals(1, decoded.getHistory().size());
+        assertEquals("b:false", decoded.getPreferences().get("desktop_mode"));
+        assertEquals("s:Encrypted-UA", decoded.getPreferences().get("userAgent"));
 
         try {
             ProfileTransferCodec.decode(encoded, "wrong-password");
