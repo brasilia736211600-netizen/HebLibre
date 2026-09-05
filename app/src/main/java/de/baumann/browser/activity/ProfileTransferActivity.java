@@ -299,16 +299,26 @@ public class ProfileTransferActivity extends AppCompatActivity {
         if (!ProfileCatalogStore.save(this, metadata)) {
             throw new IllegalStateException("Unable to save imported profile");
         }
-        ProfileCatalogStore.setActiveProfileId(this, metadata.getId());
 
         RecordAction action = new RecordAction(this);
         action.open(true);
         try {
-            for (Record record : transfer.getHistory()) action.addHistory(record);
-            for (Record record : transfer.getBookmarks()) action.addBookmark(record, metadata.getId());
-            for (Record record : transfer.getTabs()) action.addTab(record, metadata.getId());
+            if (!action.importProfileRecords(
+                    transfer.getHistory(), transfer.getBookmarks(), transfer.getTabs(), metadata.getId())) {
+                throw new IllegalStateException("Unable to import profile records");
+            }
+        } catch (RuntimeException e) {
+            // The record transaction is already rolled back. Remove the catalog entry as
+            // well so a failed import cannot leave a visible empty/partial profile behind.
+            ProfileCatalogStore.delete(this, metadata.getId());
+            throw e;
         } finally {
             action.close();
+        }
+
+        if (!ProfileCatalogStore.setActiveProfileId(this, metadata.getId())) {
+            ProfileCatalogStore.delete(this, metadata.getId());
+            throw new IllegalStateException("Unable to activate imported profile");
         }
         Toast.makeText(this, "Profile imported. Restart the browser to apply it.", Toast.LENGTH_LONG).show();
     }
