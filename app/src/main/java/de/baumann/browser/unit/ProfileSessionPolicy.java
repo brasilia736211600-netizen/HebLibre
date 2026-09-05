@@ -2,7 +2,7 @@ package de.baumann.browser.unit;
 
 import java.util.Locale;
 
-/** Deterministic rules for deciding which tab URLs may be persisted/restored. */
+/** Deterministic rules for deciding which tab state may be persisted/restored. */
 public final class ProfileSessionPolicy {
 
     private ProfileSessionPolicy() {
@@ -21,5 +21,13 @@ public final class ProfileSessionPolicy {
             return fallbackUrl == null ? "" : fallbackUrl.trim();
         }
         return title.trim();
+    }
+
+    /** Keeps an in-flight browser session bound to the profile that created it. */
+    public static String persistenceProfileId(String sessionProfileId, String currentActiveProfileId) {
+        if (sessionProfileId != null && !sessionProfileId.trim().isEmpty()) {
+            return ProfileIdentity.normalize(sessionProfileId);
+        }
+        return ProfileIdentity.normalize(currentActiveProfileId);
     }
 }
