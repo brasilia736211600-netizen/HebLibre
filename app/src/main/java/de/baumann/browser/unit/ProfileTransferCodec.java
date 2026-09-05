@@ -7,7 +7,9 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -35,6 +37,14 @@ public final class ProfileTransferCodec {
                                      List<Record> history,
                                      List<Record> bookmarks,
                                      List<Record> tabs) {
+        return encodePlain(metadata, history, bookmarks, tabs, Collections.<String, String>emptyMap());
+    }
+
+    public static String encodePlain(ProfileMetadata metadata,
+                                     List<Record> history,
+                                     List<Record> bookmarks,
+                                     List<Record> tabs,
+                                     Map<String, String> preferences) {
         StringBuilder out = new StringBuilder();
         out.append(PLAIN_HEADER).append('\n');
         line(out, "id", metadata.getId());
@@ -44,6 +54,8 @@ public final class ProfileTransferCodec {
         line(out, "notes", metadata.getNotes());
         line(out, "tags", joinEncodedTags(metadata.getTags()));
         line(out, "group", metadata.getGroup());
+        out.append("PREFERENCES\n");
+        appendPreferences(out, preferences);
         appendRecords(out, "HISTORY", history);
         appendRecords(out, "BOOKMARKS", bookmarks);
         appendRecords(out, "TABS", tabs);
@@ -55,6 +67,16 @@ public final class ProfileTransferCodec {
                                           List<Record> bookmarks,
                                           List<Record> tabs,
                                           String password) {
+        return encodeEncrypted(metadata, history, bookmarks, tabs, password,
+                Collections.<String, String>emptyMap());
+    }
+
+    public static String encodeEncrypted(ProfileMetadata metadata,
+                                          List<Record> history,
+                                          List<Record> bookmarks,
+                                          List<Record> tabs,
+                                          String password,
+                                          Map<String, String> preferences) {
         requirePassword(password);
         byte[] salt = randomBytes(SALT_BYTES);
         byte[] iv = randomBytes(IV_BYTES);
@@ -62,7 +84,8 @@ public final class ProfileTransferCodec {
             SecretKey key = deriveKey(password, salt);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, key, new GCMParameterSpec(128, iv));
-            byte[] ciphertext = cipher.doFinal(encodePlain(metadata, history, bookmarks, tabs)
+            byte[] ciphertext = cipher.doFinal(encodePlain(
+                    metadata, history, bookmarks, tabs, preferences)
                     .getBytes(StandardCharsets.UTF_8));
             StringBuilder out = new StringBuilder();
             out.append(ENCRYPTED_HEADER).append('\n');
@@ -141,14 +164,23 @@ public final class ProfileTransferCodec {
         List<Record> history = new ArrayList<>();
         List<Record> bookmarks = new ArrayList<>();
         List<Record> tabs = new ArrayList<>();
+        Map<String, String> preferences = new LinkedHashMap<>();
         List<Record> target = null;
         for (String line : lines) {
-            if ("HISTORY".equals(line)) {
+            if ("PREFERENCES".equals(line)) {
+                target = null;
+            } else if ("HISTORY".equals(line)) {
                 target = history;
             } else if ("BOOKMARKS".equals(line)) {
                 target = bookmarks;
             } else if ("TABS".equals(line)) {
                 target = tabs;
+            } else if (line.startsWith("P|")) {
+                String[] parts = line.split("\\|", 3);
+                if (parts.length != 3 || parts[1].isEmpty()) {
+                    throw new IllegalArgumentException("Malformed profile preference");
+                }
+                preferences.put(parts[1], decode(parts[2]));
             } else if (line.startsWith("R|")) {
                 if (target == null) {
                     throw new IllegalArgumentException("Record found outside a section");
@@ -156,7 +188,7 @@ public final class ProfileTransferCodec {
                 target.add(parseRecord(line));
             }
         }
-        return new TransferPackage(metadata, history, bookmarks, tabs);
+        return new TransferPackage(metadata, history, bookmarks, tabs, preferences);
     }
 
     private static Record parseRecord(String line) {
@@ -188,6 +220,22 @@ public final class ProfileTransferCodec {
                     .append(encode(record.getTitle()))
                     .append('|')
                     .append(encode(record.getURL()))
+                    .append('\n');
+        }
+    }
+
+    private static void appendPreferences(StringBuilder out, Map<String, String> preferences) {
+        if (preferences == null || preferences.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : preferences.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                continue;
+            }
+            out.append("P|")
+                    .append(entry.getKey())
+                    .append('|')
+                    .append(encode(entry.getValue()))
                     .append('\n');
         }
     }
@@ -306,20 +354,24 @@ public final class ProfileTransferCodec {
         private final List<Record> history;
         private final List<Record> bookmarks;
         private final List<Record> tabs;
+        private final Map<String, String> preferences;
 
         private TransferPackage(ProfileMetadata metadata,
                                 List<Record> history,
                                 List<Record> bookmarks,
-                                List<Record> tabs) {
+                                List<Record> tabs,
+                                Map<String, String> preferences) {
             this.metadata = metadata;
             this.history = Collections.unmodifiableList(new ArrayList<>(history));
             this.bookmarks = Collections.unmodifiableList(new ArrayList<>(bookmarks));
             this.tabs = Collections.unmodifiableList(new ArrayList<>(tabs));
+            this.preferences = Collections.unmodifiableMap(new LinkedHashMap<>(preferences));
         }
 
         public ProfileMetadata getMetadata() { return metadata; }
         public List<Record> getHistory() { return history; }
         public List<Record> getBookmarks() { return bookmarks; }
         public List<Record> getTabs() { return tabs; }
+        public Map<String, String> getPreferences() { return preferences; }
     }
 }
