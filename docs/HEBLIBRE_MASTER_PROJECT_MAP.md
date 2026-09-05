@@ -69,8 +69,9 @@ Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.
 - Profile-owned session persistence/launcher restore with existing-browser task reuse — SOURCE-VERIFIED on current branch.
 - Profile export/import using a versioned format, optional AES-GCM encryption, PBKDF2 password derivation, wrong-password/tamper rejection, document picker UI, and explicit exclusion of WebView-internal cookies/storage/login secrets — SOURCE-VERIFIED on current branch.
 - Profile-transfer parser hardening: exact version-header validation plus encrypted salt/IV/ciphertext dimension checks, with deterministic malformed-input tests — SOURCE-VERIFIED in `c23297b7d5f1dc106f8e8865294882261fcaa0e2` and `1c7b1f395d70c4e07d12bbda37ab9ab1f909cecc`.
-- Profile-record import is now transactional across HISTORY/BOOKMARK/TAB inserts; invalid records cannot leave partial database state, and failed imports remove the newly created profile catalog entry — SOURCE-VERIFIED in `ac454447a2553cabec830ae129823ad4358a1a81` with debug rollback smoke coverage.
+- Profile-record import is transactional across HISTORY/BOOKMARK/TAB inserts; invalid records cannot leave partial database state, and failed imports remove the newly created profile catalog entry — SOURCE-VERIFIED in `ac454447a2553cabec830ae129823ad4358a1a81` with debug rollback smoke coverage.
 - Database deletion hardening: profile-domain and URL deletion paths now bind data values through SQLite selection arguments rather than interpolating them into SQL predicates — SOURCE-VERIFIED in `ad5cec1d0c2be694c9b732ec8ba0ecb69b6ac143`.
+- User-profile deletion now purges app-owned HISTORY/BOOKMARK/TAB plus profile-scoped WHITELIST/JAVASCRIPT/COOKIE/REMOTE rows before catalog deletion, with debug smoke coverage — SOURCE-VERIFIED on current branch.
 - CI diagnostic hardening: Unit and Runtime Smoke workflows pin `ubuntu-24.04`; a minimal runner probe was added to isolate hosted-runner startup from Android/toolchain execution.
 - Runtime Smoke coverage expanded with a debug-only Profile Transfer launcher that verifies the production transfer screen can be opened without exporting that production activity.
 
@@ -127,10 +128,10 @@ Current 2026 market references repeatedly identify Multilogin, GoLogin, AdsPower
 - Complete profile-local settings and per-profile proxy routing remain architectural work and are intentionally not represented as completed features.
 
 ## Current next executable step
-Use the first fresh GitHub Actions capacity that successfully assigns a hosted runner: verify Unit Tests and Runtime Smoke on the latest checkpoint `ac454447a2553cabec830ae129823ad4358a1a81`, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation. Until that runner is available, continue bounded source work that has deterministic tests and does not widen unresolved profile/storage/networking architecture.
+Use the first fresh GitHub Actions capacity that successfully assigns a hosted runner: verify Unit Tests and Runtime Smoke on the latest checkpoint `5ffdcdee8c58d0e0c3b22ca5f7bda84d7a36a7eb`, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation. Until that runner is available, continue bounded source work that has deterministic tests and does not widen unresolved profile/storage/networking architecture.
 
 ## Android validation gate
 Do not repeatedly build/install APKs during feature development. Complete source review, deterministic tests, CI, and documentation first. Then perform consolidated physical-device validation. Emulator evidence remains separate from physical-device evidence.
 
 ## Last synchronized
-2026-09-06 — synchronized to source/runtime-smoke checkpoint `ac454447a2553cabec830ae129823ad4358a1a81`, including transactional profile-record import and rollback smoke coverage.
+2026-09-06 — synchronized to current profile-deletion hardening checkpoint `5ffdcdee8c58d0e0c3b22ca5f7bda84d7a36a7eb`.
