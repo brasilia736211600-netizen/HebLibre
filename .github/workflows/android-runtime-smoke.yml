@@ -100,7 +100,7 @@ jobs:
             test -n "$(adb shell pidof de.baumann.browser)"
             adb shell uiautomator dump /sdcard/browser.xml >/dev/null
             adb shell cat /sdcard/browser.xml | grep -F 'Example Domain' >/dev/null
-            adb shell am start -W -n de.baumann.browser/.activity.ProfileManagerActivity
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileManagerSmokeActivity
             sleep 3
             adb shell uiautomator dump /sdcard/profile.xml >/dev/null
             adb shell cat /sdcard/profile.xml | grep -F 'Profiles' >/dev/null
