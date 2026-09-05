@@ -91,5 +91,25 @@ This is the durable record of important project decisions. A future agent must r
 **Reason:** Sessions can terminate, freeze, lose network, or otherwise interrupt work.
 **Implication:** Persist material decisions, blockers, test conclusions, source checkpoints, CI evidence, and the next executable step in the durable control plane.
 
+## D-022 — Profile settings require real partitioning, not namespaced UI alone
+**Decision:** Do not claim complete profile-local browser settings while production code still reads and writes the global default `SharedPreferences` store. A future settings partition must update every material reader/writer, migrate existing values deterministically, and keep intentionally global settings explicitly global.
+**Reason:** `BrowserActivity` and `ProfileCatalogStore` currently use `PreferenceManager.getDefaultSharedPreferences(...)`, and settings are consumed outside a single preference screen. A partial wrapper would create a false isolation boundary and risk configuration leakage between profiles.
+**Implication:** Treat complete profile-local settings as a bounded architecture task, not a cosmetic preference-screen change. Until implemented and tested, the current state must be described as partial profile isolation.
+
+## D-023 — Per-profile proxy cannot use process-global WebView ProxyController
+**Decision:** Do not implement per-profile proxy routing with AndroidX WebKit `ProxyController` semantics.
+**Reason:** The supported controller is process-scoped and affects all WebViews in the app, so it cannot safely associate different proxies with simultaneously existing WebView profiles.
+**Implication:** Per-profile proxying requires a separate network-layer architecture or another platform capability that provides true profile/request isolation. Until such an architecture is selected and tested, do not expose a misleading per-profile proxy feature.
+
+## D-024 — Current GitHub Actions pre-step failures are not application test failures
+**Decision:** A workflow run whose job has no executed steps and no job logs is classified as runner/workflow initialization failure, not as a compiler, test, or runtime failure.
+**Reason:** There is no application execution evidence to attribute to HebLibre.
+**Implication:** Continue source-level progress where safe, but do not mark current checkpoints CI-VERIFIED or Android-RUNTIME-VERIFIED until a job actually executes.
+
+## D-025 — Parameterize database values used in deletion predicates
+**Decision:** Database deletion predicates must bind user/data values through selection arguments rather than interpolating them into SQL strings.
+**Reason:** It removes unnecessary SQL-injection/parsing risk and preserves the existing profile scoping semantics.
+**Implication:** `RecordAction.deleteDomain()` and the non-profile branch of URL deletion use `SQLiteDatabase.delete(..., whereArgs)` rather than string-built value predicates.
+
 ## Change control
 To supersede any decision above, create a new dated decision entry explaining the new contract, evidence, affected files, tests/CI plan, and migration/compatibility impact. Do not silently overwrite historical rationale.
