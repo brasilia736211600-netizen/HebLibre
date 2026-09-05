@@ -13,6 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
+import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,18 +142,18 @@ public class ProfileManagerActivity extends AppCompatActivity {
         if (!ProfileCatalogStore.setActiveProfileId(this, profileId)) {
             return;
         }
-        getSharedPreferencesWrapper().edit().putInt("restart_changed", 1).apply();
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                .edit().putInt("restart_changed", 1).apply();
         Toast.makeText(this, R.string.profile_switched, Toast.LENGTH_LONG).show();
         renderProfiles();
     }
 
     private void showEditor(final ProfileMetadata existing) {
         final boolean isNew = existing == null;
-        int horizontalPadding = dp(4);
 
         LinearLayout fields = new LinearLayout(this);
         fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(horizontalPadding, 0, horizontalPadding, 0);
+        fields.setPadding(dp(4), 0, dp(4), 0);
 
         final EditText id = editText(R.string.profile_id, existing == null ? "" : existing.getId());
         id.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
@@ -177,14 +179,7 @@ public class ProfileManagerActivity extends AppCompatActivity {
         final ScrollView scroll = new ScrollView(this);
         scroll.addView(fields);
 
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(isNew ? R.string.profile_new : R.string.profile_edit)
-                .setView(scroll)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.profile_saved, null)
-                .create();
-
-        final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+        final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(isNew ? R.string.profile_new : R.string.profile_edit)
                 .setView(scroll)
                 .setNegativeButton(android.R.string.cancel, null)
@@ -238,7 +233,7 @@ public class ProfileManagerActivity extends AppCompatActivity {
     }
 
     private void confirmDelete(final ProfileMetadata profile) {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
+        new AlertDialog.Builder(this)
                 .setTitle(R.string.profile_delete)
                 .setMessage(profile.getName() + " (" + profile.getId() + ")")
                 .setNegativeButton(android.R.string.cancel, null)
@@ -259,7 +254,6 @@ public class ProfileManagerActivity extends AppCompatActivity {
         EditText input = new EditText(this);
         input.setHint(hintRes);
         input.setText(value);
-        input.setSingleLine(false);
         input.setPadding(dp(8), dp(6), dp(8), dp(6));
         return input;
     }
@@ -277,9 +271,5 @@ public class ProfileManagerActivity extends AppCompatActivity {
             result.append(value);
         }
         return result.toString();
-    }
-
-    private android.content.SharedPreferences getSharedPreferencesWrapper() {
-        return androidx.preference.PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     }
 }
