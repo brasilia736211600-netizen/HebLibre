@@ -4,7 +4,7 @@
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
 ## Live branch checkpoint
-`0f397ffdbac45af8fe0ac200e050f70dd87cee99` — latest verified branch HEAD after extending the Runtime Smoke lane with a debug-only Profile Transfer launcher.
+`659f173e10671cd8d1bb2b1a0280b71c2970c40e` — latest verified branch HEAD after expanding Runtime Smoke with Profile Transfer coverage and synchronizing project documentation.
 
 ## Current source checkpoint
 `ad5cec1d0c2be694c9b732ec8ba0ecb69b6ac143` — profile-aware app records, profile-owned launcher session restore, profile transfer with optional AES-GCM encryption, and SQL predicate hardening. Documentation/test-harness commits after the source change are tracked separately.
@@ -54,7 +54,7 @@
 - Complete profile-local settings require repository-wide classification and migration because production code still reads global default SharedPreferences in multiple locations; a cosmetic preference-screen namespace is insufficient.
 
 ## Current blockers
-- GitHub Actions hosted jobs still fail during job startup before the first step, including the minimal runner probe. The latest probe job has no assigned runner (`runner_id=0`) and zero executed steps. This is not application-test evidence.
+- GitHub Actions hosted jobs still fail during job startup before the first step, including the minimal runner probe. The latest probe job reports no assigned runner (`runner_id=0`) and zero executed steps. This is not application-test evidence.
 - No current successful x86_64 artifact exists for consolidated emulator testing.
 - Complete profile-local settings and per-profile proxy routing remain architectural work and are intentionally not represented as completed features.
 
@@ -66,7 +66,7 @@
 - `D-026`: keep Profile Transfer production activity non-exported and reach it from Runtime Smoke only through a debug-only exported launcher.
 
 ## Current next executable slice
-1. Obtain a fresh GitHub Actions run that actually assigns a hosted runner; then run Unit Tests and Runtime Smoke on this latest checkpoint.
+1. Obtain a fresh GitHub Actions run that actually assigns a hosted runner; then run Unit Tests and Runtime Smoke on the latest checkpoint.
 2. On the first successful Runtime Smoke, download the exact x86_64 APK + checksum, verify the checksum, and use that artifact for one consolidated emulator validation covering browser launch, profile manager, profile transfer screen, and session restore.
 3. Continue bounded profile-settings source inventory; implement only after a complete reader/writer/migration map exists and the contract is explicit.
 4. Keep per-profile proxy routing deferred until a network-layer design provides genuine profile/request isolation.
