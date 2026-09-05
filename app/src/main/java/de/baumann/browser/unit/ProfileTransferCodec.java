@@ -112,7 +112,7 @@ public final class ProfileTransferCodec {
         String color = decode(findValue(lines, "color"));
         String icon = decode(findValue(lines, "icon"));
         String notes = decode(findValue(lines, "notes"));
-        String tagsValue = findValue(lines, "tags");
+        String tagsValue = decode(findValue(lines, "tags"));
         String group = decode(findValue(lines, "group"));
         ProfileMetadata metadata = new ProfileMetadata(
                 id,
