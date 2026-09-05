@@ -13,20 +13,32 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.RecordUnit;
 
 public class RecordAction {
     private SQLiteDatabase database;
     private final RecordHelper helper;
+    private final Context context;
 
     public RecordAction(Context context) {
-        this.helper = new RecordHelper(context);
+        this.context = context.getApplicationContext();
+        this.helper = new RecordHelper(this.context);
     }
     public void open(boolean rw) { database = rw ? helper.getWritableDatabase() : helper.getReadableDatabase(); }
     public void close() {
         helper.close();
     }
 
+    private String activeProfileId() {
+        return ProfileCatalogStore.getActiveProfileId(context);
+    }
+
+    private boolean isProfileScopedRecordTable(String table) {
+        return RecordUnit.TABLE_HISTORY.equals(table)
+                || RecordUnit.TABLE_BOOKMARK.equals(table)
+                || RecordUnit.TABLE_TAB.equals(table);
+    }
 
     //StartSite
 
@@ -96,6 +108,7 @@ public class RecordAction {
         values.put(RecordUnit.COLUMN_TITLE, record.getTitle().trim());
         values.put(RecordUnit.COLUMN_URL, record.getURL().trim());
         values.put(RecordUnit.COLUMN_TIME, record.getTime());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, activeProfileId());
         database.insert(RecordUnit.TABLE_BOOKMARK, null, values);
     }
 
@@ -113,8 +126,8 @@ public class RecordAction {
                         RecordUnit.COLUMN_URL,
                         RecordUnit.COLUMN_TIME
                 },
-                null,
-                null,
+                RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {activeProfileId()},
                 null,
                 null,
                 sortBy
@@ -156,6 +169,7 @@ public class RecordAction {
         values.put(RecordUnit.COLUMN_TITLE, record.getTitle().trim());
         values.put(RecordUnit.COLUMN_URL, record.getURL().trim());
         values.put(RecordUnit.COLUMN_TIME, record.getTime());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, activeProfileId());
         database.insert(RecordUnit.TABLE_TAB, null, values);
     }
 
@@ -169,8 +183,8 @@ public class RecordAction {
                         RecordUnit.COLUMN_URL,
                         RecordUnit.COLUMN_TIME
                 },
-                null,
-                null,
+                RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {activeProfileId()},
                 null,
                 null,
                 RecordUnit.COLUMN_TITLE + " asc"
@@ -202,6 +216,7 @@ public class RecordAction {
         values.put(RecordUnit.COLUMN_TITLE, record.getTitle().trim());
         values.put(RecordUnit.COLUMN_URL, record.getURL().trim());
         values.put(RecordUnit.COLUMN_TIME, record.getTime());
+        values.put(RecordUnit.COLUMN_PROFILE_ID, activeProfileId());
         database.insert(RecordUnit.TABLE_HISTORY, null, values);
     }
 
@@ -215,8 +230,8 @@ public class RecordAction {
                         RecordUnit.COLUMN_URL,
                         RecordUnit.COLUMN_TIME
                 },
-                null,
-                null,
+                RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {activeProfileId()},
                 null,
                 null,
                 RecordUnit.COLUMN_TIME + " asc"
@@ -235,13 +250,10 @@ public class RecordAction {
 
     // General
     //
-    // P1 step 4: the four whitelist domain tables (WHITELIST/JAVASCRIPT/
-    // COOKIE/REMOTE - the only callers of addDomain/checkDomain/
-    // deleteDomain/listDomains) are now profile-scoped via PROFILE_ID.
-    // Every read/write below is filtered/tagged by profileId so that two
-    // different profile ids never see or affect each other's rows, while
-    // callers that pass the same profileId continue to share full CRUD
-    // visibility exactly as before this step.
+    // Profile-scoped domain tables are handled by the overloads below, while
+    // HISTORY/BOOKMARK/TAB now obtain the active profile automatically for
+    // all existing callers. This keeps the public RecordAction surface
+    // backwards compatible without allowing cross-profile record leakage.
 
     public void addDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) { return; }
@@ -274,9 +286,6 @@ public class RecordAction {
 
     public void deleteDomain(String domain, String table, String profileId) {
         if (domain == null || domain.trim().isEmpty()) { return; }
-        // Kept as the pre-existing raw execSQL/string-concatenation style
-        // (unchanged parameterization strategy) - only the extra
-        // PROFILE_ID condition is new, per the P1 step 4 scope.
         database.execSQL("DELETE FROM " + table
                 + " WHERE " + RecordUnit.COLUMN_DOMAIN + " = " + "\"" + domain.trim() + "\""
                 + " AND " + RecordUnit.COLUMN_PROFILE_ID + " = " + "\"" + profileId + "\"");
@@ -312,8 +321,12 @@ public class RecordAction {
         Cursor cursor = database.query(
                 table,
                 new String[] {RecordUnit.COLUMN_URL},
-                RecordUnit.COLUMN_URL + "=?",
-                new String[] {url.trim()},
+                isProfileScopedRecordTable(table)
+                        ? RecordUnit.COLUMN_URL + "=? AND " + RecordUnit.COLUMN_PROFILE_ID + "=?"
+                        : RecordUnit.COLUMN_URL + "=?",
+                isProfileScopedRecordTable(table)
+                        ? new String[] {url.trim(), activeProfileId()}
+                        : new String[] {url.trim()},
                 null,
                 null,
                 null
@@ -329,17 +342,23 @@ public class RecordAction {
 
     public void deleteURL (String domain, String table) {
         if (domain == null || domain.trim().isEmpty()) { return; }
-        database.execSQL("DELETE FROM "+ table + " WHERE " + RecordUnit.COLUMN_URL + " = " + "\"" + domain.trim() + "\"");
+        if (isProfileScopedRecordTable(table)) {
+            database.delete(table,
+                    RecordUnit.COLUMN_URL + "=? AND " + RecordUnit.COLUMN_PROFILE_ID + "=?",
+                    new String[] {domain.trim(), activeProfileId()});
+        } else {
+            database.execSQL("DELETE FROM " + table + " WHERE " + RecordUnit.COLUMN_URL + " = " + "\"" + domain.trim() + "\"");
+        }
     }
 
     public void clearTable (String table) {
+        if (isProfileScopedRecordTable(table)) {
+            database.delete(table, RecordUnit.COLUMN_PROFILE_ID + "=?", new String[] {activeProfileId()});
+            return;
+        }
         database.execSQL("DELETE FROM " + table);
     }
 
-    // P1 step 4: profile-scoped clear, used only by the four whitelist
-    // tables so that clearing one profile's whitelist cannot affect any
-    // other profile's rows in the same table. The unscoped clearTable(table)
-    // above remains unchanged and is still used by GRID/BOOKMARK/HISTORY.
     public void clearTable (String table, String profileId) {
         database.delete(table, RecordUnit.COLUMN_PROFILE_ID + "=?", new String[] {profileId});
     }
@@ -358,7 +377,8 @@ public class RecordAction {
         action.open(false);
         list.addAll(action.listStartSite(activity));
         list.addAll(action.listHistory());
-        list.addAll(listBookmark(activity, false, 0));
+        list.addAll(action.listBookmark(activity, false, 0));
+        action.close();
         return list;
     }
 }
