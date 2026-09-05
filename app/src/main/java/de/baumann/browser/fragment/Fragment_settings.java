@@ -26,6 +26,7 @@ import androidx.preference.PreferenceGroup;
 
 import java.util.Objects;
 
+import de.baumann.browser.activity.ProfileManagerActivity;
 import de.baumann.browser.activity.Settings_ClearActivity;
 import de.baumann.browser.activity.Settings_DataActivity;
 import de.baumann.browser.activity.Settings_FilterActivity;
@@ -45,6 +46,14 @@ public class Fragment_settings extends PreferenceFragmentCompat implements Share
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preference_setting, rootKey);
 
+        ((androidx.preference.Preference) Objects.requireNonNull(findPreference("profile_manager"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(androidx.preference.Preference preference) {
+                Intent intent = new Intent(getActivity(), ProfileManagerActivity.class);
+                Objects.requireNonNull(getActivity()).startActivity(intent);
+                return true;
+            }
+        });
         ((androidx.preference.Preference) Objects.requireNonNull(findPreference("settings_filter"))).setOnPreferenceClickListener(new androidx.preference.Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(androidx.preference.Preference preference) {
