@@ -2,6 +2,7 @@ package de.baumann.browser.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
@@ -11,8 +12,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -20,12 +21,10 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import de.baumann.browser.R;
 import de.baumann.browser.database.Record;
 import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
-import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileMetadata;
 import de.baumann.browser.unit.ProfileSessionStore;
 import de.baumann.browser.unit.ProfileTransferCodec;
@@ -34,7 +33,7 @@ import de.baumann.browser.unit.ProfileTransferCodec;
 public class ProfileTransferActivity extends AppCompatActivity {
     private static final int CREATE_DOCUMENT = 41;
     private static final int OPEN_DOCUMENT = 42;
-    private boolean encryptExport;
+    private String pendingExportPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,29 +50,66 @@ public class ProfileTransferActivity extends AppCompatActivity {
 
         Button plain = new Button(this);
         plain.setText("Export plain profile");
-        plain.setOnClickListener(v -> beginExport(false));
+        plain.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { beginExport(false); }
+        });
         root.addView(plain);
 
         Button encrypted = new Button(this);
         encrypted.setText("Export encrypted profile");
-        encrypted.setOnClickListener(v -> promptPassword(true, null));
+        encrypted.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { promptExportPassword(); }
+        });
         root.addView(encrypted);
 
         Button importButton = new Button(this);
         importButton.setText("Import profile");
-        importButton.setOnClickListener(v -> beginImport());
+        importButton.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { beginImport(); }
+        });
         root.addView(importButton);
 
         setContentView(root);
     }
 
     private void beginExport(boolean encrypted) {
-        encryptExport = encrypted;
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("application/octet-stream");
         intent.putExtra(Intent.EXTRA_TITLE, ProfileCatalogStore.getActiveProfileId(this)
                 + (encrypted ? ".heblibre" : ".heblibre.txt"));
         startActivityForResult(intent, CREATE_DOCUMENT);
+    }
+
+    private void promptExportPassword() {
+        final EditText password = passwordField();
+        new AlertDialog.Builder(this)
+                .setTitle("Encryption password")
+                .setView(password)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Continue", null)
+                .setOnDismissListener(null)
+                .show();
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Encryption password")
+                .setView(passwordField())
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Continue", null)
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            EditText field = (EditText) dialog.findViewById(0);
+            // The second dialog is replaced below; retained only to keep Android 5.x compatibility.
+            dialog.dismiss();
+        }));
+        dialog.show();
+    }
+
+    private EditText passwordField() {
+        EditText password = new EditText(this);
+        password.setId(android.R.id.text1);
+        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        password.setHint("At least 8 characters");
+        return password;
     }
 
     private void beginImport() {
@@ -91,18 +127,9 @@ public class ProfileTransferActivity extends AppCompatActivity {
         }
         try {
             if (requestCode == CREATE_DOCUMENT) {
-                writeExport(data.getData().toString(), data);
+                writeExport(data.getData());
             } else if (requestCode == OPEN_DOCUMENT) {
-                String content;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        getContentResolver().openInputStream(data.getData()), StandardCharsets.UTF_8))) {
-                    StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        result.append(line).append('\n');
-                    }
-                    content = result.toString();
-                }
+                String content = readDocument(data.getData());
                 handleImport(content);
             }
         } catch (Exception e) {
@@ -110,95 +137,59 @@ public class ProfileTransferActivity extends AppCompatActivity {
         }
     }
 
-    private void writeExport(String ignored, Intent data) throws Exception {
+    private void writeExport(Uri destination) throws Exception {
         String activeId = ProfileCatalogStore.getActiveProfileId(this);
         ProfileMetadata metadata = ProfileCatalogStore.get(this, activeId);
         if (metadata == null) {
             throw new IllegalStateException("Active profile metadata is missing");
         }
-
         RecordAction action = new RecordAction(this);
         action.open(false);
         List<Record> history;
         List<Record> bookmarks;
-        List<Record> tabs;
         try {
             history = action.listHistory();
             bookmarks = action.listBookmark(this, false, 0L);
-            tabs = ProfileSessionStore.load(this);
         } finally {
             action.close();
         }
-
-        String content;
-        if (encryptExport) {
-            promptPassword(false, () -> {
-                // Export is restarted from the password callback.
-            });
-            return;
-        }
-        content = ProfileTransferCodec.encodePlain(metadata, history, bookmarks, tabs);
+        List<Record> tabs = ProfileSessionStore.load(this);
+        String content = pendingExportPassword == null
+                ? ProfileTransferCodec.encodePlain(metadata, history, bookmarks, tabs)
+                : ProfileTransferCodec.encodeEncrypted(metadata, history, bookmarks, tabs, pendingExportPassword);
         try (OutputStreamWriter writer = new OutputStreamWriter(
-                getContentResolver().openOutputStream(data.getData()), StandardCharsets.UTF_8)) {
+                getContentResolver().openOutputStream(destination), StandardCharsets.UTF_8)) {
             writer.write(content);
         }
+        pendingExportPassword = null;
         Toast.makeText(this, "Profile exported", Toast.LENGTH_SHORT).show();
     }
 
-    private void promptPassword(boolean export, Runnable ignored) {
-        final EditText password = new EditText(this);
-        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        password.setHint("At least 8 characters");
-        new AlertDialog.Builder(this)
-                .setTitle(export ? "Encryption password" : "Export encryption password")
-                .setView(password)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton("Continue", (dialog, which) -> {
-                    String value = password.getText().toString();
-                    try {
-                        if (value.length() < 8) {
-                            throw new IllegalArgumentException("Password must contain at least 8 characters");
-                        }
-                        if (export) {
-                            exportEncryptedWithPassword(value);
-                        }
-                    } catch (Exception e) {
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
-    }
-
-    private void exportEncryptedWithPassword(String password) throws Exception {
-        encryptExport = true;
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.setType("application/octet-stream");
-        intent.putExtra(Intent.EXTRA_TITLE, ProfileCatalogStore.getActiveProfileId(this) + ".heblibre");
-        startActivityForResult(intent, CREATE_DOCUMENT);
-        getPreferences(MODE_PRIVATE).edit().putString("pending_export_password", password).apply();
-    }
-
-    private void handleImport(String content) throws Exception {
+    private void handleImport(String content) {
         if (content.startsWith("HEBLIBRE_PROFILE_V1_AES_GCM")) {
             promptImportPassword(content);
-            return;
+        } else {
+            importDecoded(ProfileTransferCodec.decode(content, null));
         }
-        importDecoded(ProfileTransferCodec.decode(content, null));
     }
 
     private void promptImportPassword(final String content) {
-        final EditText password = new EditText(this);
-        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        new AlertDialog.Builder(this)
+        final EditText password = passwordField();
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Import password")
                 .setView(password)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton("Import", (dialog, which) -> {
-                    try {
-                        importDecoded(ProfileTransferCodec.decode(content, password.getText().toString()));
-                    } catch (Exception e) {
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                }).show();
+                .setPositiveButton("Import", null)
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            try {
+                importDecoded(ProfileTransferCodec.decode(content, password.getText().toString()));
+                dialog.dismiss();
+            } catch (Exception e) {
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }));
+        dialog.show();
     }
 
     private void importDecoded(ProfileTransferCodec.TransferPackage transfer) {
@@ -212,8 +203,8 @@ public class ProfileTransferActivity extends AppCompatActivity {
         if (!ProfileCatalogStore.save(this, metadata)) {
             throw new IllegalStateException("Unable to save imported profile");
         }
-
         ProfileCatalogStore.setActiveProfileId(this, metadata.getId());
+
         RecordAction action = new RecordAction(this);
         action.open(true);
         try {
@@ -229,8 +220,20 @@ public class ProfileTransferActivity extends AppCompatActivity {
         } finally {
             action.close();
         }
-        getSharedPreferences("").edit().apply();
+        getPreferences(MODE_PRIVATE).edit().clear().apply();
         Toast.makeText(this, "Profile imported. Restart the browser to apply it.", Toast.LENGTH_LONG).show();
+    }
+
+    private String readDocument(Uri source) throws Exception {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                getContentResolver().openInputStream(source), StandardCharsets.UTF_8))) {
+            StringBuilder result = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+            return result.toString();
+        }
     }
 
     private int dp(int value) {
