@@ -42,7 +42,7 @@ Every material step must be recoverable from GitHub without chat context. Persis
 Do not commit trivial thoughts, but do commit material decisions, rejected approaches, architecture conclusions, scope changes, blockers, test conclusions, and milestones before they can be lost.
 
 ## Baseline toolchain
-Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.2, compile SDK 29, build-tools 28.0.3, JDK 11 for Gradle, JDK 17 for CI SDK tooling.
+Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.2, **compile SDK 33 / build-tools 33.0.2**, minSdk 21, targetSdk 29, JDK 11 for Gradle, JDK 17 for CI SDK/emulator tooling.
 
 ## Completed engineering
 - Build/toolchain recovery, minimal JUnit4 harness, CI workflow recovery.
@@ -69,6 +69,7 @@ Legacy FOSS Browser-derived Android WebView application. Gradle 5.4.1 / AGP 3.5.
 - Profile-owned session persistence/launcher restore with existing-browser task reuse — SOURCE-VERIFIED on current branch.
 - Profile export/import using a versioned format, optional AES-GCM encryption, PBKDF2 password derivation, wrong-password/tamper rejection, document picker UI, and explicit exclusion of WebView-internal cookies/storage/login secrets — SOURCE-VERIFIED on current branch.
 - Database deletion hardening: profile-domain and URL deletion paths now bind data values through SQLite selection arguments rather than interpolating them into SQL predicates — SOURCE-VERIFIED in `ad5cec1d0c2be694c9b732ec8ba0ecb69b6ac143`.
+- CI diagnostic hardening: Unit and Runtime Smoke workflows pinned to `ubuntu-24.04`; a minimal `ubuntu-22.04` runner probe was added to isolate runner startup from Android/toolchain execution.
 
 ## Existing HebLibre baseline — do not reimplement
 Multi-tab browsing, tab overview, Home/Bookmarks/History, search/autocomplete and configurable search engines, navigation gestures, find-in-page, PDF/print, downloads, fullscreen/video handling, JavaScript/Cookie/Remote/AdBlock controls with whitelists, Safe Browsing, bookmark import/export, custom User-Agent, clear-on-exit, and AMOLED/pure-black theme are already present.
@@ -118,14 +119,15 @@ Current 2026 market references repeatedly identify Multilogin, GoLogin, AdsPower
 `P0/P1 portability implementation → CI/runtime recovery → settings/proxy architecture decisions`
 
 ## Current blocking items
-- GitHub Actions jobs for the latest checkpoint still fail before any job step; current Unit and Android Runtime Smoke runs have `steps: null` and no application logs. This is not treated as a code failure.
+- GitHub Actions jobs for the latest checkpoints still fail before any job step; current Unit and Android Runtime Smoke jobs have `steps: null` and no application logs. This is not treated as a code failure.
 - A successful current x86_64 GitHub Actions artifact is therefore not yet available for consolidated Android validation.
+- Runner Probe was added on `ubuntu-22.04` to isolate whether the failure occurs before any project action executes; its result still needs to be observed through GitHub Actions.
 
 ## Current next executable step
-Once GitHub Actions starts executing again, obtain fresh Unit Tests and Runtime Smoke results on the latest checkpoint, download the exact x86_64 artifact from that successful run, verify its SHA-256, and use it for the single consolidated emulator validation. In parallel, keep the settings partition and proxy design work bounded and do not expose claims that the implementation cannot prove.
+Observe the Runner Probe result. If it executes, use its evidence to isolate the existing workflow startup problem; then rerun Unit Tests and Runtime Smoke, download the exact x86_64 artifact from the first successful runtime build, verify SHA-256, and perform one consolidated emulator validation. In parallel, continue only bounded source inventory for profile settings and preserve the proxy architecture boundary.
 
 ## Android validation gate
 Do not repeatedly build/install APKs during feature development. Complete source review, deterministic tests, CI, and documentation first. Then perform consolidated physical-device validation. Emulator evidence remains separate from physical-device evidence.
 
 ## Last synchronized
-2026-09-06 — synchronized the map to the profile transfer/security hardening checkpoint and recorded the current GitHub Actions pre-step blocker plus the explicit settings/proxy boundaries.
+2026-09-06 — synchronized toolchain truth, profile portability/security hardening, runner diagnostics, and explicit settings/proxy boundaries.
