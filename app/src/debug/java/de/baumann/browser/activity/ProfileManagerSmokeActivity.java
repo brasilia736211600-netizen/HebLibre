@@ -8,11 +8,16 @@ import android.os.Bundle;
 import java.util.Arrays;
 import java.util.Collections;
 
+import de.baumann.browser.R;
 import de.baumann.browser.database.Record;
 import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogStore;
+import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileMetadata;
+import de.baumann.browser.unit.ProfilePreferencesStore;
 import de.baumann.browser.unit.RecordUnit;
+import android.content.SharedPreferences;
+import androidx.preference.PreferenceManager;
 
 public class ProfileManagerSmokeActivity extends Activity {
     @Override
@@ -20,6 +25,7 @@ public class ProfileManagerSmokeActivity extends Activity {
         super.onCreate(savedInstanceState);
         verifyLegacyDatabaseMigration();
         verifyProfileScopedRecords();
+        verifyProfilePreferencesIsolation();
         verifyProfileDeletionPurgesRecords();
         seedDefaultSessionForLauncherRestore();
         startActivity(new Intent(this, ProfileManagerActivity.class));
@@ -101,6 +107,43 @@ public class ProfileManagerSmokeActivity extends Activity {
                 "cannot restore default profile");
         ProfileCatalogStore.delete(this, firstProfile);
         ProfileCatalogStore.delete(this, secondProfile);
+    }
+
+    private void verifyProfilePreferencesIsolation() {
+        final String firstProfile = "prefs-a";
+        final String secondProfile = "prefs-b";
+        ProfileCatalogStore.save(this, new ProfileMetadata(
+                firstProfile, "Prefs A", "", "", "", Collections.<String>emptyList(), ""));
+        ProfileCatalogStore.save(this, new ProfileMetadata(
+                secondProfile, "Prefs B", "", "", "", Collections.<String>emptyList(), ""));
+
+        SharedPreferences global = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean originalDesktop = global.getBoolean("desktop_mode", false);
+        String originalAgent = global.getString("userAgent", "");
+
+        ProfilePreferencesStore.initializeProfile(this, firstProfile);
+        ProfilePreferencesStore.initializeProfile(this, secondProfile);
+
+        global.edit().putBoolean("desktop_mode", true).putString("userAgent", "Prefs-A-UA").commit();
+        ProfilePreferencesStore.saveGlobalToProfile(this, firstProfile);
+        global.edit().putBoolean("desktop_mode", false).putString("userAgent", "Prefs-B-UA").commit();
+        ProfilePreferencesStore.saveGlobalToProfile(this, secondProfile);
+
+        ProfilePreferencesStore.loadProfileToGlobal(this, firstProfile);
+        require(global.getBoolean("desktop_mode", false), "first profile desktop preference missing");
+        require("Prefs-A-UA".equals(global.getString("userAgent", "")), "first profile user agent leaked or missing");
+
+        ProfilePreferencesStore.loadProfileToGlobal(this, secondProfile);
+        require(!global.getBoolean("desktop_mode", true), "second profile inherited first profile desktop preference");
+        require("Prefs-B-UA".equals(global.getString("userAgent", "")), "second profile user agent missing or polluted");
+
+        global.edit().putBoolean("desktop_mode", originalDesktop).putString("userAgent", originalAgent).commit();
+        ProfilePreferencesStore.deleteProfile(this, firstProfile);
+        ProfilePreferencesStore.deleteProfile(this, secondProfile);
+        ProfileCatalogStore.delete(this, firstProfile);
+        ProfileCatalogStore.delete(this, secondProfile);
+        require(ProfileCatalogStore.setActiveProfileId(this, ProfileIdentity.DEFAULT_PROFILE_ID),
+                "cannot restore default after preference smoke");
     }
 
     private void verifyProfileImportRollback(String profileId) {
