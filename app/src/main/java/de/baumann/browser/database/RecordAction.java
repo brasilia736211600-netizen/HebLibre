@@ -279,6 +279,23 @@ public class RecordAction {
         database.insertOrThrow(table, null, values);
     }
 
+    /** Removes all app-owned records belonging to one profile without changing the active profile. */
+    public static void deleteProfileRecords(Context context, String profileId) {
+        if (context == null || !ProfileCatalogPolicy.isValidUserProfileId(profileId)) {
+            return;
+        }
+        RecordAction action = new RecordAction(context);
+        action.open(true);
+        try {
+            String normalizedProfileId = ProfileIdentity.normalize(profileId);
+            action.clearTable(RecordUnit.TABLE_HISTORY, normalizedProfileId);
+            action.clearTable(RecordUnit.TABLE_BOOKMARK, normalizedProfileId);
+            action.clearTable(RecordUnit.TABLE_TAB, normalizedProfileId);
+        } finally {
+            action.close();
+        }
+    }
+
     // General
     //
     // Profile-scoped domain tables are handled by the overloads below, while
