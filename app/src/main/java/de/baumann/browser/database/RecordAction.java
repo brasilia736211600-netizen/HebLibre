@@ -279,7 +279,7 @@ public class RecordAction {
         database.insertOrThrow(table, null, values);
     }
 
-    /** Removes all app-owned records belonging to one profile without changing the active profile. */
+    /** Removes all app-owned profile records belonging to one profile without changing the active profile. */
     public static void deleteProfileRecords(Context context, String profileId) {
         if (context == null || !ProfileCatalogPolicy.isValidUserProfileId(profileId)) {
             return;
@@ -291,6 +291,10 @@ public class RecordAction {
             action.clearTable(RecordUnit.TABLE_HISTORY, normalizedProfileId);
             action.clearTable(RecordUnit.TABLE_BOOKMARK, normalizedProfileId);
             action.clearTable(RecordUnit.TABLE_TAB, normalizedProfileId);
+            action.clearTable(RecordUnit.TABLE_WHITELIST, normalizedProfileId);
+            action.clearTable(RecordUnit.TABLE_JAVASCRIPT, normalizedProfileId);
+            action.clearTable(RecordUnit.TABLE_COOKIE, normalizedProfileId);
+            action.clearTable(RecordUnit.TABLE_REMOTE, normalizedProfileId);
         } finally {
             action.close();
         }
