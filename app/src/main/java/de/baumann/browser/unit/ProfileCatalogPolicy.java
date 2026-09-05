@@ -38,15 +38,13 @@ public final class ProfileCatalogPolicy {
     }
 
     public static String serialize(List<String> profileIds) {
-        List<String> normalized = normalizeIds(profileIds);
-        return join(normalized);
+        return join(normalizeIds(profileIds));
     }
 
     public static List<String> deserialize(String serializedIds) {
         if (serializedIds == null || serializedIds.trim().isEmpty()) {
             return normalizeIds(Collections.<String>emptyList());
         }
-
         String[] parts = serializedIds.split(",");
         List<String> ids = new ArrayList<>();
         Collections.addAll(ids, parts);
@@ -56,6 +54,13 @@ public final class ProfileCatalogPolicy {
     public static boolean contains(List<String> profileIds, String profileId) {
         String normalized = ProfileIdentity.normalize(profileId);
         return normalizeIds(profileIds).contains(normalized);
+    }
+
+    public static String selectActiveId(List<String> profileIds, String requestedId) {
+        String normalized = ProfileIdentity.normalize(requestedId);
+        return contains(profileIds, normalized)
+                ? normalized
+                : ProfileIdentity.DEFAULT_PROFILE_ID;
     }
 
     public static List<String> add(List<String> profileIds, String profileId) {
