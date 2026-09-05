@@ -66,10 +66,12 @@ public class ProfileTransferCodecTest {
             // expected
         }
 
-        String tampered = encoded.replaceFirst("ciphertext=([0-9a-f])", "ciphertext=$1")
-                .replace("ciphertext=", "ciphertext=f", 1);
+        int payloadStart = encoded.indexOf("ciphertext=") + "ciphertext=".length();
+        StringBuilder tamperedBuilder = new StringBuilder(encoded);
+        char original = tamperedBuilder.charAt(payloadStart);
+        tamperedBuilder.setCharAt(payloadStart, original == '0' ? '1' : '0');
         try {
-            ProfileTransferCodec.decode(tampered, "correct-horse");
+            ProfileTransferCodec.decode(tamperedBuilder.toString(), "correct-horse");
             throw new AssertionError("Expected tampered ciphertext to fail");
         } catch (IllegalArgumentException expected) {
             // expected
