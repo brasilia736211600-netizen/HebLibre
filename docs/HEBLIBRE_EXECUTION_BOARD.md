@@ -10,90 +10,70 @@ A durable, agent-neutral task board. This file answers: what is done, what is pe
 - `DONE-EMULATOR`: Android emulator runtime verified.
 - `DONE-PHYSICAL`: physical target-device verified.
 - `PARTIAL`: usable core exists but end-to-end feature is incomplete.
+- `RESEARCH`: researched but not yet implemented.
+- `ARCHITECTURAL`: requires design/architecture checkpoint first.
 - `DEFERRED`: intentionally postponed.
 - `POLICY-DECISION`: do not change until explicit contract.
+- `EXCLUDED`: outside product safety/scope boundary.
 
-## Completed bounded scope
-| Area | Status | Evidence / notes |
+## Current phase
+`2026 Product Scope Reset → P0/P1 architecture and bounded implementation planning`
+
+## Completed verified foundation
+Tracking/query cleanup, HTTPS-only, Global Privacy Control, Desktop Mode, screenshot protection, search bangs, bounded camera/microphone permission guard, third-party cookie control, geolocation guard, Save-Data, global settings search, download-cookie privacy, profile-aware whitelist transfer, tab reorder core, and remote-content default consistency remain implemented at the recorded source/test/CI levels. GitHub-hosted Android emulator smoke also passed on its documented application-source checkpoint. Physical-device validation has not been performed for the new product scope.
+
+## New product-direction work
+| Workstream | Status | Next action |
 |---|---|---|
-| Tracking/query parameter cleanup | DONE-CI | P2.1; conservative `UrlTrackerCleaner`. |
-| HTTPS-only | DONE-CI | P2.2. |
-| Global Privacy Control | DONE-CI | P2.3. |
-| Desktop Mode | DONE-CI | P2.4; deterministic UA policy. |
-| Screenshot Protection | DONE-CI | P2.5; live `FLAG_SECURE` preference. |
-| Search bangs | DONE-CI | P2.6. |
-| Camera/microphone permission guard | DONE-CI | P2.7; bounded WebView permission policy. |
-| Third-party cookie control | DONE-CI | P2.8; compatibility-preserving default. |
-| Geolocation guard | DONE-CI | P2.9. |
-| Save-Data | DONE-CI | P2.10. |
-| Global settings search | DONE-CI | P2.11. |
-| Download cookie privacy | DONE-CI | Both main download and Save As paths are policy-gated. |
-| Profile-scoped whitelists | DONE-CI | Active and legacy whitelist transfer paths use the active normalized profile. |
-| Tab reorder core | DONE-CI | `TabOrderPolicy` + `BrowserContainer.move()` + identity tests. |
-| Remote-content default consistency | DONE-CI | `sp_remote` fallback aligned with declared default. |
-| Emulator smoke | DONE-EMULATOR | GitHub-hosted emulator execution completed successfully on a CI checkpoint; not physical-device proof. |
+| Durable continuity/control plane | DONE-SOURCE | Enforce docs-first bootstrap and material-step persistence. |
+| Product scope reset | DONE-SOURCE | Use the 2026 scope document as active direction. |
+| Competitor feature synthesis | RESEARCH | Translate research into bounded Android-native requirements. |
+| Profile metadata/groups/tags/notes | RESEARCH | Audit current data model; propose smallest deterministic seam. |
+| True profile-local WebView storage | ARCHITECTURAL | Perform feasibility audit before code. |
+| Profile-local history/bookmarks | RESEARCH | Audit RecordAction/RecordHelper boundaries and migration cost. |
+| Profile-local cookies/login state | ARCHITECTURAL | Determine CookieManager/WebView storage constraints. |
+| Profile import/export | RESEARCH | Define security/compatibility contract before implementation. |
+| Optional encrypted profile state | RESEARCH | Evaluate platform crypto primitives and data boundary. |
+| Per-profile proxy | ARCHITECTURAL | Establish Android/WebView routing feasibility first. |
+| Profile-local UA/language settings | RESEARCH | Implement only settings proven to be profile-local. |
+| Site permission editor | RESEARCH | Map existing WebView permission callbacks and persistence. |
+| Resource blocking | RESEARCH | Extend current interception with measurable bounded rules. |
+| Popup/redirect controls | RESEARCH | Identify navigation seams and preserve legitimate flows. |
+| Tab groups/reorder UI | PARTIAL | Design dedicated non-long-press affordance; keep close gesture. |
+| Password/app protection | RESEARCH | Audit existing settings/data flows and use platform security. |
+| Session synchronization | DEFERRED / OPTIONAL | Local-first; requires explicit secure synchronization contract. |
+| Script manager / extensions | ARCHITECTURAL | Requires compatible Android engine/runtime; no speculative dependency. |
+| Automation API | DEFERRED / OPTIONAL | Consider only for legitimate testing/development workflows. |
+| DoH | ARCHITECTURAL | Requires resolver/network design. |
+| Full WebRTC privacy | ARCHITECTURAL | Requires engine-level design beyond current permission guard. |
+| PWA | DEFERRED / ARCHITECTURAL | Lifecycle/storage design required. |
+| QR/barcode scanner | DEFERRED | Not core to lightweight browser target. |
+| Reader Mode | DEFERRED | Safe extraction architecture required. |
 
-## Current physical validation checklist
+## Explicitly excluded
+- Primary-purpose fraud/security detection bypass.
+- Identity-verification bypass or ban evasion.
+- Covert stealth automation intended to defeat platform enforcement.
+- Credential theft or covert session sharing.
+- Heavy frameworks or always-on services without demonstrated value and performance justification.
+
+## Performance gate
+Every candidate must document expected startup, memory, storage, battery, dependency, and lifecycle impact before implementation. A feature that materially degrades the lightweight target without proportional value is deferred or rejected.
+
+## TDD gate
+For bounded work with a deterministic seam:
+`WRITE/REFINE TESTS → MINIMAL IMPLEMENTATION → TEST → DIFF → REVIEW → CI → SAVE STATE`
+
+## Physical-device validation
 Status: `PENDING`
 
-Validate together on the target Android phone:
-- launch/relaunch and process restoration;
-- normal navigation, external intents, back/forward, search and bangs;
-- HTTPS-only and meaningful query parameter cleanup;
-- GPC and Save-Data headers where applicable;
-- desktop/custom User-Agent interaction;
-- screenshot protection on/off;
-- camera/microphone permission blocking and allowed-path behavior;
-- geolocation permission behavior;
-- third-party cookie behavior;
-- download with cookies enabled/disabled and Save As;
-- profile switching and whitelist export/import isolation;
-- tab selection, close, overview, and reorder core behavior;
-- settings search and setting persistence;
-- history/bookmarks/home and clear-data flows;
-- general regression, rendering, lifecycle, and crash behavior.
+The physical-device pass is performed after the new product-scope implementation wave reaches a coherent checkpoint. Do not use repeated APK installation as the development loop.
 
 ## Runtime defect protocol
-When physical testing discovers defects:
-1. Record the exact symptom and reproduction steps.
-2. Map each symptom to the smallest source seam.
-3. Batch related fixes rather than repeatedly installing APKs for isolated tweaks.
-4. Add deterministic tests where possible.
-5. Run CI on the consolidated fix checkpoint.
-6. Repeat physical validation once after the consolidated fix set.
+`reproduce → smallest seam → batch related fixes → deterministic tests → CI → physical recheck`
 
-## Deferred backlog
-### DEFERRED — MEDIUM
-- QR scanner.
-- PWA support.
-- True tab hierarchy.
-- Dedicated tab reorder UI that preserves long-click close semantics.
-- Broader download-manager UX enhancements.
-- Translation service integration.
-- Full-page/Markdown export.
+## Continuity checkpoint requirement
+After every meaningful step, synchronize the operational workflow state with the current exact HEAD, evidence, material reasoning/decisions, unresolved items, and next executable step.
 
-### DEFERRED — ARCHITECTURAL
-- Complete profile/WebView storage isolation.
-- Isolated tabs.
-- Multi-window architecture.
-- Per-container proxy/Tor.
-- DNS over HTTPS.
-- Broad fingerprinting defenses.
-- Full WebRTC privacy/engine changes.
-- Extensions/uBlock runtime.
-- On-device AI.
-- Broader tracking-protection engine.
-
-### NOT TARGETED
-- Reader Mode in the current P2 cycle; no bounded dependency-free extraction seam established.
-
-## Policy/architecture decisions not to reopen silently
-- SSL certificate override behavior.
-- Application-level cleartext traffic.
-- Automatic backup semantics for `Ninja4.db`.
-- Coupling of file-origin access and DOM storage under `sp_remote`.
-
-See `docs/HEBLIBRE_DECISION_LOG.md` for rationale and supersession rules.
-
-## Current next executable step
-**Physical target-device validation** after verifying that the active `genspark-dev` HEAD still corresponds to the documented source/CI checkpoint. Any runtime fixes become a consolidated follow-up cycle.
+## Last synchronized
+2026-09-06 — reset the execution board around the new lightweight profile/privacy product direction and the legitimate-privacy boundary for anti-detect-derived capabilities.
