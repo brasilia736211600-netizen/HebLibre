@@ -36,6 +36,7 @@ import de.baumann.browser.unit.ProfileTransferCodec;
 public class ProfileTransferActivity extends AppCompatActivity {
     private static final int CREATE_DOCUMENT = 41;
     private static final int OPEN_DOCUMENT = 42;
+    private boolean pendingEncryptedExport;
     private String pendingExportPassword;
 
     @Override
@@ -54,14 +55,14 @@ public class ProfileTransferActivity extends AppCompatActivity {
         Button plain = new Button(this);
         plain.setText("Export plain profile");
         plain.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { beginExport(false); }
+            @Override public void onClick(View v) { beginPlainExport(); }
         });
         root.addView(plain);
 
         Button encrypted = new Button(this);
         encrypted.setText("Export encrypted profile");
         encrypted.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { promptExportPassword(); }
+            @Override public void onClick(View v) { beginEncryptedExport(); }
         });
         root.addView(encrypted);
 
@@ -75,9 +76,16 @@ public class ProfileTransferActivity extends AppCompatActivity {
         setContentView(root);
     }
 
-    private void beginExport(boolean encrypted) {
+    private void beginPlainExport() {
+        pendingEncryptedExport = false;
         pendingExportPassword = null;
-        startDocumentCreation(encrypted);
+        startDocumentCreation(false);
+    }
+
+    private void beginEncryptedExport() {
+        pendingEncryptedExport = true;
+        pendingExportPassword = null;
+        startDocumentCreation(true);
     }
 
     private void startDocumentCreation(boolean encrypted) {
@@ -89,13 +97,13 @@ public class ProfileTransferActivity extends AppCompatActivity {
         startActivityForResult(intent, CREATE_DOCUMENT);
     }
 
-    private void promptExportPassword() {
+    private void promptExportPassword(final Uri destination) {
         final EditText password = passwordField();
         final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Encryption password")
                 .setView(password)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton("Continue", null)
+                .setPositiveButton("Export", null)
                 .create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override public void onShow(DialogInterface ignored) {
@@ -109,7 +117,13 @@ public class ProfileTransferActivity extends AppCompatActivity {
                         }
                         pendingExportPassword = value;
                         dialog.dismiss();
-                        startDocumentCreation(true);
+                        try {
+                            writeExport(destination);
+                        } catch (Exception e) {
+                            pendingExportPassword = null;
+                            Toast.makeText(ProfileTransferActivity.this,
+                                    e.getMessage() == null ? "Transfer failed" : e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
             }
@@ -135,15 +149,25 @@ public class ProfileTransferActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+            if (requestCode == CREATE_DOCUMENT) {
+                pendingEncryptedExport = false;
+                pendingExportPassword = null;
+            }
             return;
         }
         try {
             if (requestCode == CREATE_DOCUMENT) {
-                writeExport(data.getData());
+                if (pendingEncryptedExport && pendingExportPassword == null) {
+                    promptExportPassword(data.getData());
+                } else {
+                    writeExport(data.getData());
+                }
             } else if (requestCode == OPEN_DOCUMENT) {
                 handleImport(readDocument(data.getData()));
             }
         } catch (Exception e) {
+            pendingEncryptedExport = false;
+            pendingExportPassword = null;
             Toast.makeText(this, e.getMessage() == null ? "Transfer failed" : e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
@@ -164,13 +188,17 @@ public class ProfileTransferActivity extends AppCompatActivity {
             action.close();
         }
         List<Record> tabs = ProfileSessionStore.load(this);
-        String content = pendingExportPassword == null
-                ? ProfileTransferCodec.encodePlain(metadata, history, bookmarks, tabs)
-                : ProfileTransferCodec.encodeEncrypted(metadata, history, bookmarks, tabs, pendingExportPassword);
+        if (pendingEncryptedExport && pendingExportPassword == null) {
+            throw new IllegalStateException("Encryption password is required");
+        }
+        String content = pendingEncryptedExport
+                ? ProfileTransferCodec.encodeEncrypted(metadata, history, bookmarks, tabs, pendingExportPassword)
+                : ProfileTransferCodec.encodePlain(metadata, history, bookmarks, tabs);
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 getContentResolver().openOutputStream(destination), StandardCharsets.UTF_8)) {
             writer.write(content);
         }
+        pendingEncryptedExport = false;
         pendingExportPassword = null;
         Toast.makeText(this, "Profile exported", Toast.LENGTH_SHORT).show();
     }
