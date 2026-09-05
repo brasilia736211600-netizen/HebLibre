@@ -14,6 +14,15 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a', 'armeabi-v7a'
+            universalApk false
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
