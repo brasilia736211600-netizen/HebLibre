@@ -22,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import de.baumann.browser.R;
 import de.baumann.browser.database.Record;
@@ -29,6 +30,7 @@ import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileMetadata;
+import de.baumann.browser.unit.ProfilePreferencesStore;
 import de.baumann.browser.unit.ProfileSessionStore;
 import de.baumann.browser.unit.ProfileTransferCodec;
 
@@ -54,7 +56,7 @@ public class ProfileTransferActivity extends AppCompatActivity {
         root.setPadding(dp(16), dp(16), dp(16), dp(16));
 
         TextView note = new TextView(this);
-        note.setText("Exports contain profile metadata plus app-owned history, bookmarks, and saved tab URLs. WebView-internal cookies, storage, and login secrets are not exported.");
+        note.setText("Exports contain profile metadata, selected profile settings, app-owned history, bookmarks, and saved tab URLs. WebView-internal cookies, storage, and login secrets are not exported.");
         root.addView(note);
 
         Button plain = new Button(this);
@@ -119,7 +121,7 @@ public class ProfileTransferActivity extends AppCompatActivity {
                 .create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override public void onShow(DialogInterface ignored) {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override public void onClick(View v) {
                         String value = password.getText().toString();
                         if (value.length() < 8) {
@@ -190,6 +192,9 @@ public class ProfileTransferActivity extends AppCompatActivity {
         ProfileMetadata metadata = ProfileCatalogStore.get(this, activeId);
         if (metadata == null) throw new IllegalStateException("Active profile metadata is missing");
 
+        ProfilePreferencesStore.saveGlobalToProfile(this, activeId);
+        Map<String, String> profilePreferences = ProfilePreferencesStore.snapshot(this, activeId);
+
         RecordAction action = new RecordAction(this);
         action.open(false);
         List<Record> history;
@@ -205,8 +210,8 @@ public class ProfileTransferActivity extends AppCompatActivity {
             throw new IllegalStateException("Encryption password is required");
         }
         String content = pendingEncryptedExport
-                ? ProfileTransferCodec.encodeEncrypted(metadata, history, bookmarks, tabs, pendingExportPassword)
-                : ProfileTransferCodec.encodePlain(metadata, history, bookmarks, tabs);
+                ? ProfileTransferCodec.encodeEncrypted(metadata, history, bookmarks, tabs, pendingExportPassword, profilePreferences)
+                : ProfileTransferCodec.encodePlain(metadata, history, bookmarks, tabs, profilePreferences);
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 getContentResolver().openOutputStream(destination), StandardCharsets.UTF_8)) {
             writer.write(content);
@@ -307,9 +312,11 @@ public class ProfileTransferActivity extends AppCompatActivity {
                     transfer.getHistory(), transfer.getBookmarks(), transfer.getTabs(), metadata.getId())) {
                 throw new IllegalStateException("Unable to import profile records");
             }
+            ProfilePreferencesStore.restore(this, metadata.getId(), transfer.getPreferences());
         } catch (RuntimeException e) {
-            // The record transaction is already rolled back. Remove the catalog entry as
-            // well so a failed import cannot leave a visible empty/partial profile behind.
+            // The record transaction is already rolled back. Remove the catalog entry and
+            // its profile-local settings as well so a failed import cannot leave a visible
+            // empty/partial profile behind.
             ProfileCatalogStore.delete(this, metadata.getId());
             throw e;
         } finally {
