@@ -4,10 +4,10 @@
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
 ## Live branch checkpoint
-`991a55261e726d4d6e3d67879572759d3e1ea572` — latest source/test-harness checkpoint after hardening profile deletion data cleanup.
+`b2c15f9587a584116ab8bc87e91f2a8070a4b4e3` — latest documentation-synchronized branch HEAD.
 
 ## Current source checkpoint
-`991a55261e726d4d6e3d67879572759d3e1ea572` — profile-aware app records, profile-owned launcher session restore, profile transfer with optional AES-GCM encryption, hardened transfer parsing, transactional profile-record import, debug rollback smoke coverage, and profile-record purge on deletion.
+`5ffdcdee8c58d0e0c3b22ca5f7bda84d7a36a7eb` — profile-aware app records, profile-owned launcher session restore, profile transfer with optional AES-GCM encryption, hardened transfer parsing, transactional profile-record import, rollback smoke coverage, and profile-record/privacy-rule purge on user-profile deletion.
 
 ## Completed bounded work
 - `ProfileMetadata`: immutable profile metadata contract with id/name/color/icon/notes/tags/group plus normalization and JVM tests.
@@ -30,17 +30,17 @@
 - `RecordAction` database deletion hardening: profile-domain and URL deletion values now use SQLite selection arguments rather than string-interpolated values.
 - `RecordAction.importProfileRecords(...)`: app-owned history/bookmark/tab imports now execute in one transaction using the canonical profile-ID policy and `insertOrThrow`, so invalid input cannot leave a partial import.
 - `ProfileTransferActivity`: failed profile-record import removes the newly created catalog entry; active-profile selection happens only after the record transaction succeeds.
-- `RecordAction.deleteProfileRecords(...)` plus Profile Manager integration: deleting a user profile now purges its app-owned HISTORY/BOOKMARK/TAB rows before removing the catalog entry, preventing orphaned profile data.
+- `RecordAction.deleteProfileRecords(...)` plus Profile Manager integration: deleting a user profile now purges app-owned HISTORY/BOOKMARK/TAB and profile-scoped WHITELIST/JAVASCRIPT/COOKIE/REMOTE rows before removing the catalog entry.
 - Runtime smoke coverage: debug-only `ProfileTransferSmokeActivity` validates that the production Profile Transfer screen can be launched by an installed debug build without exporting that production activity.
-- Runtime smoke coverage: `ProfileManagerSmokeActivity` verifies rollback behavior after a deliberately invalid imported record and verifies profile deletion purges all app-owned records.
+- Runtime smoke coverage: `ProfileManagerSmokeActivity` verifies rollback behavior after a deliberately invalid imported record, profile-record isolation, whitelist isolation, and deletion purge across all profile-scoped app-owned tables.
 
 ## Verification evidence
-- SOURCE-VERIFIED: all features listed above are present on `genspark-dev`; the current deletion hardening has not yet received fresh compiler/runtime execution.
+- SOURCE-VERIFIED: all features listed above are present on `genspark-dev`; the current deletion/privacy-rule hardening has not yet received fresh compiler/runtime execution.
 - TEST-VERIFIED: prior Unit Tests runs `33994575842` and `33990897505` passed on earlier checkpoints. Fresh tests for the current source remain unverified because hosted jobs terminate before any step executes.
-- CI-VERIFIED: current push workflows continue to fail before any executed step/runner allocation. Latest Unit run `33998930289` ended with no steps; no compiler/test assertion/runtime output was produced.
-- ANDROID-RUNTIME-VERIFIED: earlier Android Runtime Smoke run `33994758706` on checkpoint `5aa5a6e87e45b0fa3cc7aca820c1de6b8bfbdb8e` completed successfully for the baseline browser/emulator flow. Fresh runtime proof for the current profile-transfer/deletion checkpoint remains pending because no current APK is produced.
-- ARTIFACT-VERIFIED: an earlier GitHub Actions x86_64 smoke APK matched its published SHA-256 checksum. The current Runtime Smoke lane has produced no artifact because its job never receives a runner.
-- DOCUMENTED: yes. This state is synchronized to the current source/test-harness checkpoint.
+- CI-VERIFIED: current push workflows fail during job startup before any executed step/runner allocation. Latest Runtime Smoke run `33999101624` and latest Unit run on the transactional-import checkpoint `33998930289` produced no step output; this is not application-test evidence.
+- ANDROID-RUNTIME-VERIFIED: earlier Android Runtime Smoke run `33994758706` on checkpoint `5aa5a6e87e45b0fa3cc7aca820c1de6b8bfbdb8e` completed successfully for the baseline browser/emulator flow. Fresh runtime proof for the current profile/deletion checkpoint remains pending because no current APK is produced.
+- ARTIFACT-VERIFIED: an earlier GitHub Actions x86_64 smoke APK matched its published SHA-256 checksum. No current artifact exists because the Runtime Smoke job never receives a runner.
+- DOCUMENTED: yes. State and master project map are synchronized to the latest source checkpoint.
 
 ## Architectural boundaries
 - `WebViewCompat.setProfile()` must happen before WebView use/navigation; the binder follows this ordering.
@@ -53,26 +53,27 @@
 - Profile transfer exports only app-owned metadata/history/bookmarks/tabs. WebView-internal cookies, storage, and login secrets are explicitly outside the export contract.
 - Plain export is intentionally unencrypted; encrypted export uses AES-GCM with a password-derived key and rejects wrong passwords/tampered ciphertext plus malformed encrypted dimensions.
 - Profile-record import is atomic across HISTORY/BOOKMARK/TAB inserts; a failed insert rolls back all record writes and the caller removes the newly created catalog entry.
-- User-profile deletion purges app-owned HISTORY/BOOKMARK/TAB records before catalog removal; it does not claim to clear WebView-internal storage/cookies beyond the current WebView profile lifecycle contract.
+- User-profile deletion purges app-owned HISTORY/BOOKMARK/TAB and profile-scoped privacy-rule tables before catalog removal; it does not claim to clear WebView-internal storage/cookies beyond the existing AndroidX profile lifecycle contract.
 - Per-profile proxy routing, same-URL in-process switching, and complete per-profile SharedPreferences/WebView data-directory isolation are not yet claimed complete.
 - Do not change SSL certificate override semantics, cleartext policy, backup semantics, or file-origin/DOM-storage coupling without an explicit decision.
 - Do not emulate profile-local proxying with process-global `ProxyController` behavior.
 - Complete profile-local settings require repository-wide classification and migration because production code still reads global default SharedPreferences in multiple locations; a cosmetic preference-screen namespace is insufficient.
 
 ## Current blockers
-- GitHub Actions hosted jobs still fail during job startup before the first step, including the latest Runner Probe and push-triggered Unit/Runtime runs. No assigned runner, no logs, and no artifact are produced. This is not application-test evidence.
+- GitHub Actions hosted jobs still fail during job startup before the first step, including minimal runner diagnostics and normal Unit/Runtime workflows. Fresh jobs show no useful step logs or assigned runner, so the blocker is external to Android/Gradle execution.
 - No current successful x86_64 artifact exists for consolidated emulator testing.
 - Complete profile-local settings and per-profile proxy routing remain architectural work and are intentionally not represented as completed features.
 
 ## Recent durable decisions
 - `D-022`: do not claim complete profile-local settings until all material readers/writers and migration semantics are covered.
-- `D-023`: do not use process-global WebView `ProxyController` to emulate per-profile routing.
+- `D-023`: do not use process-global WebView `ProxyController` to emulate per-profile proxy routing.
 - `D-024`: pre-step GitHub Actions failures are classified as runner/workflow initialization failures, not application failures.
 - `D-025`: parameterize database values used in deletion predicates.
 - `D-026`: keep Profile Transfer production activity non-exported and reach it from Runtime Smoke only through a debug-only exported launcher.
 - `D-027`: profile-transfer parser accepts only exact version headers and validates encrypted field dimensions before key derivation/decryption; malformed exports fail closed.
 - `D-028`: profile-record imports are transactional and the catalog entry is removed on record-import failure; activation occurs only after the transaction succeeds.
-- `D-029`: deleting a user profile purges its app-owned HISTORY/BOOKMARK/TAB rows before catalog deletion; WebView-internal storage/cookies remain governed by the existing AndroidX profile lifecycle boundary.
+- `D-029`: deleting a user profile purges its app-owned HISTORY/BOOKMARK/TAB rows before catalog deletion.
+- `D-030`: profile deletion also purges all profile-scoped privacy-rule rows (WHITELIST/JAVASCRIPT/COOKIE/REMOTE); WebView-internal storage/cookies remain governed by the existing AndroidX profile lifecycle boundary.
 
 ## Current next executable slice
 1. Obtain the first GitHub Actions capacity that actually assigns a hosted runner; verify Unit Tests and Runtime Smoke on the latest source checkpoint, then download the exact x86_64 APK + checksum and perform one consolidated emulator validation.
