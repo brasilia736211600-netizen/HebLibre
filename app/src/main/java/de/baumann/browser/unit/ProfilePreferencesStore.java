@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import androidx.preference.PreferenceManager;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -97,7 +97,7 @@ public final class ProfilePreferencesStore {
 
     /** Returns a typed, portable snapshot of only the settings explicitly owned by profiles. */
     public static Map<String, String> snapshot(Context context, String profileId) {
-        Map<String, String> result = new HashMap<>();
+        Map<String, String> result = new LinkedHashMap<>();
         if (context == null || !isSupportedProfileId(profileId)) {
             return result;
         }
@@ -125,17 +125,13 @@ public final class ProfilePreferencesStore {
             if (value == null) {
                 continue;
             }
-            try {
-                if (BOOLEAN_KEYS.contains(key) && value.startsWith("b:")) {
-                    String raw = value.substring(2);
-                    if ("true".equals(raw) || "false".equals(raw)) {
-                        editor.putBoolean(key, Boolean.parseBoolean(raw));
-                    }
-                } else if (STRING_KEYS.contains(key) && value.startsWith("s:")) {
-                    editor.putString(key, value.substring(2));
+            if (BOOLEAN_KEYS.contains(key) && value.startsWith("b:")) {
+                String raw = value.substring(2);
+                if ("true".equals(raw) || "false".equals(raw)) {
+                    editor.putBoolean(key, Boolean.parseBoolean(raw));
                 }
-            } catch (RuntimeException ignored) {
-                // Ignore malformed imported preference entries without aborting the import.
+            } else if (STRING_KEYS.contains(key) && value.startsWith("s:")) {
+                editor.putString(key, value.substring(2));
             }
         }
         editor.putBoolean(INITIALIZED_KEY, true).apply();
