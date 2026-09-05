@@ -203,6 +203,11 @@ public class ProfileManagerActivity extends AppCompatActivity {
                                     R.string.profile_invalid_id, Toast.LENGTH_LONG).show();
                             return;
                         }
+                        if (isNew && ProfileCatalogStore.get(ProfileManagerActivity.this, profileId) != null) {
+                            Toast.makeText(ProfileManagerActivity.this,
+                                    R.string.profile_duplicate_id, Toast.LENGTH_LONG).show();
+                            return;
+                        }
 
                         List<String> tagValues = new ArrayList<>();
                         String rawTags = tags.getText().toString();
