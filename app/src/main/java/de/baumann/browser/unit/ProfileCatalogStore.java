@@ -47,7 +47,7 @@ public final class ProfileCatalogStore {
     public static ProfileMetadata get(Context context, String profileId) {
         String normalizedId = ProfileIdentity.normalize(profileId);
         SharedPreferences preferences = preferences(context);
-        ensureDefaultMetadata(preferences);
+        ensureCatalog(preferences);
         if (!ProfileCatalogPolicy.contains(
                 ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null)),
                 normalizedId)) {
@@ -59,8 +59,15 @@ public final class ProfileCatalogStore {
     public static String getActiveProfileId(Context context) {
         SharedPreferences preferences = preferences(context);
         ensureCatalog(preferences);
-        return ProfileIdentity.normalize(preferences.getString(
-                ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
+        List<String> ids = ProfileCatalogPolicy.deserialize(
+                preferences.getString(CATALOG_IDS_KEY, null));
+        String active = ProfileCatalogPolicy.selectActiveId(
+                ids, preferences.getString(
+                        ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
+        if (!active.equals(preferences.getString(ProfileIdentity.PREFERENCE_KEY, null))) {
+            preferences.edit().putString(ProfileIdentity.PREFERENCE_KEY, active).apply();
+        }
+        return active;
     }
 
     public static boolean setActiveProfileId(Context context, String profileId) {
