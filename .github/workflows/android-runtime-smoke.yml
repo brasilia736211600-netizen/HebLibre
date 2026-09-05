@@ -107,6 +107,13 @@ jobs:
             adb shell cat /sdcard/profile.xml | grep -F 'Default (default)' >/dev/null
             adb shell input keyevent 4
             sleep 1
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileTransferSmokeActivity
+            sleep 2
+            test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileTransferActivity')" -ge 1
+            adb shell uiautomator dump /sdcard/profile-transfer.xml >/dev/null
+            adb shell cat /sdcard/profile-transfer.xml | grep -F 'Profile transfer' >/dev/null
+            adb shell input keyevent 4
+            sleep 1
             adb shell am force-stop de.baumann.browser
             adb shell monkey -p de.baumann.browser 1
             sleep 10
