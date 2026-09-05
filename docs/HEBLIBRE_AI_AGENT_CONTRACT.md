@@ -3,6 +3,12 @@
 ## Purpose
 This file is the durable operating contract for every future human, AI agent, plugin, or chat session working on HebLibre. It exists to prevent loss of project intent, forgetting, duplicated work, unsafe regressions, and continuity gaps.
 
+## Communication language
+- All human-facing conversation about HebLibre MUST be in Arabic unless the user explicitly requests another language.
+- This language rule applies to progress updates, explanations, decisions, questions, status reports, and session handoffs in chat.
+- Source code, identifiers, commit messages, CI output, and repository filenames remain in their native/project language and must not be translated merely to satisfy the conversation-language rule.
+- Do not switch the conversation to English because repository artifacts are written in English; summarize their relevant content in Arabic.
+
 ## Authority hierarchy
 1. The current GitHub repository and current branch are authoritative.
 2. `docs/HEBLIBRE_WORKFLOW_STATE.md` is the operational checkpoint.
