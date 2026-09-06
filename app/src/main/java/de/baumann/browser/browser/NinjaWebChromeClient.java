@@ -11,6 +11,10 @@ import android.content.SharedPreferences;
 import de.baumann.browser.R;
 import de.baumann.browser.unit.GeolocationPermissionPolicy;
 import de.baumann.browser.unit.HelperUnit;
+import de.baumann.browser.unit.ProfileCatalogStore;
+import de.baumann.browser.unit.ProfilePreferencesStore;
+import de.baumann.browser.unit.ProfileSitePermissionPolicy;
+import de.baumann.browser.unit.ProfileSitePermissionStore;
 import de.baumann.browser.unit.WebRtcPermissionPolicy;
 import de.baumann.browser.view.NinjaWebView;
 
@@ -23,16 +27,12 @@ public class NinjaWebChromeClient extends WebChromeClient {
         this.ninjaWebView = ninjaWebView;
     }
 
-
     @Override
     public void onProgressChanged(WebView view, int progress) {
         super.onProgressChanged(view, progress);
         ninjaWebView.update(progress);
-        if (view.getTitle().isEmpty()) {
-            ninjaWebView.update(view.getUrl());
-        } else {
-            ninjaWebView.update(view.getTitle());
-        }
+        if (view.getTitle().isEmpty()) ninjaWebView.update(view.getUrl());
+        else ninjaWebView.update(view.getTitle());
     }
 
     @Override
@@ -55,24 +55,43 @@ public class NinjaWebChromeClient extends WebChromeClient {
 
     @Override
     public void onPermissionRequest(final PermissionRequest request) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ninjaWebView.getContext());
-        if (preferences.getBoolean("block_media_permissions", true)) {
-            for (String resource : request.getResources()) {
-                if (WebRtcPermissionPolicy.shouldBlock(true, resource)) {
-                    request.deny();
-                    return;
-                }
-            }
+        String profileId = ProfileCatalogStore.getActiveProfileId(ninjaWebView.getContext());
+        String decision = ProfileSitePermissionStore.getDecision(
+                ninjaWebView.getContext(), profileId, request.getOrigin().toString(),
+                ProfileSitePermissionPolicy.PERMISSION_MEDIA);
+        if (ProfileSitePermissionPolicy.DECISION_DENY.equals(decision)) {
+            request.deny();
+            return;
+        }
+
+        boolean globalBlock = ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId)
+                .containsKey("block_media_permissions")
+                && "b:true".equals(ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId)
+                .get("block_media_permissions"));
+        if (globalBlock && !ProfileSitePermissionPolicy.DECISION_ALLOW.equals(decision)) {
+            request.deny();
+            return;
         }
         super.onPermissionRequest(request);
     }
 
     @Override
     public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+        String profileId = ProfileCatalogStore.getActiveProfileId(ninjaWebView.getContext());
+        String siteDecision = ProfileSitePermissionStore.getDecision(
+                ninjaWebView.getContext(), profileId, origin,
+                ProfileSitePermissionPolicy.PERMISSION_GEOLOCATION);
+        if (ProfileSitePermissionPolicy.DECISION_DENY.equals(siteDecision)) {
+            callback.invoke(origin, false, false);
+            return;
+        }
+
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ninjaWebView.getContext());
-        boolean enabled = preferences.getBoolean(
-                ninjaWebView.getContext().getString(R.string.sp_location), false);
-        if (!GeolocationPermissionPolicy.shouldGrant(enabled)) {
+        MapBackedBooleanReader settings = new MapBackedBooleanReader(ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId));
+        boolean enabled = settings.getBoolean("sp_location", preferences.getBoolean(
+                ninjaWebView.getContext().getString(R.string.sp_location), false));
+        if (!GeolocationPermissionPolicy.shouldGrant(enabled)
+                && !ProfileSitePermissionPolicy.DECISION_ALLOW.equals(siteDecision)) {
             callback.invoke(origin, false, false);
             return;
         }
@@ -80,5 +99,15 @@ public class NinjaWebChromeClient extends WebChromeClient {
         HelperUnit.grantPermissionsLoc(activity);
         callback.invoke(origin, true, false);
         super.onGeolocationPermissionsShowPrompt(origin, callback);
+    }
+
+    /** Tiny adapter to avoid exposing profile preference encoding outside the existing store. */
+    private static final class MapBackedBooleanReader {
+        private final java.util.Map<String, String> values;
+        MapBackedBooleanReader(java.util.Map<String, String> values) { this.values = values; }
+        boolean getBoolean(String key, boolean fallback) {
+            String value = values.get(key);
+            return value == null ? fallback : "b:true".equals(value);
+        }
     }
 }
