@@ -3,8 +3,11 @@
 ## Repository
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
-## Current application/source checkpoint
-`086c7038faa5bbb8b9d2a24f392edfe9cce3a07e` — latest application/test checkpoint; subsequent commits are documentation/diagnostic cleanup only.
+## Current branch checkpoint
+`aa8b9ba3530808d1301560060c44b78f4ed7d59a` — latest synchronized branch descendant containing the final CI smoke assertion hardening.
+
+## Latest application/source checkpoint
+`cc3d2bc77994a08db1a7f657f94690b17fc22a54` — latest application/test source change; subsequent changes are CI/documentation only. This commit restores the required profile-aware `RecordAction.listTab()` API used by session/profile smoke code.
 
 ## Completed bounded work
 - Profile metadata/catalog and deterministic profile identity policy.
@@ -19,27 +22,28 @@
 - Profile deletion purges app-owned records/privacy-rule rows transactionally and clears profile-local preference namespace.
 - Active-profile deletion immediately switches the legacy global preference view back to `default` and requests the existing restart behavior.
 - Transfer parser rejects input larger than 8 MiB before structural parsing/decryption.
+- Restored `RecordAction.listTab()` as a profile-aware read API required by profile/session code and smoke harnesses.
 - Runtime smoke harnesses are debug-only and exercise production Profile Manager and Profile Transfer screens without exporting those production activities.
-- Runtime smoke coverage includes database migration, profile isolation, rollback, privacy-rule isolation/purge, preference isolation, preference transfer, and active-profile deletion/default-preference restoration.
+- Runtime smoke coverage includes database migration, profile isolation, rollback, privacy-rule isolation/purge, preference isolation, preference transfer, active-profile deletion/default-preference restoration, launch, navigation, and restart/session restore.
 - JVM transfer test coverage includes oversized-input rejection.
 
 ## Verification
-- SOURCE-VERIFIED: application/test checkpoint `086c7038...` remains the release-candidate source basis.
-- TEST-VERIFIED: no fresh hosted test pass exists after `086c...` because current Jobs terminate before the first step.
-- CI-VERIFIED: current Unit run `34002495828` failed before steps; exact Job rerun `101530040003` also failed before steps. A minimal `ubuntu-latest` probe failed the same way. This is not evidence of an application/test failure.
-- ANDROID-RUNTIME-VERIFIED: historical baseline Runtime Smoke `33994758706` passed on an older checkpoint only.
-- ARTIFACT-VERIFIED: historical Actions artifact `9977732103` was downloaded and checksum-verified; it is not the current build.
-- DOCUMENTED: GitHub Issue #3 and this context record the blocker.
+- SOURCE-VERIFIED: latest application/test checkpoint `cc3d2bc...` is present on `genspark-dev`; no application source changes were introduced after it.
+- TEST-VERIFIED: Unit Tests run `34051212987` succeeded completely, including ARM split build, APK output verification, artifact upload, and `:app:testDebugUnitTest`.
+- CI-VERIFIED: Unit Tests run `34051212987` succeeded. Android Runtime Smoke run `34051212916` succeeded end-to-end on a real GitHub-hosted runner.
+- ANDROID-RUNTIME-VERIFIED: Runtime Smoke `34051212916` installed the current x86_64 debug APK on API 29 x86_64 Pixel 2 emulator; verified process liveness, `example.com`/`Example Domain`, production Profile Manager launch, default profile UI, production Profile Transfer launch/UI, restart, restored `Example Domain`, and absence of fatal app exceptions.
+- ARTIFACT-VERIFIED: Runtime artifact `9994608514` was downloaded from GitHub Actions. ZIP SHA-256 verified independently as `a41fd22149bdca09d9df128b46b29fb518c4bd096779dee261dc0e26b5d13827`. Embedded APK SHA-256 verified independently as `cf8b57af86cbfabe60e973ec1e970f6f2514910a4db9778ecafa37df88366865`. Unit ARM artifact `9994609950` was also downloaded and its ZIP SHA-256 independently verified as `2f97f109b1dde9dae356cb4e98b362004e0ee58c76007da7e3441b056a93ccde`; it contains both ARM APK splits.
+- DOCUMENTED: CI blocker, source fix, smoke hardening, and final verification are recorded here and in `02_CONTINUATION_2026-09-06.md`.
 
-## Actions blocker diagnosis
-A decisive repository-level comparison is now available:
-- `HebLibre` is **private**.
-- The user's other repository `WebLibre` is **public** and its Actions job `101530796057` successfully received a GitHub-hosted runner and executed multiple steps on 2026-09-06.
-- GitHub's current documentation states that standard GitHub-hosted runners are free for public repositories, while private repositories consume the account's included Actions minutes. GitHub Free includes 2,000 standard-runner minutes/month; when the quota is exhausted and there is no valid payment method, further usage is blocked.
-- HebLibre's pre-step failures therefore now have **private-repository Actions quota/billing state as the leading cause**, rather than a runner-label or application defect.
-- The diagnosis is highly consistent with the observed `steps: null` / no-log failures, but billing usage cannot be read through the available connector, so it is not yet mathematically proven from account telemetry.
-- A secondary possibility remains an Actions backend/repository state defect; no more runner-label probes should be added unless new evidence requires one.
-- The temporary runner probe has been removed.
+## Actions blocker — resolved operationally
+The former pre-step Actions failure was specific to the private-repository entitlement path. After `HebLibre` was changed to **public**, GitHub-hosted runners allocated normally and both Unit and Android Runtime Smoke completed. No runner-label churn or application workaround was required. Diagnostic `runner-probe.yml` was removed.
+
+## Runtime findings and fixes from the restored runner
+1. First live build exposed a real compile error: `ProfileSessionStore`/profile smoke code required `RecordAction.listTab()`. Fixed in `cc3d2bc...` with a profile-aware query constrained by active profile.
+2. First live emulator run reached the app, navigation, and Profile Manager but failed on brittle UI text `Default (default)`; source/harness logic itself was functioning.
+3. One diagnostic run captured actual UIAutomator XML: profile row rendered `Active  Default  (default)` and the button rendered `NEW PROFILE`. Smoke assertions were hardened to test stable rendered semantics rather than exact typography.
+4. Final Runtime Smoke initially failed only on the transfer title assertion; source inspection showed the activity sets title `Profile transfer` but Android button text is transformed for display. The final smoke now checks for the actual semantic control text with case-insensitive matching (`Import profile`).
+5. Final run `34051212916` passed every step.
 
 ## Architectural boundaries
 - WebView profile binding must occur before WebView use/navigation.
@@ -66,14 +70,15 @@ A decisive repository-level comparison is now available:
 - `D-032`: deleting the active profile immediately restores the default preference view and requests restart.
 - `D-033`: transfer input is bounded to 8 MiB before parsing/decryption.
 - `D-034`: temporary runner probes are diagnostic only and must not remain in the release branch.
-- `D-035`: WebLibre public vs HebLibre private comparison makes private Actions quota/billing the leading runner-blocker hypothesis; no privacy change is made automatically.
+- `D-035`: private vs public comparison made private Actions quota/billing the leading former blocker; no privacy change was made automatically.
+- `D-036`: Smoke UI assertions must target stable rendered semantics, not brittle exact typography.
 
 ## Current blockers / release gate
-1. Verify/restore the GitHub Actions allowance for the **private** HebLibre repository (or attach a valid payment method / upgrade as appropriate). Do not expose the repository publicly merely to bypass CI billing without an explicit decision.
-2. Once a runner starts, execute Unit Tests and Android Runtime Smoke on the latest branch descendant.
-3. Download the current x86_64 APK + checksum and independently verify the digest.
-4. Execute one consolidated emulator smoke gate, then final physical-device validation.
+1. No current CI blocker remains for hosted build/test execution.
+2. Current x86_64 APK artifact is available and emulator-verified.
+3. ARM64-v8a and armeabi-v7a debug APKs are available from the successful Unit artifact.
+4. Physical-device validation remains the final evidence gate before calling the project fully release-ready; it is not required for routine development because the hosted emulator smoke is now operational.
 5. Per-profile proxy and complete WebView storage isolation remain intentionally deferred.
 
 ## Next executable slice
-Keep application source stable at `086c7038...`. The next technical action after Actions access is restored is the consolidated current build/test/smoke chain; no further runner-label experimentation is warranted.
+Keep the application source stable at `cc3d2bc...`. Use the verified current APK artifact for final distribution/physical-device validation. No further CI experimentation is required unless a new concrete failure appears.
