@@ -12,10 +12,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import de.baumann.browser.unit.ProfileCatalogStore;
+import de.baumann.browser.unit.ProfileConsistencyPolicy;
 import de.baumann.browser.unit.ProfileLanguagePolicy;
 import de.baumann.browser.unit.ProfilePreferencesStore;
 import de.baumann.browser.unit.ProfileProxyPolicy;
@@ -55,7 +56,7 @@ public class ProfileNetworkSettingsActivity extends AppCompatActivity {
         fields.addView(proxy);
         bypass = field("Proxy bypass rules (comma-separated)", value(values, "proxy_bypass"));
         fields.addView(bypass);
-        uaPreset = field("UA preset id (for example android_chrome_131)", value(values, "ua_preset"));
+        uaPreset = field("UA preset id (for example android_chrome_152)", value(values, "ua_preset"));
         fields.addView(uaPreset);
         customUa = field("Custom User-Agent (optional; overrides preset)", value(values, "userAgent_custom"));
         customUa.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
@@ -81,6 +82,18 @@ public class ProfileNetworkSettingsActivity extends AppCompatActivity {
             }
         });
         fields.addView(presets);
+
+        Button audit = new Button(this);
+        audit.setText("Run profile consistency audit");
+        audit.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                List<String> issues = ProfileConsistencyPolicy.findIssues(ProfilePreferencesStore.snapshot(ProfileNetworkSettingsActivity.this, profileId));
+                Toast.makeText(ProfileNetworkSettingsActivity.this,
+                        issues.isEmpty() ? "Profile configuration is consistent" : "Consistency findings: " + issues.size(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+        fields.addView(audit);
 
         Button save = new Button(this);
         save.setText("Save profile network settings");
@@ -142,7 +155,5 @@ public class ProfileNetworkSettingsActivity extends AppCompatActivity {
         return encoded != null && encoded.startsWith("s:") ? encoded.substring(2) : "";
     }
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
