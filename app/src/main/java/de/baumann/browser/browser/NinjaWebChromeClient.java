@@ -48,7 +48,8 @@ public class NinjaWebChromeClient extends WebChromeClient {
     }
 
     @Override
-    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
+    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
+                                     WebChromeClient.FileChooserParams fileChooserParams) {
         ninjaWebView.getBrowserController().showFileChooser(filePathCallback);
         return true;
     }
@@ -56,27 +57,39 @@ public class NinjaWebChromeClient extends WebChromeClient {
     @Override
     public void onPermissionRequest(final PermissionRequest request) {
         String profileId = ProfileCatalogStore.getActiveProfileId(ninjaWebView.getContext());
-        String decision = ProfileSitePermissionStore.getDecision(
+        String siteDecision = ProfileSitePermissionStore.getDecision(
                 ninjaWebView.getContext(), profileId, request.getOrigin().toString(),
                 ProfileSitePermissionPolicy.PERMISSION_MEDIA);
-        if (ProfileSitePermissionPolicy.DECISION_DENY.equals(decision)) {
+        if (ProfileSitePermissionPolicy.DECISION_DENY.equals(siteDecision)) {
             request.deny();
             return;
         }
 
-        boolean globalBlock = ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId)
-                .containsKey("block_media_permissions")
-                && "b:true".equals(ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId)
-                .get("block_media_permissions"));
-        if (globalBlock && !ProfileSitePermissionPolicy.DECISION_ALLOW.equals(decision)) {
-            request.deny();
-            return;
+        SharedPreferences legacyPreferences = PreferenceManager.getDefaultSharedPreferences(
+                ninjaWebView.getContext());
+        java.util.Map<String, String> profileSettings =
+                ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId);
+        String encodedBlock = profileSettings.get("block_media_permissions");
+        boolean blockMedia = encodedBlock == null
+                ? legacyPreferences.getBoolean("block_media_permissions", true)
+                : "b:true".equals(encodedBlock);
+
+        if (blockMedia) {
+            for (String resource : request.getResources()) {
+                if (WebRtcPermissionPolicy.shouldBlock(true, resource)) {
+                    request.deny();
+                    return;
+                }
+            }
         }
+        // A profile/site 'allow' never bypasses the browser's global media policy
+        // or Android runtime permissions; it only avoids an explicit site-level deny.
         super.onPermissionRequest(request);
     }
 
     @Override
-    public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+    public void onGeolocationPermissionsShowPrompt(String origin,
+                                                     GeolocationPermissions.Callback callback) {
         String profileId = ProfileCatalogStore.getActiveProfileId(ninjaWebView.getContext());
         String siteDecision = ProfileSitePermissionStore.getDecision(
                 ninjaWebView.getContext(), profileId, origin,
@@ -86,12 +99,16 @@ public class NinjaWebChromeClient extends WebChromeClient {
             return;
         }
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ninjaWebView.getContext());
-        MapBackedBooleanReader settings = new MapBackedBooleanReader(ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId));
-        boolean enabled = settings.getBoolean("sp_location", preferences.getBoolean(
-                ninjaWebView.getContext().getString(R.string.sp_location), false));
-        if (!GeolocationPermissionPolicy.shouldGrant(enabled)
-                && !ProfileSitePermissionPolicy.DECISION_ALLOW.equals(siteDecision)) {
+        SharedPreferences legacyPreferences = PreferenceManager.getDefaultSharedPreferences(
+                ninjaWebView.getContext());
+        java.util.Map<String, String> profileSettings =
+                ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId);
+        String encodedLocation = profileSettings.get("sp_location");
+        boolean enabled = encodedLocation == null
+                ? legacyPreferences.getBoolean(
+                        ninjaWebView.getContext().getString(R.string.sp_location), false)
+                : "b:true".equals(encodedLocation);
+        if (!GeolocationPermissionPolicy.shouldGrant(enabled)) {
             callback.invoke(origin, false, false);
             return;
         }
@@ -99,15 +116,5 @@ public class NinjaWebChromeClient extends WebChromeClient {
         HelperUnit.grantPermissionsLoc(activity);
         callback.invoke(origin, true, false);
         super.onGeolocationPermissionsShowPrompt(origin, callback);
-    }
-
-    /** Tiny adapter to avoid exposing profile preference encoding outside the existing store. */
-    private static final class MapBackedBooleanReader {
-        private final java.util.Map<String, String> values;
-        MapBackedBooleanReader(java.util.Map<String, String> values) { this.values = values; }
-        boolean getBoolean(String key, boolean fallback) {
-            String value = values.get(key);
-            return value == null ? fallback : "b:true".equals(value);
-        }
     }
 }
