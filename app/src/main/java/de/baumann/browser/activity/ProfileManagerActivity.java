@@ -34,6 +34,7 @@ import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileLanguagePolicy;
 import de.baumann.browser.unit.ProfileMetadata;
 import de.baumann.browser.unit.ProfilePreferencesStore;
+import de.baumann.browser.unit.ProfileSitePermissionStore;
 
 /** Lightweight profile catalog UI. */
 public class ProfileManagerActivity extends AppCompatActivity {
@@ -74,8 +75,17 @@ public class ProfileManagerActivity extends AppCompatActivity {
                         ProfileManagerActivity.this, ProfilePrivacyStatusActivity.class));
             }
         });
-        root.addView(privacyStatus, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        root.addView(privacyStatus, new LinearLayout.LayoutParams(-1, -2));
+
+        Button sitePermissions = new Button(this);
+        sitePermissions.setText("Site permissions");
+        sitePermissions.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startActivity(new android.content.Intent(
+                        ProfileManagerActivity.this, ProfileSitePermissionsActivity.class));
+            }
+        });
+        root.addView(sitePermissions, new LinearLayout.LayoutParams(-1, -2));
 
         searchField = new EditText(this);
         searchField.setSingleLine(true);
@@ -83,61 +93,44 @@ public class ProfileManagerActivity extends AppCompatActivity {
         searchField.setHint("Search profiles, groups, tags, notes");
         searchField.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                renderProfiles();
-            }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { renderProfiles(); }
             @Override public void afterTextChanged(Editable s) { }
         });
-        root.addView(searchField, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        root.addView(searchField, new LinearLayout.LayoutParams(-1, -2));
 
         LinearLayout controls = new LinearLayout(this);
         controls.setOrientation(LinearLayout.HORIZONTAL);
-
         Button sort = new Button(this);
         sort.setText("Sort: name");
         sort.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 if (sortMode == ProfileCatalogViewPolicy.SortMode.NAME) {
-                    sortMode = ProfileCatalogViewPolicy.SortMode.GROUP;
-                    sort.setText("Sort: group");
+                    sortMode = ProfileCatalogViewPolicy.SortMode.GROUP; sort.setText("Sort: group");
                 } else if (sortMode == ProfileCatalogViewPolicy.SortMode.GROUP) {
-                    sortMode = ProfileCatalogViewPolicy.SortMode.ID;
-                    sort.setText("Sort: id");
+                    sortMode = ProfileCatalogViewPolicy.SortMode.ID; sort.setText("Sort: id");
                 } else {
-                    sortMode = ProfileCatalogViewPolicy.SortMode.NAME;
-                    sort.setText("Sort: name");
+                    sortMode = ProfileCatalogViewPolicy.SortMode.NAME; sort.setText("Sort: name");
                 }
                 renderProfiles();
             }
         });
-        controls.addView(sort, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-
+        controls.addView(sort, new LinearLayout.LayoutParams(0, -2, 1f));
         Button clearSearch = new Button(this);
         clearSearch.setText("Clear");
-        clearSearch.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { searchField.setText(""); }
-        });
-        controls.addView(clearSearch, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        root.addView(controls, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        clearSearch.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { searchField.setText(""); } });
+        controls.addView(clearSearch, new LinearLayout.LayoutParams(0, -2, 1f));
+        root.addView(controls, new LinearLayout.LayoutParams(-1, -2));
 
         ScrollView scroll = new ScrollView(this);
         profileList = new LinearLayout(this);
         profileList.setOrientation(LinearLayout.VERTICAL);
-        scroll.addView(profileList, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        root.addView(scroll, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        scroll.addView(profileList, new ScrollView.LayoutParams(-1, -2));
+        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1f));
 
         Button add = new Button(this);
         add.setText(R.string.profile_new);
-        add.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { showEditor(null); }
-        });
-        root.addView(add, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-
+        add.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showEditor(null); } });
+        root.addView(add, new LinearLayout.LayoutParams(-1, -2));
         setContentView(root);
         renderProfiles();
     }
@@ -146,52 +139,30 @@ public class ProfileManagerActivity extends AppCompatActivity {
         profileList.removeAllViews();
         String activeId = ProfileCatalogStore.getActiveProfileId(this);
         String query = searchField == null ? "" : searchField.getText().toString();
-        List<ProfileMetadata> profiles = ProfileCatalogViewPolicy.filterAndSort(
-                ProfileCatalogStore.load(this), query, activeId, sortMode);
+        List<ProfileMetadata> profiles = ProfileCatalogViewPolicy.filterAndSort(ProfileCatalogStore.load(this), query, activeId, sortMode);
         for (final ProfileMetadata profile : profiles) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(dp(4), dp(4), dp(4), dp(4));
             row.setBackgroundResource(android.R.drawable.list_selector_background);
-
             TextView label = new TextView(this);
             String marker = profile.getId().equals(activeId) ? getString(R.string.profile_active) + "  " : "";
-            label.setText(marker + profile.getName() + "  (" + profile.getId() + ")"
-                    + (profile.getGroup().trim().isEmpty() ? "" : "  [" + profile.getGroup() + "]"));
+            label.setText(marker + profile.getName() + "  (" + profile.getId() + ")" + (profile.getGroup().trim().isEmpty() ? "" : "  [" + profile.getGroup() + "]"));
             label.setGravity(Gravity.CENTER_VERTICAL);
             label.setMaxLines(2);
             row.addView(label, new LinearLayout.LayoutParams(0, dp(56), 1f));
-
-            Button edit = new Button(this);
-            edit.setText(R.string.profile_edit);
-            edit.setEnabled(!ProfileIdentity.DEFAULT_PROFILE_ID.equals(profile.getId()));
-            edit.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { showEditor(profile); }
-            });
-            row.addView(edit, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(56)));
-
-            Button duplicate = new Button(this);
-            duplicate.setText("Duplicate");
-            duplicate.setContentDescription("Duplicate profile template");
-            duplicate.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { duplicateProfile(profile); }
-            });
-            row.addView(duplicate, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(56)));
-
-            Button delete = new Button(this);
-            delete.setText(R.string.profile_delete);
-            delete.setEnabled(!ProfileIdentity.DEFAULT_PROFILE_ID.equals(profile.getId()));
-            delete.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { confirmDelete(profile); }
-            });
-            row.addView(delete, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(56)));
-
-            row.setOnClickListener(new View.OnClickListener() {
-                @Override public void onClick(View v) { selectProfile(profile.getId()); }
-            });
-            profileList.addView(row, new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            Button edit = new Button(this); edit.setText(R.string.profile_edit); edit.setEnabled(!ProfileIdentity.DEFAULT_PROFILE_ID.equals(profile.getId()));
+            edit.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showEditor(profile); } });
+            row.addView(edit, new LinearLayout.LayoutParams(-2, dp(56)));
+            Button duplicate = new Button(this); duplicate.setText("Duplicate"); duplicate.setContentDescription("Duplicate profile template");
+            duplicate.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { duplicateProfile(profile); } });
+            row.addView(duplicate, new LinearLayout.LayoutParams(-2, dp(56)));
+            Button delete = new Button(this); delete.setText(R.string.profile_delete); delete.setEnabled(!ProfileIdentity.DEFAULT_PROFILE_ID.equals(profile.getId()));
+            delete.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { confirmDelete(profile); } });
+            row.addView(delete, new LinearLayout.LayoutParams(-2, dp(56)));
+            row.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { selectProfile(profile.getId()); } });
+            profileList.addView(row, new LinearLayout.LayoutParams(-1, -2));
         }
     }
 
@@ -199,35 +170,23 @@ public class ProfileManagerActivity extends AppCompatActivity {
         String current = ProfileCatalogStore.getActiveProfileId(this);
         String normalizedTarget = ProfileIdentity.normalize(profileId);
         if (current.equals(normalizedTarget)) return;
-
         ProfilePreferencesStore.saveGlobalToProfile(this, current);
         ProfilePreferencesStore.initializeProfile(this, normalizedTarget);
         if (!ProfileCatalogStore.setActiveProfileId(this, normalizedTarget)) return;
         ProfilePreferencesStore.loadProfileToGlobal(this, normalizedTarget);
-
-        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                .edit().putInt("restart_changed", 1).apply();
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putInt("restart_changed", 1).apply();
         Toast.makeText(this, R.string.profile_switched, Toast.LENGTH_LONG).show();
         renderProfiles();
     }
 
-    /** Creates a clean-data profile template by copying metadata and profile-owned settings only. */
     private void duplicateProfile(ProfileMetadata source) {
         String sourceId = ProfileIdentity.normalize(source.getId());
         String newId = uniqueDuplicateId(sourceId);
         String newName = source.getName().trim().isEmpty() ? sourceId + " copy" : source.getName().trim() + " copy";
-        ProfileMetadata duplicate = new ProfileMetadata(
-                newId,
-                newName,
-                source.getColor(),
-                source.getIcon(),
-                source.getNotes(),
-                new ArrayList<>(source.getTags()),
-                source.getGroup());
+        ProfileMetadata duplicate = new ProfileMetadata(newId, newName, source.getColor(), source.getIcon(), source.getNotes(), new ArrayList<>(source.getTags()), source.getGroup());
         Map<String, String> settings = ProfilePreferencesStore.snapshot(this, sourceId);
         if (!ProfileCatalogStore.save(this, duplicate)) {
-            Toast.makeText(this, "Unable to duplicate profile", Toast.LENGTH_LONG).show();
-            return;
+            Toast.makeText(this, "Unable to duplicate profile", Toast.LENGTH_LONG).show(); return;
         }
         ProfilePreferencesStore.restore(this, newId, settings);
         Toast.makeText(this, "Profile template duplicated without history or tabs", Toast.LENGTH_LONG).show();
@@ -236,11 +195,8 @@ public class ProfileManagerActivity extends AppCompatActivity {
 
     private String uniqueDuplicateId(String sourceId) {
         String base = sourceId + "-copy";
-        if (base.length() > ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH) {
-            base = base.substring(0, ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH);
-        }
-        String candidate = base;
-        int suffix = 2;
+        if (base.length() > ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH) base = base.substring(0, ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH);
+        String candidate = base; int suffix = 2;
         while (ProfileCatalogStore.get(this, candidate) != null) {
             String suffixText = "-" + suffix++;
             int maxBaseLength = ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH - suffixText.length();
@@ -252,79 +208,32 @@ public class ProfileManagerActivity extends AppCompatActivity {
 
     private void showEditor(final ProfileMetadata existing) {
         final boolean isNew = existing == null;
-        LinearLayout fields = new LinearLayout(this);
-        fields.setOrientation(LinearLayout.VERTICAL);
-        fields.setPadding(dp(4), 0, dp(4), 0);
-
-        final EditText id = editText(R.string.profile_id, existing == null ? "" : existing.getId());
-        id.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-        if (!isNew) id.setEnabled(false);
-        fields.addView(id);
+        LinearLayout fields = new LinearLayout(this); fields.setOrientation(LinearLayout.VERTICAL); fields.setPadding(dp(4), 0, dp(4), 0);
+        final EditText id = editText(R.string.profile_id, existing == null ? "" : existing.getId()); id.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI); if (!isNew) id.setEnabled(false); fields.addView(id);
         final EditText name = editText(R.string.profile_name, existing == null ? "" : existing.getName()); fields.addView(name);
         final EditText color = editText(R.string.profile_color, existing == null ? "" : existing.getColor()); fields.addView(color);
         final EditText icon = editText(R.string.profile_icon, existing == null ? "" : existing.getIcon()); fields.addView(icon);
         final EditText notes = editText(R.string.profile_notes, existing == null ? "" : existing.getNotes()); fields.addView(notes);
         final EditText tags = editText(R.string.profile_tags, existing == null ? "" : join(existing.getTags())); fields.addView(tags);
         final EditText group = editText(R.string.profile_group, existing == null ? "" : existing.getGroup()); fields.addView(group);
-        final String existingLanguage = existing == null
-                ? ""
-                : getProfileLanguage(existing.getId());
-        final EditText language = editText("Preferred language (e.g. ar-YE)", existingLanguage);
-        language.setInputType(InputType.TYPE_CLASS_TEXT);
-        fields.addView(language);
-
-        ScrollView scroll = new ScrollView(this);
-        scroll.addView(fields);
-        final AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(isNew ? R.string.profile_new : R.string.profile_edit)
-                .setView(scroll)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.profile_saved, null)
-                .create();
+        final EditText language = editText("Preferred language (e.g. ar-YE)", existing == null ? "" : getProfileLanguage(existing.getId())); language.setInputType(InputType.TYPE_CLASS_TEXT); fields.addView(language);
+        ScrollView scroll = new ScrollView(this); scroll.addView(fields);
+        final AlertDialog dialog = new AlertDialog.Builder(this).setTitle(isNew ? R.string.profile_new : R.string.profile_edit).setView(scroll).setNegativeButton(android.R.string.cancel, null).setPositiveButton(R.string.profile_saved, null).create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override public void onShow(DialogInterface ignored) {
                 dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                     @Override public void onClick(View v) {
-                        String profileId = id.getText().toString().trim();
-                        String profileName = name.getText().toString().trim();
-                        String preferredLanguage = language.getText().toString().trim();
-                        if (profileId.isEmpty() || profileName.isEmpty()) {
-                            Toast.makeText(ProfileManagerActivity.this, R.string.profile_required_fields, Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        if (isNew && !ProfileCatalogPolicy.isValidUserProfileId(profileId)) {
-                            Toast.makeText(ProfileManagerActivity.this, R.string.profile_invalid_id, Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        if (isNew && ProfileCatalogStore.get(ProfileManagerActivity.this, profileId) != null) {
-                            Toast.makeText(ProfileManagerActivity.this, R.string.profile_duplicate_id, Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        if (!preferredLanguage.isEmpty() && !ProfileLanguagePolicy.isValid(preferredLanguage)) {
-                            Toast.makeText(ProfileManagerActivity.this,
-                                    "Use a valid language tag such as ar-YE or en-US", Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        List<String> tagValues = new ArrayList<>();
-                        String rawTags = tags.getText().toString();
-                        if (!rawTags.trim().isEmpty()) tagValues.addAll(Arrays.asList(rawTags.split(",")));
-                        ProfileMetadata metadata = new ProfileMetadata(profileId, profileName,
-                                color.getText().toString(), icon.getText().toString(), notes.getText().toString(),
-                                tagValues, group.getText().toString());
-                        if (!ProfileCatalogStore.save(ProfileManagerActivity.this, metadata)) {
-                            Toast.makeText(ProfileManagerActivity.this, R.string.profile_invalid_id, Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        if (isNew) {
-                            ProfilePreferencesStore.initializeProfile(ProfileManagerActivity.this, profileId);
-                        }
-                        String normalizedLanguage = ProfileLanguagePolicy.normalize(preferredLanguage);
-                        ProfilePreferencesStore.restore(
-                                ProfileManagerActivity.this,
-                                profileId,
-                                Collections.singletonMap("preferred_language", "s:" + normalizedLanguage));
-                        dialog.dismiss();
-                        renderProfiles();
+                        String profileId = id.getText().toString().trim(); String profileName = name.getText().toString().trim(); String preferredLanguage = language.getText().toString().trim();
+                        if (profileId.isEmpty() || profileName.isEmpty()) { Toast.makeText(ProfileManagerActivity.this, R.string.profile_required_fields, Toast.LENGTH_SHORT).show(); return; }
+                        if (isNew && !ProfileCatalogPolicy.isValidUserProfileId(profileId)) { Toast.makeText(ProfileManagerActivity.this, R.string.profile_invalid_id, Toast.LENGTH_LONG).show(); return; }
+                        if (isNew && ProfileCatalogStore.get(ProfileManagerActivity.this, profileId) != null) { Toast.makeText(ProfileManagerActivity.this, R.string.profile_duplicate_id, Toast.LENGTH_LONG).show(); return; }
+                        if (!preferredLanguage.isEmpty() && !ProfileLanguagePolicy.isValid(preferredLanguage)) { Toast.makeText(ProfileManagerActivity.this, "Use a valid language tag such as ar-YE or en-US", Toast.LENGTH_LONG).show(); return; }
+                        List<String> tagValues = new ArrayList<>(); String rawTags = tags.getText().toString(); if (!rawTags.trim().isEmpty()) tagValues.addAll(Arrays.asList(rawTags.split(",")));
+                        ProfileMetadata metadata = new ProfileMetadata(profileId, profileName, color.getText().toString(), icon.getText().toString(), notes.getText().toString(), tagValues, group.getText().toString());
+                        if (!ProfileCatalogStore.save(ProfileManagerActivity.this, metadata)) { Toast.makeText(ProfileManagerActivity.this, R.string.profile_invalid_id, Toast.LENGTH_LONG).show(); return; }
+                        if (isNew) ProfilePreferencesStore.initializeProfile(ProfileManagerActivity.this, profileId);
+                        ProfilePreferencesStore.restore(ProfileManagerActivity.this, profileId, Collections.singletonMap("preferred_language", "s:" + ProfileLanguagePolicy.normalize(preferredLanguage)));
+                        dialog.dismiss(); renderProfiles();
                     }
                 });
             }
@@ -335,58 +244,24 @@ public class ProfileManagerActivity extends AppCompatActivity {
     private String getProfileLanguage(String profileId) {
         Map<String, String> snapshot = ProfilePreferencesStore.snapshot(this, profileId);
         String encoded = snapshot.get("preferred_language");
-        if (encoded != null && encoded.startsWith("s:")) {
-            return encoded.substring(2);
-        }
-        return "";
+        return encoded != null && encoded.startsWith("s:") ? encoded.substring(2) : "";
     }
 
     private void confirmDelete(final ProfileMetadata profile) {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.profile_delete)
-                .setMessage(profile.getName() + " (" + profile.getId() + ")")
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(R.string.profile_delete, new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface dialog, int which) {
-                        try {
-                            RecordAction.deleteProfileRecords(ProfileManagerActivity.this, profile.getId());
-                        } catch (RuntimeException e) {
-                            Toast.makeText(ProfileManagerActivity.this, "Unable to delete profile data", Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        if (ProfileCatalogStore.delete(ProfileManagerActivity.this, profile.getId())) {
-                            ProfilePreferencesStore.deleteProfile(ProfileManagerActivity.this, profile.getId());
-                            Toast.makeText(ProfileManagerActivity.this, R.string.profile_deleted, Toast.LENGTH_SHORT).show();
-                            renderProfiles();
-                        }
-                    }
-                }).show();
+        new AlertDialog.Builder(this).setTitle(R.string.profile_delete).setMessage(profile.getName() + " (" + profile.getId() + ")").setNegativeButton(android.R.string.cancel, null).setPositiveButton(R.string.profile_delete, new DialogInterface.OnClickListener() {
+            @Override public void onClick(DialogInterface dialog, int which) {
+                try { RecordAction.deleteProfileRecords(ProfileManagerActivity.this, profile.getId()); } catch (RuntimeException e) { Toast.makeText(ProfileManagerActivity.this, "Unable to delete profile data", Toast.LENGTH_LONG).show(); return; }
+                if (ProfileCatalogStore.delete(ProfileManagerActivity.this, profile.getId())) {
+                    ProfilePreferencesStore.deleteProfile(ProfileManagerActivity.this, profile.getId());
+                    ProfileSitePermissionStore.clearProfile(ProfileManagerActivity.this, profile.getId());
+                    Toast.makeText(ProfileManagerActivity.this, R.string.profile_deleted, Toast.LENGTH_SHORT).show(); renderProfiles();
+                }
+            }
+        }).show();
     }
 
-    private EditText editText(int hintRes, String value) {
-        EditText input = new EditText(this);
-        input.setHint(hintRes);
-        input.setText(value);
-        input.setPadding(dp(8), dp(6), dp(8), dp(6));
-        return input;
-    }
-
-    private EditText editText(String hint, String value) {
-        EditText input = new EditText(this);
-        input.setHint(hint);
-        input.setText(value);
-        input.setPadding(dp(8), dp(6), dp(8), dp(6));
-        return input;
-    }
-
+    private EditText editText(int hintRes, String value) { EditText input = new EditText(this); input.setHint(hintRes); input.setText(value); input.setPadding(dp(8), dp(6), dp(8), dp(6)); return input; }
+    private EditText editText(String hint, String value) { EditText input = new EditText(this); input.setHint(hint); input.setText(value); input.setPadding(dp(8), dp(6), dp(8), dp(6)); return input; }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-
-    private String join(List<String> values) {
-        StringBuilder result = new StringBuilder();
-        for (String value : values) {
-            if (result.length() > 0) result.append(", ");
-            result.append(value);
-        }
-        return result.toString();
-    }
+    private String join(List<String> values) { StringBuilder result = new StringBuilder(); for (String value : values) { if (result.length() > 0) result.append(", "); result.append(value); } return result.toString(); }
 }
