@@ -64,6 +64,17 @@ public class ProfileManagerActivity extends AppCompatActivity {
         root.addView(capability, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
+        Button privacyStatus = new Button(this);
+        privacyStatus.setText("Privacy & storage status");
+        privacyStatus.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startActivity(new android.content.Intent(
+                        ProfileManagerActivity.this, ProfilePrivacyStatusActivity.class));
+            }
+        });
+        root.addView(privacyStatus, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
         searchField = new EditText(this);
         searchField.setSingleLine(true);
         searchField.setInputType(InputType.TYPE_CLASS_TEXT);
