@@ -244,9 +244,19 @@ public class ProfileManagerSmokeActivity extends Activity {
         require(action.listDomains(RecordUnit.TABLE_REMOTE, profileId).isEmpty(), "profile deletion left remote records");
         action.close();
 
+        require(ProfileCatalogStore.setActiveProfileId(this, profileId), "cannot reselect deletion profile");
+        SharedPreferences global = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean originalDesktop = global.getBoolean("desktop_mode", false);
+        global.edit().putBoolean("desktop_mode", true).commit();
+        ProfilePreferencesStore.saveGlobalToProfile(this, profileId);
+        require(ProfileCatalogStore.delete(this, profileId), "active profile catalog deletion failed");
+        require(ProfileIdentity.DEFAULT_PROFILE_ID.equals(ProfileCatalogStore.getActiveProfileId(this)),
+                "active profile deletion did not restore default id");
+        require(!global.getBoolean("desktop_mode", true),
+                "active profile deletion did not load default profile preferences");
+        global.edit().putBoolean("desktop_mode", originalDesktop).commit();
         require(ProfileCatalogStore.setActiveProfileId(this, RecordUnit.DEFAULT_PROFILE_ID),
                 "cannot restore default after delete smoke");
-        require(ProfileCatalogStore.delete(this, profileId), "profile catalog deletion failed");
     }
 
     private void seedDefaultSessionForLauncherRestore() {
