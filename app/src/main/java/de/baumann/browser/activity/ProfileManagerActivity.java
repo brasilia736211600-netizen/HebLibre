@@ -21,6 +21,7 @@ import androidx.webkit.WebViewFeature;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileCatalogViewPolicy;
 import de.baumann.browser.unit.ProfileIdentity;
+import de.baumann.browser.unit.ProfileLanguagePolicy;
 import de.baumann.browser.unit.ProfileMetadata;
 import de.baumann.browser.unit.ProfilePreferencesStore;
 
@@ -264,6 +266,12 @@ public class ProfileManagerActivity extends AppCompatActivity {
         final EditText notes = editText(R.string.profile_notes, existing == null ? "" : existing.getNotes()); fields.addView(notes);
         final EditText tags = editText(R.string.profile_tags, existing == null ? "" : join(existing.getTags())); fields.addView(tags);
         final EditText group = editText(R.string.profile_group, existing == null ? "" : existing.getGroup()); fields.addView(group);
+        final String existingLanguage = existing == null
+                ? ""
+                : getProfileLanguage(existing.getId());
+        final EditText language = editText("Preferred language (e.g. ar-YE)", existingLanguage);
+        language.setInputType(InputType.TYPE_CLASS_TEXT);
+        fields.addView(language);
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(fields);
@@ -279,6 +287,7 @@ public class ProfileManagerActivity extends AppCompatActivity {
                     @Override public void onClick(View v) {
                         String profileId = id.getText().toString().trim();
                         String profileName = name.getText().toString().trim();
+                        String preferredLanguage = language.getText().toString().trim();
                         if (profileId.isEmpty() || profileName.isEmpty()) {
                             Toast.makeText(ProfileManagerActivity.this, R.string.profile_required_fields, Toast.LENGTH_SHORT).show();
                             return;
@@ -289,6 +298,11 @@ public class ProfileManagerActivity extends AppCompatActivity {
                         }
                         if (isNew && ProfileCatalogStore.get(ProfileManagerActivity.this, profileId) != null) {
                             Toast.makeText(ProfileManagerActivity.this, R.string.profile_duplicate_id, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        if (!preferredLanguage.isEmpty() && !ProfileLanguagePolicy.isValid(preferredLanguage)) {
+                            Toast.makeText(ProfileManagerActivity.this,
+                                    "Use a valid language tag such as ar-YE or en-US", Toast.LENGTH_LONG).show();
                             return;
                         }
                         List<String> tagValues = new ArrayList<>();
@@ -304,6 +318,11 @@ public class ProfileManagerActivity extends AppCompatActivity {
                         if (isNew) {
                             ProfilePreferencesStore.initializeProfile(ProfileManagerActivity.this, profileId);
                         }
+                        String normalizedLanguage = ProfileLanguagePolicy.normalize(preferredLanguage);
+                        ProfilePreferencesStore.restore(
+                                ProfileManagerActivity.this,
+                                profileId,
+                                Collections.singletonMap("preferred_language", "s:" + normalizedLanguage));
                         dialog.dismiss();
                         renderProfiles();
                     }
@@ -311,6 +330,15 @@ public class ProfileManagerActivity extends AppCompatActivity {
             }
         });
         dialog.show();
+    }
+
+    private String getProfileLanguage(String profileId) {
+        Map<String, String> snapshot = ProfilePreferencesStore.snapshot(this, profileId);
+        String encoded = snapshot.get("preferred_language");
+        if (encoded != null && encoded.startsWith("s:")) {
+            return encoded.substring(2);
+        }
+        return "";
     }
 
     private void confirmDelete(final ProfileMetadata profile) {
@@ -338,6 +366,14 @@ public class ProfileManagerActivity extends AppCompatActivity {
     private EditText editText(int hintRes, String value) {
         EditText input = new EditText(this);
         input.setHint(hintRes);
+        input.setText(value);
+        input.setPadding(dp(8), dp(6), dp(8), dp(6));
+        return input;
+    }
+
+    private EditText editText(String hint, String value) {
+        EditText input = new EditText(this);
+        input.setHint(hint);
         input.setText(value);
         input.setPadding(dp(8), dp(6), dp(8), dp(6));
         return input;
