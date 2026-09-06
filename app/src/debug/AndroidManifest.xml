@@ -7,5 +7,8 @@
         <activity
             android:name="de.baumann.browser.activity.ProfileTransferSmokeActivity"
             android:exported="true" />
+        <activity
+            android:name="de.baumann.browser.activity.ProfilePrivacyStatusSmokeActivity"
+            android:exported="true" />
     </application>
 </manifest>
