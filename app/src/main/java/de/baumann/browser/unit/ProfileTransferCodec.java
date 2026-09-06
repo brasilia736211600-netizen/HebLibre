@@ -29,6 +29,7 @@ public final class ProfileTransferCodec {
     private static final int GCM_TAG_BYTES = 16;
     private static final int KEY_BITS = 256;
     private static final int PBKDF2_ITERATIONS = 120_000;
+    private static final int MAX_CONTENT_CHARS = 8 * 1024 * 1024;
 
     private ProfileTransferCodec() {
     }
@@ -99,10 +100,13 @@ public final class ProfileTransferCodec {
     }
 
     public static TransferPackage decode(String content, String password) {
-        if (content == null) {
-            throw new IllegalArgumentException("Empty profile export");
+        if (content == null || content.length() > MAX_CONTENT_CHARS) {
+            throw new IllegalArgumentException("Profile export is too large");
         }
         String normalized = content.trim();
+        if (normalized.length() > MAX_CONTENT_CHARS) {
+            throw new IllegalArgumentException("Profile export is too large");
+        }
         List<String> lines = lines(normalized);
         if (lines.isEmpty()) {
             throw new IllegalArgumentException("Empty profile export");
@@ -141,6 +145,9 @@ public final class ProfileTransferCodec {
     }
 
     private static TransferPackage decodePlain(String content) {
+        if (content.length() > MAX_CONTENT_CHARS) {
+            throw new IllegalArgumentException("Profile export is too large");
+        }
         List<String> lines = lines(content);
         if (lines.isEmpty() || !PLAIN_HEADER.equals(lines.get(0))) {
             throw new IllegalArgumentException("Unsupported profile export format");
