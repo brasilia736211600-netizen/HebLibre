@@ -11,10 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Keeps browser/privacy preferences local to a profile while preserving the existing
- * global SharedPreferences contract used throughout the app.
- */
+/** Keeps browser/privacy preferences local to a profile while preserving legacy global consumers. */
 public final class ProfilePreferencesStore {
     private static final String STORE_PREFIX = "profile_preferences_";
     private static final String INITIALIZED_KEY = "__profile_preferences_initialized";
@@ -28,7 +25,7 @@ public final class ProfilePreferencesStore {
 
     private static final Set<String> STRING_KEYS = new HashSet<>(Arrays.asList(
             "favoriteURL", "sp_search_engine", "sp_search_engine_custom", "userAgent",
-            "preferred_language", "ua_preset", "proxy_url", "proxy_bypass"
+            "userAgent_custom", "preferred_language", "ua_preset", "proxy_url", "proxy_bypass"
     ));
 
     private ProfilePreferencesStore() { }
@@ -91,6 +88,7 @@ public final class ProfilePreferencesStore {
                 if ("proxy_url".equals(key)) raw = ProfileProxyPolicy.normalize(raw);
                 if ("proxy_bypass".equals(key)) raw = ProfileProxyPolicy.normalizeBypassRules(raw);
                 if ("ua_preset".equals(key) && !raw.isEmpty() && !ProfileUserAgentPolicy.isValidPreset(raw)) continue;
+                if ("userAgent_custom".equals(key)) raw = ProfileUserAgentPolicy.normalizeCustom(raw);
                 editor.putString(key, raw);
             }
         }
@@ -121,6 +119,7 @@ public final class ProfilePreferencesStore {
             if ("proxy_url".equals(key)) value = ProfileProxyPolicy.normalize(value);
             if ("proxy_bypass".equals(key)) value = ProfileProxyPolicy.normalizeBypassRules(value);
             if ("ua_preset".equals(key) && !value.isEmpty() && !ProfileUserAgentPolicy.isValidPreset(value)) value = "";
+            if ("userAgent_custom".equals(key)) value = ProfileUserAgentPolicy.normalizeCustom(value);
             editor.putString(key, value);
         }
         editor.apply();
