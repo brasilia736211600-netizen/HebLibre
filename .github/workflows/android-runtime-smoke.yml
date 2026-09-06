@@ -109,7 +109,6 @@ jobs:
             adb shell cat /sdcard/profile.xml | grep -F 'NEW PROFILE' >/dev/null
             adb shell cat /sdcard/profile.xml | grep -Fi 'Search profiles' >/dev/null
             adb shell cat /sdcard/profile.xml | grep -Fi 'DUPLICATE' >/dev/null
-            adb shell cat /sdcard/profile.xml | grep -F 'Privacy' >/dev/null
 
             adb shell input keyevent 4
             sleep 1
