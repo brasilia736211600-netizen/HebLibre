@@ -183,6 +183,33 @@ public class RecordAction {
         database.insert(RecordUnit.TABLE_TAB, null, values);
     }
 
+    public List<Record> listTab() {
+        List<Record> list = new ArrayList<>();
+        Cursor cursor = database.query(
+                RecordUnit.TABLE_TAB,
+                new String[] {
+                        RecordUnit.COLUMN_TITLE,
+                        RecordUnit.COLUMN_URL,
+                        RecordUnit.COLUMN_TIME
+                },
+                RecordUnit.COLUMN_PROFILE_ID + "=?",
+                new String[] {activeProfileId()},
+                null,
+                null,
+                RecordUnit.COLUMN_TIME + " asc"
+        );
+        if (cursor == null) {
+            return list;
+        }
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            list.add(getRecord(cursor));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return list;
+    }
+
     //History
 
     public void addHistory(Record record) {
