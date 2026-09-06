@@ -8,7 +8,7 @@ on:
 
 jobs:
   probe:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-slim
     steps:
       - name: Prove runner execution
         run: |
