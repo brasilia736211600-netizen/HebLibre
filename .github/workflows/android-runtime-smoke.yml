@@ -119,7 +119,7 @@ jobs:
             adb shell uiautomator dump /sdcard/profile-transfer.xml >/dev/null
             adb shell cat /sdcard/profile-transfer.xml | grep -Fi 'Import profile' >/dev/null
 
-            adb shell am start -W -n de.baumann.browser/.activity.ProfilePrivacyStatusActivity
+            adb shell am start -W -n de.baumann.browser/.activity.ProfilePrivacyStatusSmokeActivity
             sleep 2
             test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfilePrivacyStatusActivity')" -ge 1
             adb shell uiautomator dump /sdcard/privacy.xml >/dev/null
