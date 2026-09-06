@@ -3,11 +3,8 @@
 ## Repository
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
-## Current branch checkpoint
-`41a9d0d3c4f01f5c798726933f956a7613debcf3` — diagnostic cleanup commit removing the temporary runner probe.
-
 ## Current application/source checkpoint
-`086c7038faa5bbb8b9d2a24f392edfe9cce3a07e` — latest application/test checkpoint; no application changes were introduced during the Actions investigation.
+`086c7038faa5bbb8b9d2a24f392edfe9cce3a07e` — latest application/test checkpoint; subsequent commits are documentation/diagnostic cleanup only.
 
 ## Completed bounded work
 - Profile metadata/catalog and deterministic profile identity policy.
@@ -20,29 +17,29 @@
 - Profile transfer includes only a curated typed browser/privacy preference snapshot; WebView cookies/storage/login secrets are excluded.
 - Transactional HISTORY/BOOKMARK/TAB import with rollback and cleanup of a newly-created profile on failure.
 - Profile deletion purges app-owned records/privacy-rule rows transactionally and clears profile-local preference namespace.
-- Active-profile deletion immediately switches the legacy global preference view back to `default` and requests the existing restart flag.
+- Active-profile deletion immediately switches the legacy global preference view back to `default` and requests the existing restart behavior.
 - Transfer parser rejects input larger than 8 MiB before structural parsing/decryption.
 - Runtime smoke harnesses are debug-only and exercise production Profile Manager and Profile Transfer screens without exporting those production activities.
 - Runtime smoke coverage includes database migration, profile isolation, rollback, privacy-rule isolation/purge, preference isolation, preference transfer, and active-profile deletion/default-preference restoration.
 - JVM transfer test coverage includes oversized-input rejection.
 
 ## Verification
-- SOURCE-VERIFIED: current application/test checkpoint `086c7038...` remains the basis of the release candidate; branch now also contains documentation/diagnostic commits only.
-- TEST-VERIFIED: fresh hosted execution is blocked before the first step; no new hosted test pass exists after `086c...`.
-- CI-VERIFIED: current Unit Tests run `34002495828` failed before steps; rerunning its exact Job produced new Job `101530040003`, which again failed with `steps: null`. A minimal `ubuntu-latest` probe also failed before any step. This classifies the blocker as runner/Actions startup, not an app test failure.
-- ANDROID-RUNTIME-VERIFIED: historical baseline Runtime Smoke run `33994758706` passed on an older checkpoint; current profile/preference hardening is not yet runtime-verified.
-- ARTIFACT-VERIFIED: historical Actions artifact `9977732103` was downloaded and checksum-verified locally; it is not current release evidence.
-- DOCUMENTED: GitHub issue #3 records the runner blocker and exact evidence.
+- SOURCE-VERIFIED: application/test checkpoint `086c7038...` remains the release-candidate source basis.
+- TEST-VERIFIED: no fresh hosted test pass exists after `086c...` because current Jobs terminate before the first step.
+- CI-VERIFIED: current Unit run `34002495828` failed before steps; exact Job rerun `101530040003` also failed before steps. A minimal `ubuntu-latest` probe failed the same way. This is not evidence of an application/test failure.
+- ANDROID-RUNTIME-VERIFIED: historical baseline Runtime Smoke `33994758706` passed on an older checkpoint only.
+- ARTIFACT-VERIFIED: historical Actions artifact `9977732103` was downloaded and checksum-verified; it is not the current build.
+- DOCUMENTED: GitHub Issue #3 and this context record the blocker.
 
 ## Actions blocker diagnosis
-- Last known successful Runtime Smoke run: `33994758706` (2026-09-05), with normal step execution through emulator smoke.
-- Latest Unit Tests run `34002495828` on head `4a8ad46...` had Job `101403747772` fail before any step.
-- Rerun of the same job created Job `101530040003`; it also failed before any step.
-- The temporary minimal `ubuntu-latest` probe failed before any step as well, ruling out a single workflow YAML path or only the `ubuntu-24.04` label.
-- No job logs are available for these pre-step failures.
-- The symptom matches recent GitHub Community reports of private repositories with fresh standard-runner jobs failing before runner assignment and producing zero-step/no-log runs.
-- The temporary diagnostic probe has been removed; production workflows were not rewritten to chase runner labels.
-- GitHub-side Actions scheduling/dispatch recovery is currently required. Repository YAML cannot repair a runner that never starts.
+A decisive repository-level comparison is now available:
+- `HebLibre` is **private**.
+- The user's other repository `WebLibre` is **public** and its Actions job `101530796057` successfully received a GitHub-hosted runner and executed multiple steps on 2026-09-06.
+- GitHub's current documentation states that standard GitHub-hosted runners are free for public repositories, while private repositories consume the account's included Actions minutes. GitHub Free includes 2,000 standard-runner minutes/month; when the quota is exhausted and there is no valid payment method, further usage is blocked.
+- HebLibre's pre-step failures therefore now have **private-repository Actions quota/billing state as the leading cause**, rather than a runner-label or application defect.
+- The diagnosis is highly consistent with the observed `steps: null` / no-log failures, but billing usage cannot be read through the available connector, so it is not yet mathematically proven from account telemetry.
+- A secondary possibility remains an Actions backend/repository state defect; no more runner-label probes should be added unless new evidence requires one.
+- The temporary runner probe has been removed.
 
 ## Architectural boundaries
 - WebView profile binding must occur before WebView use/navigation.
@@ -69,17 +66,14 @@
 - `D-032`: deleting the active profile immediately restores the default preference view and requests restart.
 - `D-033`: transfer input is bounded to 8 MiB before parsing/decryption.
 - `D-034`: temporary runner probes are diagnostic only and must not remain in the release branch.
+- `D-035`: WebLibre public vs HebLibre private comparison makes private Actions quota/billing the leading runner-blocker hypothesis; no privacy change is made automatically.
 
 ## Current blockers / release gate
-1. GitHub-hosted runner allocation/startup is preventing fresh Unit and Runtime Smoke execution.
-2. No current x86_64 APK artifact exists from Actions until a runner executes.
-3. Fresh emulator verification is pending; historical baseline smoke is the only runtime evidence.
-4. Physical-device validation remains pending for the final consolidated build.
+1. Verify/restore the GitHub Actions allowance for the **private** HebLibre repository (or attach a valid payment method / upgrade as appropriate). Do not expose the repository publicly merely to bypass CI billing without an explicit decision.
+2. Once a runner starts, execute Unit Tests and Android Runtime Smoke on the latest branch descendant.
+3. Download the current x86_64 APK + checksum and independently verify the digest.
+4. Execute one consolidated emulator smoke gate, then final physical-device validation.
 5. Per-profile proxy and complete WebView storage isolation remain intentionally deferred.
 
 ## Next executable slice
-1. Keep application source stable at `086c7038...` unless a concrete source defect is found.
-2. When a GitHub-hosted runner successfully starts, run Unit Tests and Runtime Smoke against the latest branch descendant.
-3. Download the exact current APK + checksum and independently verify the digest.
-4. Use that artifact for one consolidated emulator smoke gate, then one physical-device validation gate.
-5. Only after that evidence chain classify the build as release-ready.
+Keep application source stable at `086c7038...`. The next technical action after Actions access is restored is the consolidated current build/test/smoke chain; no further runner-label experimentation is warranted.
