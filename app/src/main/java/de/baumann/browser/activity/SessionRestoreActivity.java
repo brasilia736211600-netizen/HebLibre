@@ -15,7 +15,7 @@ import de.baumann.browser.database.Record;
 import de.baumann.browser.unit.ProfileProxyController;
 import de.baumann.browser.unit.ProfileSessionStore;
 
-/** Launcher trampoline that configures the active profile before restoring its tab set. */
+/** Launcher and external-intent trampoline that configures the active profile before BrowserActivity. */
 public class SessionRestoreActivity extends Activity {
 
     private static final long RESTORE_STEP_DELAY_MS = 250L;
@@ -23,13 +23,39 @@ public class SessionRestoreActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (moveExistingBrowserTaskToFront()) {
+        if (!isExternalBrowserIntent() && moveExistingBrowserTaskToFront()) {
             finish();
             return;
         }
         ProfileProxyController.applyActiveProfileProxy(this, new Runnable() {
-            @Override public void run() { restoreOrLaunch(); }
+            @Override public void run() { routeAfterProxySetup(); }
         });
+    }
+
+    private boolean isExternalBrowserIntent() {
+        String action = getIntent().getAction();
+        return Intent.ACTION_VIEW.equals(action) || Intent.ACTION_SEND.equals(action)
+                || Intent.ACTION_WEB_SEARCH.equals(action);
+    }
+
+    private void routeAfterProxySetup() {
+        if (Intent.ACTION_VIEW.equals(getIntent().getAction())
+                && getIntent().getData() != null) {
+            launchBrowser(new Intent(getIntent()));
+            finish();
+            return;
+        }
+        if (Intent.ACTION_SEND.equals(getIntent().getAction())) {
+            launchBrowser(new Intent(getIntent()));
+            finish();
+            return;
+        }
+        if (Intent.ACTION_WEB_SEARCH.equals(getIntent().getAction())) {
+            launchBrowser(new Intent(getIntent()));
+            finish();
+            return;
+        }
+        restoreOrLaunch();
     }
 
     private void restoreOrLaunch() {
