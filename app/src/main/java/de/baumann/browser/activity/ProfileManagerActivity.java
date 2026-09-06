@@ -3,6 +3,8 @@ package de.baumann.browser.activity;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -20,11 +22,13 @@ import androidx.webkit.WebViewFeature;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import de.baumann.browser.R;
 import de.baumann.browser.database.RecordAction;
 import de.baumann.browser.unit.ProfileCatalogPolicy;
 import de.baumann.browser.unit.ProfileCatalogStore;
+import de.baumann.browser.unit.ProfileCatalogViewPolicy;
 import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfileMetadata;
 import de.baumann.browser.unit.ProfilePreferencesStore;
@@ -33,6 +37,8 @@ import de.baumann.browser.unit.ProfilePreferencesStore;
 public class ProfileManagerActivity extends AppCompatActivity {
 
     private LinearLayout profileList;
+    private EditText searchField;
+    private ProfileCatalogViewPolicy.SortMode sortMode = ProfileCatalogViewPolicy.SortMode.NAME;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +64,51 @@ public class ProfileManagerActivity extends AppCompatActivity {
         root.addView(capability, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
+        searchField = new EditText(this);
+        searchField.setSingleLine(true);
+        searchField.setInputType(InputType.TYPE_CLASS_TEXT);
+        searchField.setHint("Search profiles, groups, tags, notes");
+        searchField.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                renderProfiles();
+            }
+            @Override public void afterTextChanged(Editable s) { }
+        });
+        root.addView(searchField, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        LinearLayout controls = new LinearLayout(this);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+
+        Button sort = new Button(this);
+        sort.setText("Sort: name");
+        sort.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                if (sortMode == ProfileCatalogViewPolicy.SortMode.NAME) {
+                    sortMode = ProfileCatalogViewPolicy.SortMode.GROUP;
+                    sort.setText("Sort: group");
+                } else if (sortMode == ProfileCatalogViewPolicy.SortMode.GROUP) {
+                    sortMode = ProfileCatalogViewPolicy.SortMode.ID;
+                    sort.setText("Sort: id");
+                } else {
+                    sortMode = ProfileCatalogViewPolicy.SortMode.NAME;
+                    sort.setText("Sort: name");
+                }
+                renderProfiles();
+            }
+        });
+        controls.addView(sort, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        Button clearSearch = new Button(this);
+        clearSearch.setText("Clear");
+        clearSearch.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) { searchField.setText(""); }
+        });
+        controls.addView(clearSearch, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        root.addView(controls, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
         ScrollView scroll = new ScrollView(this);
         profileList = new LinearLayout(this);
         profileList.setOrientation(LinearLayout.VERTICAL);
@@ -81,7 +132,9 @@ public class ProfileManagerActivity extends AppCompatActivity {
     private void renderProfiles() {
         profileList.removeAllViews();
         String activeId = ProfileCatalogStore.getActiveProfileId(this);
-        List<ProfileMetadata> profiles = ProfileCatalogStore.load(this);
+        String query = searchField == null ? "" : searchField.getText().toString();
+        List<ProfileMetadata> profiles = ProfileCatalogViewPolicy.filterAndSort(
+                ProfileCatalogStore.load(this), query, activeId, sortMode);
         for (final ProfileMetadata profile : profiles) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
@@ -91,7 +144,8 @@ public class ProfileManagerActivity extends AppCompatActivity {
 
             TextView label = new TextView(this);
             String marker = profile.getId().equals(activeId) ? getString(R.string.profile_active) + "  " : "";
-            label.setText(marker + profile.getName() + "  (" + profile.getId() + ")");
+            label.setText(marker + profile.getName() + "  (" + profile.getId() + ")"
+                    + (profile.getGroup().trim().isEmpty() ? "" : "  [" + profile.getGroup() + "]"));
             label.setGravity(Gravity.CENTER_VERTICAL);
             label.setMaxLines(2);
             row.addView(label, new LinearLayout.LayoutParams(0, dp(56), 1f));
@@ -103,6 +157,14 @@ public class ProfileManagerActivity extends AppCompatActivity {
                 @Override public void onClick(View v) { showEditor(profile); }
             });
             row.addView(edit, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(56)));
+
+            Button duplicate = new Button(this);
+            duplicate.setText("Duplicate");
+            duplicate.setContentDescription("Duplicate profile template");
+            duplicate.setOnClickListener(new View.OnClickListener() {
+                @Override public void onClick(View v) { duplicateProfile(profile); }
+            });
+            row.addView(duplicate, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(56)));
 
             Button delete = new Button(this);
             delete.setText(R.string.profile_delete);
@@ -125,7 +187,6 @@ public class ProfileManagerActivity extends AppCompatActivity {
         String normalizedTarget = ProfileIdentity.normalize(profileId);
         if (current.equals(normalizedTarget)) return;
 
-        // Persist every profile-local browser/privacy preference before changing the active namespace.
         ProfilePreferencesStore.saveGlobalToProfile(this, current);
         ProfilePreferencesStore.initializeProfile(this, normalizedTarget);
         if (!ProfileCatalogStore.setActiveProfileId(this, normalizedTarget)) return;
@@ -135,6 +196,45 @@ public class ProfileManagerActivity extends AppCompatActivity {
                 .edit().putInt("restart_changed", 1).apply();
         Toast.makeText(this, R.string.profile_switched, Toast.LENGTH_LONG).show();
         renderProfiles();
+    }
+
+    /** Creates a clean-data profile template by copying metadata and profile-owned settings only. */
+    private void duplicateProfile(ProfileMetadata source) {
+        String sourceId = ProfileIdentity.normalize(source.getId());
+        String newId = uniqueDuplicateId(sourceId);
+        String newName = source.getName().trim().isEmpty() ? sourceId + " copy" : source.getName().trim() + " copy";
+        ProfileMetadata duplicate = new ProfileMetadata(
+                newId,
+                newName,
+                source.getColor(),
+                source.getIcon(),
+                source.getNotes(),
+                new ArrayList<>(source.getTags()),
+                source.getGroup());
+        Map<String, String> settings = ProfilePreferencesStore.snapshot(this, sourceId);
+        if (!ProfileCatalogStore.save(this, duplicate)) {
+            Toast.makeText(this, "Unable to duplicate profile", Toast.LENGTH_LONG).show();
+            return;
+        }
+        ProfilePreferencesStore.restore(this, newId, settings);
+        Toast.makeText(this, "Profile template duplicated without history or tabs", Toast.LENGTH_LONG).show();
+        renderProfiles();
+    }
+
+    private String uniqueDuplicateId(String sourceId) {
+        String base = sourceId + "-copy";
+        if (base.length() > ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH) {
+            base = base.substring(0, ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH);
+        }
+        String candidate = base;
+        int suffix = 2;
+        while (ProfileCatalogStore.get(this, candidate) != null) {
+            String suffixText = "-" + suffix++;
+            int maxBaseLength = ProfileCatalogPolicy.MAX_PROFILE_ID_LENGTH - suffixText.length();
+            String shortened = base.length() > maxBaseLength ? base.substring(0, maxBaseLength) : base;
+            candidate = shortened + suffixText;
+        }
+        return candidate;
     }
 
     private void showEditor(final ProfileMetadata existing) {
