@@ -100,12 +100,17 @@ jobs:
             test -n "$(adb shell pidof de.baumann.browser)"
             adb shell uiautomator dump /sdcard/browser.xml >/dev/null
             adb shell cat /sdcard/browser.xml | grep -F 'Example Domain' >/dev/null
+
             adb shell am start -W -n de.baumann.browser/.activity.ProfileManagerSmokeActivity
             sleep 3
             test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileManagerActivity')" -ge 1
             adb shell uiautomator dump /sdcard/profile.xml >/dev/null
             adb shell cat /sdcard/profile.xml | grep -F 'Default' >/dev/null
             adb shell cat /sdcard/profile.xml | grep -F 'NEW PROFILE' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -Fi 'Search profiles' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -Fi 'DUPLICATE' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -Fi 'Privacy &amp; storage status' >/dev/null || adb shell cat /sdcard/profile.xml | grep -Fi 'Privacy & storage status' >/dev/null
+
             adb shell input keyevent 4
             sleep 1
             adb shell am start -W -n de.baumann.browser/.activity.ProfileTransferSmokeActivity
@@ -113,6 +118,19 @@ jobs:
             test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileTransferActivity')" -ge 1
             adb shell uiautomator dump /sdcard/profile-transfer.xml >/dev/null
             adb shell cat /sdcard/profile-transfer.xml | grep -Fi 'Import profile' >/dev/null
+
+            adb shell am start -W -n de.baumann.browser/.activity.ProfilePrivacyStatusActivity
+            sleep 2
+            test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfilePrivacyStatusActivity')" -ge 1
+            adb shell uiautomator dump /sdcard/privacy.xml >/dev/null
+            adb shell cat /sdcard/privacy.xml | grep -Fi 'Privacy &amp; storage' >/dev/null || adb shell cat /sdcard/privacy.xml | grep -Fi 'Privacy & storage' >/dev/null
+            adb shell cat /sdcard/privacy.xml | grep -F 'Active profile:' >/dev/null
+            adb shell cat /sdcard/privacy.xml | grep -F 'History:' >/dev/null
+            adb shell cat /sdcard/privacy.xml | grep -F 'Bookmarks:' >/dev/null
+            adb shell cat /sdcard/privacy.xml | grep -F 'Saved tabs:' >/dev/null
+
+            adb shell input keyevent 4
+            sleep 1
             adb shell input keyevent 4
             sleep 1
             adb shell am force-stop de.baumann.browser
