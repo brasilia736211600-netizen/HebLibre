@@ -17,7 +17,7 @@ public final class ProfileLanguagePolicy {
         if (normalized.isEmpty() || normalized.length() > 64 || !normalized.matches(TAG_PATTERN)) {
             return "";
         }
-        return normalized.toLowerCase(Locale.ROOT).replaceFirst("^([a-z]{2,8})(?:-([a-z0-9]{1,8}))?", "$1-$2").replaceAll("-$", "");
+        return normalized.toLowerCase(Locale.ROOT);
     }
 
     public static boolean isValid(String value) {
