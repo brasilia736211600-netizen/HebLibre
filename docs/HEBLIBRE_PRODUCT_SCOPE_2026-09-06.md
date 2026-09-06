@@ -4,18 +4,12 @@
 This is the durable product baseline and supersedes older chat-only feature lists.
 
 ## Product objective
-Build a lightweight, fast, reliable Android browser combining high-value capabilities from mature social/multi-profile browsers and legitimate privacy lessons from leading anti-detect browsers. The result should emphasize profile isolation, persistent sessions, privacy, profile-aware settings, social-web productivity, diagnostics, and reliable recovery while remaining local-first and low-overhead.
+Build a lightweight, fast, reliable Android browser combining high-value capabilities from mature social/multi-profile browsers and legitimate privacy lessons from leading anti-detect browsers. The result should emphasize profile isolation, persistent sessions, privacy, profile-aware settings, social-web productivity, diagnostics, defensive security testing, and reliable recovery while remaining local-first and low-overhead.
 
 ## Research baseline
 The public GitHub Social Browser README describes multi-tabs/multi-users, autofill, ad blocking, popup/redirect blocking, safety mode, script-manager support, multi-profile UA/proxy settings, data import/export, password protection, multi-user access, password manager, shortcuts, cloud sync, downloads, video preview, translation, zoom/sound controls, PDF export/reader, page editing, proxy/UA managers, download manager, bookmarks, developer tools, session sharing, resource blocking, and planned permissions/site notes/API/RSS tooling. Its repository is proprietary, so it is a feature reference only: https://github.com/absunstar/Social-Browser-Releases
 
-For anti-detect references, current 2026 comparisons repeatedly surface these ten products: Multilogin, GoLogin, AdsPower, Dolphin Anty, Octo Browser, Kameleo, Incogniton, MoreLogin, Undetectable, and Nstbrowser. Across these products, recurring useful patterns include reusable profiles, profile organization, persistent cookies/sessions, import/export, profile-specific settings, proxy association/status, automation/API integration, local/cloud profile storage, team/profile management, and profile consistency workflows.
-
-Research references: 
-- https://www.conbersa.ai/blog/top-antidetect-browsers
-- https://www.morelogin.com/blog/11-best-antidetect-browsers
-- https://www.sparkproxy.io/blog/top-12-antidetect-browsers-best-tools-for-privacy-multi-account-management
-- https://www.conbersa.ai/blog/best-antidetect-browsers
+For anti-detect references, current 2026 comparisons repeatedly surface these ten products: Multilogin, GoLogin, AdsPower, Dolphin Anty, Octo Browser, Kameleo, Incogniton, MoreLogin, Undetectable, and Nstbrowser. Across these products, recurring useful patterns include reusable profiles, profile organization, persistent cookies/sessions, import/export, profile-specific settings, proxy association/status, automation/API integration, local/cloud profile storage, team/profile management, and profile consistency workflows. These patterns are requirements signals, not an instruction to reproduce detection-evasion behavior.
 
 ## HebLibre feature disposition
 ### Implement / extend
@@ -36,6 +30,8 @@ Research references:
 - Download manager and bookmark/history/profile transfer improvements.
 - Optional local-first synchronization/export.
 - Fingerprint exposure audit as read-only diagnostics.
+- Local red-team test harness for systems the operator owns or is explicitly authorized to assess.
+- Detection-rule test scenarios that exercise controlled combinations of browser, storage, permission, network, and behavioral signals against a test endpoint.
 
 ### Architectural before implementation
 - Genuine per-profile proxy/request routing.
@@ -45,33 +41,51 @@ Research references:
 - Android-compatible extension/script runtime.
 - Multi-window and PWA support.
 - Reader Mode with safe extraction architecture.
+- Lab-only profile mutation/simulation APIs, restricted to local/authorized test environments and never exposed as a general site-evasion mechanism.
 
-### Explicitly excluded
-- Fraud-system or anti-fraud detection bypass.
+### Explicitly excluded from the general-purpose browser
+- Fraud-system or anti-fraud detection bypass against third-party services.
 - Identity-verification bypass or ban evasion.
-- Fingerprint spoofing whose primary purpose is detection evasion.
-- Behavioral stealth/bot-detection evasion.
+- Fingerprint spoofing whose primary purpose is defeating a third-party detection system.
+- Behavioral stealth/bot-detection evasion against third-party services.
 - Covert credential/session theft or session sharing.
 
-These exclusions apply even when the stated intent is education or research. The safe substitute is observability, measurement, diagnostics, and a local defensive test harness rather than an evasion engine.
+The stated purpose of a feature does not change this boundary. HebLibre can support the same security research objective through controlled red-team testing, observability, measurement, and test-environment simulation rather than shipping an operational evasion engine.
+
+## Authorized security-testing model
+HebLibre's security-testing track is divided into two clearly separated surfaces:
+
+1. **Production browser surface:** privacy, profile isolation, diagnostics, and legitimate user controls. No operational third-party anti-fraud bypass.
+2. **Authorized laboratory surface:** a local or explicitly configured test endpoint owned by the operator, with recorded test cases, controlled signal permutations, detection-rule assertions, and evidence capture. The lab can model how a detector reacts to inconsistent or manipulated signals without turning those capabilities into a portable third-party evasion feature.
+
+The lab should report:
+- Which detector rule fired.
+- Which observable signal contributed to the decision.
+- Expected versus observed classification.
+- False positive / false negative status.
+- Reproducibility metadata.
+- Timestamp, profile/test-case identifier, and test artifact hash where practical.
 
 ## Educational defensive-testing capability
 HebLibre may include a **Privacy & Fingerprint Exposure Audit**. It is read-only and can report browser/device surfaces observable by a site, such as WebView/platform version, UA, language, viewport, timezone/locale as exposed by the platform, storage/cookie capability, selected WebGL/canvas/audio API availability, permission state, and legitimate network/security indicators.
 
-HebLibre may also ship a local diagnostic/test page that helps a site owner inspect these signals and validate detection rules. It must not forge or randomize them for evasion.
+HebLibre may also ship a local diagnostic/test page that helps a site owner inspect these signals and validate detection rules. It must not forge or randomize them for evasion on arbitrary third-party sites.
 
 ## Priority roadmap
 ### P0 — release quality
 Fast startup, low memory overhead, lifecycle/crash hardening, deterministic tests, GitHub-hosted emulator Smoke, consolidated APK/artifact verification, then physical-device validation only at the final coherent checkpoint.
 
 ### P1 — profile/workspace
-Complete profile metadata and fast switching, profile-local curated settings/data/session boundaries, profile consistency diagnostics, secure transfer/duplication, and site permission controls.
+Complete profile metadata and fast switching, profile-local curated settings/data/session boundaries, profile consistency diagnostics, secure transfer/duplication, site permission controls, and site-data management.
 
 ### P1 — privacy/social web
 Maintain HTTPS-only, GPC, Save-Data, tracking cleanup, screenshot protection, media/geolocation guards, cookie controls, Safe Browsing, and profile-aware whitelists; strengthen popup/redirect/resource controls with measurable tests; add lightweight social-web utilities.
 
 ### P2 — advanced privacy/developer tooling
 Storage/site-data viewer and clearer, permission editor, resource diagnostics, fingerprint exposure audit, page analyzer/API tester, and optional script/resource controls only with a genuine runtime seam.
+
+### P2 — authorized red-team laboratory
+Build a local/explicitly authorized detector-test harness with scenario definitions, detector-result assertions, signal inventories, reproducible reports, and regression suites for the user's own future site/platform.
 
 ### P3 — architecture candidates
 Complete WebView partitioning, true per-profile network routing, DoH, full WebRTC privacy, extensions, multi-window, PWA, Reader Mode, and QR/barcode features where justified.
@@ -83,4 +97,4 @@ Prefer existing Android/WebView APIs, avoid heavy dependencies and always-on ser
 Do not repeatedly build/install APKs during feature development. Finish source review and deterministic tests, then CI, then one consolidated emulator pass. Physical-device validation comes last for the complete feature checkpoint.
 
 ## Last updated
-2026-09-06 — scope refreshed from the Social Browser GitHub feature inventory and a cross-market 2026 anti-detect comparison; evasion/bypass functionality is excluded and replaced by defensive diagnostics/testing.
+2026-09-06 — scope refreshed from the Social Browser GitHub feature inventory and a 2026 anti-detect comparison set. The requested security-testing objective is retained through an explicitly authorized red-team laboratory track; general-purpose third-party anti-fraud/verification bypass remains excluded.
