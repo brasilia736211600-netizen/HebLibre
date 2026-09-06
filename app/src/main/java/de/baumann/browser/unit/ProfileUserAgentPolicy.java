@@ -22,13 +22,18 @@ public final class ProfileUserAgentPolicy {
 
     public static String resolvePreset(String presetId) {
         if (presetId == null) return "";
-        String key = presetId.trim().toLowerCase(Locale.ROOT);
-        String value = PRESETS.get(key);
+        String value = PRESETS.get(presetId.trim().toLowerCase(Locale.ROOT));
         return value == null ? "" : value;
     }
 
     public static boolean isValidPreset(String presetId) {
         return !resolvePreset(presetId).isEmpty();
+    }
+
+    public static String normalizeCustom(String value) {
+        if (value == null) return "";
+        String normalized = value.trim();
+        return normalized.length() > 1024 ? "" : normalized;
     }
 
     public static Map<String, String> presets() {
