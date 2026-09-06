@@ -93,7 +93,7 @@ public class ProfileTransferCodecTest {
     }
 
     @Test
-    public void rejectsShortPasswordUnknownHeaderAndInvalidEncryptedDimensions() {
+    public void rejectsShortPasswordUnknownHeaderInvalidDimensionsAndOversizeInput() {
         try {
             ProfileTransferCodec.encodeEncrypted(metadata(), null, null, null, "short");
             throw new AssertionError("Expected short password to fail");
@@ -131,6 +131,17 @@ public class ProfileTransferCodecTest {
         try {
             ProfileTransferCodec.decode(badIv, "correct-horse");
             throw new AssertionError("Expected invalid IV length to fail");
+        } catch (IllegalArgumentException expected) {
+            // expected
+        }
+
+        StringBuilder oversized = new StringBuilder(8 * 1024 * 1024 + 1);
+        while (oversized.length() <= 8 * 1024 * 1024) {
+            oversized.append('x');
+        }
+        try {
+            ProfileTransferCodec.decode(oversized.toString(), null);
+            throw new AssertionError("Expected oversized profile export to fail");
         } catch (IllegalArgumentException expected) {
             // expected
         }
