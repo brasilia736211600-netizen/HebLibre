@@ -41,37 +41,30 @@ public final class ProfileSitePermissionStore {
                 "profile_site_permissions_" + suffix, Context.MODE_PRIVATE);
     }
 
-    private static String encodedOrigin(String origin) {
-        return Base64.encodeToString(
-                ProfileSitePermissionPolicy.normalizeOrigin(origin).getBytes(StandardCharsets.UTF_8),
-                Base64.NO_WRAP | Base64.URL_SAFE);
+    private static String ruleKey(String origin, String permission) {
+        String key = ProfileSitePermissionPolicy.key(origin, permission);
+        return key.isEmpty() ? "" : PREFIX + key;
     }
 
     public static String getDecision(Context context, String profileId, String origin, String permission) {
-        String key = ProfileSitePermissionPolicy.key(origin, permission);
+        String key = ruleKey(origin, permission);
         if (key.isEmpty()) return "";
-        return preferences(context, profileId).getString(PREFIX + key, "");
+        return preferences(context, profileId).getString(key, "");
     }
 
     public static boolean setDecision(Context context, String profileId, String origin,
                                       String permission, String decision) {
         String normalizedOrigin = ProfileSitePermissionPolicy.normalizeOrigin(origin);
-        if (normalizedOrigin.isEmpty()
-                || !ProfileSitePermissionPolicy.isPermission(permission)
-                || !ProfileSitePermissionPolicy.isDecision(decision)) {
-            return false;
-        }
-        String key = PREFIX + permission + "|" + encodedOrigin(normalizedOrigin);
+        String key = ruleKey(normalizedOrigin, permission);
+        if (key.isEmpty() || !ProfileSitePermissionPolicy.isDecision(decision)) return false;
         preferences(context, profileId).edit().putString(key, decision).apply();
         return true;
     }
 
     public static void clearDecision(Context context, String profileId, String origin, String permission) {
-        String normalizedOrigin = ProfileSitePermissionPolicy.normalizeOrigin(origin);
-        if (normalizedOrigin.isEmpty() || !ProfileSitePermissionPolicy.isPermission(permission)) return;
-        preferences(context, profileId).edit()
-                .remove(PREFIX + permission + "|" + encodedOrigin(normalizedOrigin))
-                .apply();
+        String key = ruleKey(origin, permission);
+        if (key.isEmpty()) return;
+        preferences(context, profileId).edit().remove(key).apply();
     }
 
     public static List<Entry> list(Context context, String profileId) {
@@ -85,12 +78,9 @@ public final class ProfileSitePermissionStore {
             if (separator <= 0 || separator == remainder.length() - 1) continue;
             String permission = remainder.substring(0, separator);
             if (!ProfileSitePermissionPolicy.isPermission(permission)) continue;
-            try {
-                String encoded = remainder.substring(separator + 1);
-                String origin = new String(Base64.decode(encoded, Base64.NO_WRAP | Base64.URL_SAFE), StandardCharsets.UTF_8);
-                origin = ProfileSitePermissionPolicy.normalizeOrigin(origin);
-                if (!origin.isEmpty()) result.add(new Entry(origin, permission, value));
-            } catch (IllegalArgumentException ignored) { }
+            String origin = remainder.substring(separator + 1);
+            origin = ProfileSitePermissionPolicy.normalizeOrigin(origin);
+            if (!origin.isEmpty()) result.add(new Entry(origin, permission, value));
         }
         Collections.sort(result, new Comparator<Entry>() {
             @Override public int compare(Entry a, Entry b) {
