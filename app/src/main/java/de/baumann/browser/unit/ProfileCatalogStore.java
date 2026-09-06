@@ -90,7 +90,6 @@ public final class ProfileCatalogStore {
             return true;
         }
 
-        // Persist the outgoing profile before switching the active namespace.
         ProfilePreferencesStore.saveGlobalToProfile(context, currentId);
         ProfilePreferencesStore.initializeProfile(context, normalizedId);
         preferences.edit().putString(ProfileIdentity.PREFERENCE_KEY, normalizedId).apply();
@@ -142,6 +141,7 @@ public final class ProfileCatalogStore {
             return false;
         }
 
+        boolean deletingActive = normalizedId.equals(getActiveProfileId(context));
         List<String> remaining = ProfileCatalogPolicy.remove(ids, normalizedId);
         SharedPreferences.Editor editor = preferences.edit()
                 .putString(CATALOG_IDS_KEY, ProfileCatalogPolicy.serialize(remaining))
@@ -152,11 +152,15 @@ public final class ProfileCatalogStore {
                 .remove(key(normalizedId, KEY_TAGS))
                 .remove(key(normalizedId, KEY_GROUP));
 
-        if (normalizedId.equals(getActiveProfileId(context))) {
-            editor.putString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID);
+        if (deletingActive) {
+            editor.putString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID)
+                    .putInt("restart_changed", 1);
         }
         editor.apply();
         ProfilePreferencesStore.deleteProfile(context, normalizedId);
+        if (deletingActive) {
+            ProfilePreferencesStore.loadProfileToGlobal(context, ProfileIdentity.DEFAULT_PROFILE_ID);
+        }
         return true;
     }
 
