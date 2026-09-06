@@ -46,7 +46,8 @@ public final class ProfilePreferencesStore {
             "favoriteURL",
             "sp_search_engine",
             "sp_search_engine_custom",
-            "userAgent"
+            "userAgent",
+            "preferred_language"
     ));
 
     private ProfilePreferencesStore() {
@@ -131,7 +132,11 @@ public final class ProfilePreferencesStore {
                     editor.putBoolean(key, Boolean.parseBoolean(raw));
                 }
             } else if (STRING_KEYS.contains(key) && value.startsWith("s:")) {
-                editor.putString(key, value.substring(2));
+                if ("preferred_language".equals(key)) {
+                    editor.putString(key, ProfileLanguagePolicy.normalize(value.substring(2)));
+                } else {
+                    editor.putString(key, value.substring(2));
+                }
             }
         }
         editor.putBoolean(INITIALIZED_KEY, true).apply();
@@ -160,7 +165,10 @@ public final class ProfilePreferencesStore {
             editor.putBoolean(key, global.getBoolean(key, defaultBoolean(key)));
         }
         for (String key : STRING_KEYS) {
-            editor.putString(key, global.getString(key, defaultString(key)));
+            String value = global.getString(key, defaultString(key));
+            editor.putString(key, "preferred_language".equals(key)
+                    ? ProfileLanguagePolicy.normalize(value)
+                    : value);
         }
         editor.apply();
     }
@@ -188,6 +196,7 @@ public final class ProfilePreferencesStore {
             case "sp_search_engine_custom":
                 return "https://www.ecosia.org/search?q=";
             case "userAgent":
+            case "preferred_language":
             default:
                 return "";
         }
