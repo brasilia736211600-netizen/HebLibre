@@ -38,9 +38,7 @@ public final class ProfileCatalogStore {
         ensureDefaultMetadata(preferences);
 
         List<ProfileMetadata> profiles = new ArrayList<>();
-        for (String id : ids) {
-            profiles.add(read(preferences, id));
-        }
+        for (String id : ids) profiles.add(read(preferences, id));
         return Collections.unmodifiableList(profiles);
     }
 
@@ -49,8 +47,7 @@ public final class ProfileCatalogStore {
         SharedPreferences preferences = preferences(context);
         ensureCatalog(preferences);
         if (!ProfileCatalogPolicy.contains(
-                ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null)),
-                normalizedId)) {
+                ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null)), normalizedId)) {
             return null;
         }
         return read(preferences, normalizedId);
@@ -59,11 +56,9 @@ public final class ProfileCatalogStore {
     public static String getActiveProfileId(Context context) {
         SharedPreferences preferences = preferences(context);
         ensureCatalog(preferences);
-        List<String> ids = ProfileCatalogPolicy.deserialize(
-                preferences.getString(CATALOG_IDS_KEY, null));
-        String active = ProfileCatalogPolicy.selectActiveId(
-                ids, preferences.getString(
-                        ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
+        List<String> ids = ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null));
+        String active = ProfileCatalogPolicy.selectActiveId(ids, preferences.getString(
+                ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
         if (!active.equals(preferences.getString(ProfileIdentity.PREFERENCE_KEY, null))) {
             preferences.edit().putString(ProfileIdentity.PREFERENCE_KEY, active).apply();
         }
@@ -71,25 +66,18 @@ public final class ProfileCatalogStore {
     }
 
     public static boolean setActiveProfileId(Context context, String profileId) {
-        if (context == null) {
-            return false;
-        }
+        if (context == null) return false;
         SharedPreferences preferences = preferences(context);
         ensureCatalog(preferences);
         String normalizedId = ProfileIdentity.normalize(profileId);
-        List<String> ids = ProfileCatalogPolicy.deserialize(
-                preferences.getString(CATALOG_IDS_KEY, null));
-        if (!ProfileCatalogPolicy.contains(ids, normalizedId)) {
-            return false;
-        }
-
-        String currentId = ProfileIdentity.normalize(
-                preferences.getString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
+        List<String> ids = ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null));
+        if (!ProfileCatalogPolicy.contains(ids, normalizedId)) return false;
+        String currentId = ProfileIdentity.normalize(preferences.getString(
+                ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID));
         if (currentId.equals(normalizedId)) {
             ProfilePreferencesStore.initializeProfile(context, normalizedId);
             return true;
         }
-
         ProfilePreferencesStore.saveGlobalToProfile(context, currentId);
         ProfilePreferencesStore.initializeProfile(context, normalizedId);
         preferences.edit().putString(ProfileIdentity.PREFERENCE_KEY, normalizedId).apply();
@@ -99,15 +87,10 @@ public final class ProfileCatalogStore {
 
     public static boolean save(Context context, ProfileMetadata metadata) {
         if (context == null || metadata == null
-                || !ProfileCatalogPolicy.isValidUserProfileId(metadata.getId())) {
-            return false;
-        }
-
+                || !ProfileCatalogPolicy.isValidUserProfileId(metadata.getId())) return false;
         SharedPreferences preferences = preferences(context);
         List<String> ids = ProfileCatalogPolicy.add(
-                ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null)),
-                metadata.getId());
-
+                ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null)), metadata.getId());
         SharedPreferences.Editor editor = preferences.edit()
                 .putString(CATALOG_IDS_KEY, ProfileCatalogPolicy.serialize(ids))
                 .putString(key(metadata.getId(), KEY_NAME), metadata.getName())
@@ -115,9 +98,7 @@ public final class ProfileCatalogStore {
                 .putString(key(metadata.getId(), KEY_ICON), metadata.getIcon())
                 .putString(key(metadata.getId(), KEY_NOTES), metadata.getNotes())
                 .putString(key(metadata.getId(), KEY_GROUP), metadata.getGroup());
-
-        editor.putStringSet(key(metadata.getId(), KEY_TAGS),
-                new LinkedHashSet<>(metadata.getTags()));
+        editor.putStringSet(key(metadata.getId(), KEY_TAGS), new LinkedHashSet<>(metadata.getTags()));
         editor.apply();
         ProfilePreferencesStore.initializeProfile(context, metadata.getId());
         ensureDefaultMetadata(preferences);
@@ -125,21 +106,12 @@ public final class ProfileCatalogStore {
     }
 
     public static boolean delete(Context context, String profileId) {
-        if (context == null) {
-            return false;
-        }
-
+        if (context == null) return false;
         String normalizedId = ProfileIdentity.normalize(profileId);
-        if (!ProfileCatalogPolicy.isValidUserProfileId(normalizedId)) {
-            return false;
-        }
-
+        if (!ProfileCatalogPolicy.isValidUserProfileId(normalizedId)) return false;
         SharedPreferences preferences = preferences(context);
-        List<String> ids = ProfileCatalogPolicy.deserialize(
-                preferences.getString(CATALOG_IDS_KEY, null));
-        if (!ids.contains(normalizedId)) {
-            return false;
-        }
+        List<String> ids = ProfileCatalogPolicy.deserialize(preferences.getString(CATALOG_IDS_KEY, null));
+        if (!ids.contains(normalizedId)) return false;
 
         boolean deletingActive = normalizedId.equals(getActiveProfileId(context));
         List<String> remaining = ProfileCatalogPolicy.remove(ids, normalizedId);
@@ -151,27 +123,21 @@ public final class ProfileCatalogStore {
                 .remove(key(normalizedId, KEY_NOTES))
                 .remove(key(normalizedId, KEY_TAGS))
                 .remove(key(normalizedId, KEY_GROUP));
-
         if (deletingActive) {
             editor.putString(ProfileIdentity.PREFERENCE_KEY, ProfileIdentity.DEFAULT_PROFILE_ID)
                     .putInt("restart_changed", 1);
         }
         editor.apply();
         ProfilePreferencesStore.deleteProfile(context, normalizedId);
-        if (deletingActive) {
-            ProfilePreferencesStore.loadProfileToGlobal(context, ProfileIdentity.DEFAULT_PROFILE_ID);
-        }
+        ProfileSitePermissionStore.clearProfile(context, normalizedId);
+        if (deletingActive) ProfilePreferencesStore.loadProfileToGlobal(context, ProfileIdentity.DEFAULT_PROFILE_ID);
         return true;
     }
 
     private static ProfileMetadata read(SharedPreferences preferences, String id) {
-        if (ProfileIdentity.DEFAULT_PROFILE_ID.equals(id)) {
-            ensureDefaultMetadata(preferences);
-        }
-        Set<String> storedTags = preferences.getStringSet(
-                key(id, KEY_TAGS), Collections.<String>emptySet());
-        return new ProfileMetadata(
-                id,
+        if (ProfileIdentity.DEFAULT_PROFILE_ID.equals(id)) ensureDefaultMetadata(preferences);
+        Set<String> storedTags = preferences.getStringSet(key(id, KEY_TAGS), Collections.<String>emptySet());
+        return new ProfileMetadata(id,
                 preferences.getString(key(id, KEY_NAME), id),
                 preferences.getString(key(id, KEY_COLOR), ""),
                 preferences.getString(key(id, KEY_ICON), ""),
@@ -184,9 +150,7 @@ public final class ProfileCatalogStore {
         String serialized = preferences.getString(CATALOG_IDS_KEY, null);
         List<String> ids = ProfileCatalogPolicy.deserialize(serialized);
         String normalized = ProfileCatalogPolicy.serialize(ids);
-        if (!normalized.equals(serialized)) {
-            preferences.edit().putString(CATALOG_IDS_KEY, normalized).apply();
-        }
+        if (!normalized.equals(serialized)) preferences.edit().putString(CATALOG_IDS_KEY, normalized).apply();
         ensureDefaultMetadata(preferences);
     }
 
@@ -198,8 +162,7 @@ public final class ProfileCatalogStore {
                     .putString(key(ProfileIdentity.DEFAULT_PROFILE_ID, KEY_COLOR), "")
                     .putString(key(ProfileIdentity.DEFAULT_PROFILE_ID, KEY_ICON), "")
                     .putString(key(ProfileIdentity.DEFAULT_PROFILE_ID, KEY_NOTES), "")
-                    .putStringSet(key(ProfileIdentity.DEFAULT_PROFILE_ID, KEY_TAGS),
-                            Collections.<String>emptySet())
+                    .putStringSet(key(ProfileIdentity.DEFAULT_PROFILE_ID, KEY_TAGS), Collections.<String>emptySet())
                     .putString(key(ProfileIdentity.DEFAULT_PROFILE_ID, KEY_GROUP), "")
                     .apply();
         }
@@ -209,7 +172,5 @@ public final class ProfileCatalogStore {
         return PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
     }
 
-    private static String key(String profileId, String suffix) {
-        return KEY_PREFIX + profileId + suffix;
-    }
+    private static String key(String profileId, String suffix) { return KEY_PREFIX + profileId + suffix; }
 }
