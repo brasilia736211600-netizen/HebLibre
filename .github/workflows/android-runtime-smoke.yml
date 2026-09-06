@@ -12,6 +12,7 @@ on:
       - 'gradlew'
       - 'gradle/**'
       - '.github/workflows/android-runtime-smoke.yml'
+      - '.github/test_support/**'
   workflow_dispatch:
 
 jobs:
@@ -78,6 +79,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Start local CONNECT proxy
+        run: |
+          set -eux
+          python3 -u .github/test_support/http_connect_proxy.py 18080 > /tmp/heblibre-connect-proxy.log 2>&1 &
+          echo $! > /tmp/heblibre-connect-proxy.pid
+          for i in $(seq 1 20); do
+            if grep -F 'LISTEN 0.0.0.0:18080' /tmp/heblibre-connect-proxy.log >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          grep -F 'LISTEN 0.0.0.0:18080' /tmp/heblibre-connect-proxy.log >/dev/null
+
       - name: Run app on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -127,6 +141,35 @@ jobs:
             adb shell cat /sdcard/privacy.xml | grep -F 'Bookmarks:' >/dev/null
             adb shell cat /sdcard/privacy.xml | grep -F 'Saved tabs:' >/dev/null
 
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileNetworkSettingsActivity
+            sleep 2
+            test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileNetworkSettingsActivity')" -ge 1
+            adb shell uiautomator dump /sdcard/network.xml >/dev/null
+            adb shell cat /sdcard/network.xml | grep -Fi 'Proxy URL' >/dev/null
+            adb shell cat /sdcard/network.xml | grep -Fi 'User-Agent' >/dev/null
+            adb shell cat /sdcard/network.xml | grep -Fi 'Preferred language' >/dev/null
+            adb shell input keyevent 4
+            sleep 1
+
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileProxySmokeActivity
+            sleep 1
+            adb shell am force-stop de.baumann.browser
+            adb shell monkey -p de.baumann.browser 1
+            sleep 10
+            adb shell am start -W -a android.intent.action.VIEW -d 'https://example.com' -p de.baumann.browser
+            sleep 10
+            test -n "$(adb shell pidof de.baumann.browser)"
+            adb shell uiautomator dump /sdcard/proxy-browser.xml >/dev/null
+            adb shell cat /sdcard/proxy-browser.xml | grep -F 'Example Domain' >/dev/null
+            grep -F 'CONNECT example.com:443' /tmp/heblibre-connect-proxy.log >/dev/null
+
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileProxySmokeActivity --es mode clear
+            sleep 1
+            adb shell am force-stop de.baumann.browser
+            adb shell monkey -p de.baumann.browser 1
+            sleep 8
+            test -n "$(adb shell pidof de.baumann.browser)"
+
             adb shell am start -W -n de.baumann.browser/.activity.ProfileSitePermissionsSmokeActivity
             sleep 2
             test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileSitePermissionsActivity')" -ge 1
@@ -134,8 +177,6 @@ jobs:
             adb shell cat /sdcard/site-permissions.xml | grep -F 'Site permissions' >/dev/null
             adb shell cat /sdcard/site-permissions.xml | grep -F 'Add rule' >/dev/null
 
-            adb shell input keyevent 4
-            sleep 1
             adb shell input keyevent 4
             sleep 1
             adb shell input keyevent 4
@@ -148,3 +189,9 @@ jobs:
             adb shell cat /sdcard/restored.xml | grep -F 'Example Domain' >/dev/null
             ! adb shell logcat -d -t 5000 | grep -E 'FATAL EXCEPTION|Process: de\.baumann\.browser' >/dev/null
             adb shell dumpsys package de.baumann.browser | grep -E 'versionName|versionCode|enabled=' || true
+
+      - name: Stop local CONNECT proxy
+        if: always()
+        run: |
+          if [ -f /tmp/heblibre-connect-proxy.pid ]; then kill "$(cat /tmp/heblibre-connect-proxy.pid)" 2>/dev/null || true; fi
+          cat /tmp/heblibre-connect-proxy.log 2>/dev/null || true
