@@ -12,9 +12,10 @@ import android.os.Looper;
 import java.util.List;
 
 import de.baumann.browser.database.Record;
+import de.baumann.browser.unit.ProfileProxyController;
 import de.baumann.browser.unit.ProfileSessionStore;
 
-/** Launcher trampoline that restores the last profile-local tab set once. */
+/** Launcher trampoline that configures the active profile before restoring its tab set. */
 public class SessionRestoreActivity extends Activity {
 
     private static final long RESTORE_STEP_DELAY_MS = 250L;
@@ -26,7 +27,9 @@ public class SessionRestoreActivity extends Activity {
             finish();
             return;
         }
-        restoreOrLaunch();
+        ProfileProxyController.applyActiveProfileProxy(this, new Runnable() {
+            @Override public void run() { restoreOrLaunch(); }
+        });
     }
 
     private void restoreOrLaunch() {
@@ -42,13 +45,10 @@ public class SessionRestoreActivity extends Activity {
             final Record tab = tabs.get(i);
             final boolean last = i == tabs.size() - 1;
             handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
+                @Override public void run() {
                     Intent view = new Intent(Intent.ACTION_VIEW, Uri.parse(tab.getURL()));
                     launchBrowser(view);
-                    if (last) {
-                        finish();
-                    }
+                    if (last) finish();
                 }
             }, i * RESTORE_STEP_DELAY_MS);
         }
@@ -56,16 +56,12 @@ public class SessionRestoreActivity extends Activity {
 
     private boolean moveExistingBrowserTaskToFront() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        if (manager == null) {
-            return false;
-        }
+        if (manager == null) return false;
         ComponentName browser = new ComponentName(this, BrowserActivity.class);
         List<ActivityManager.AppTask> tasks = manager.getAppTasks();
         for (ActivityManager.AppTask task : tasks) {
             ActivityManager.RecentTaskInfo info = task.getTaskInfo();
-            if (info == null) {
-                continue;
-            }
+            if (info == null) continue;
             if (browser.equals(info.topActivity) || browser.equals(info.baseActivity)) {
                 task.moveToFront();
                 return true;
