@@ -1,7 +1,6 @@
 package de.baumann.browser.unit;
 
-import android.net.Uri;
-
+import java.net.URI;
 import java.util.Locale;
 
 /** Pure decision/normalization rules for profile-local site permissions. */
@@ -18,7 +17,7 @@ public final class ProfileSitePermissionPolicy {
         String value = origin.trim();
         if (value.isEmpty()) return "";
         try {
-            Uri uri = Uri.parse(value);
+            URI uri = new URI(value);
             String scheme = uri.getScheme();
             String host = uri.getHost();
             if (scheme == null || host == null) return "";
@@ -28,7 +27,7 @@ public final class ProfileSitePermissionPolicy {
             int port = uri.getPort();
             if (port > 0) return scheme + "://" + host + ":" + port;
             return scheme + "://" + host;
-        } catch (RuntimeException ignored) {
+        } catch (Exception ignored) {
             return "";
         }
     }
