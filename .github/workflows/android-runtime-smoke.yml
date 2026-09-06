@@ -127,6 +127,15 @@ jobs:
             adb shell cat /sdcard/privacy.xml | grep -F 'Bookmarks:' >/dev/null
             adb shell cat /sdcard/privacy.xml | grep -F 'Saved tabs:' >/dev/null
 
+            adb shell am start -W -n de.baumann.browser/.activity.ProfileSitePermissionsSmokeActivity
+            sleep 2
+            test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileSitePermissionsActivity')" -ge 1
+            adb shell uiautomator dump /sdcard/site-permissions.xml >/dev/null
+            adb shell cat /sdcard/site-permissions.xml | grep -F 'Site permissions' >/dev/null
+            adb shell cat /sdcard/site-permissions.xml | grep -F 'Add rule' >/dev/null
+
+            adb shell input keyevent 4
+            sleep 1
             adb shell input keyevent 4
             sleep 1
             adb shell input keyevent 4
