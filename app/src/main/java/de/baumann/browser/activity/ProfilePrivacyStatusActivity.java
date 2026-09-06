@@ -12,14 +12,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.webkit.WebViewFeature;
 
-import java.util.List;
 import java.util.Map;
 
 import de.baumann.browser.database.RecordAction;
-import de.baumann.browser.database.RecordUnit;
 import de.baumann.browser.unit.ProfileCatalogStore;
 import de.baumann.browser.unit.ProfileIdentity;
 import de.baumann.browser.unit.ProfilePreferencesStore;
+import de.baumann.browser.unit.RecordUnit;
 
 /** Transparent, local-only diagnostics for the active profile's privacy/storage state. */
 public class ProfilePrivacyStatusActivity extends AppCompatActivity {
