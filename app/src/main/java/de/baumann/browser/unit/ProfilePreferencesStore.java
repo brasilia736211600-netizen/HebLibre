@@ -39,7 +39,8 @@ public final class ProfilePreferencesStore {
             "sp_ad_block",
             "sp_javascript",
             "sp_cookies",
-            "sp_remote"
+            "sp_remote",
+            "block_popups"
     ));
 
     private static final Set<String> STRING_KEYS = new HashSet<>(Arrays.asList(
@@ -181,6 +182,7 @@ public final class ProfilePreferencesStore {
             case "https_only":
             case "gpc_enabled":
             case "sp_location":
+            case "block_popups":
                 return false;
             default:
                 return true;
