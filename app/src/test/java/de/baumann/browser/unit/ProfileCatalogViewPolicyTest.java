@@ -11,9 +11,7 @@ import static org.junit.Assert.assertEquals;
 public class ProfileCatalogViewPolicyTest {
 
     private ProfileMetadata profile(String id, String name, String group, String notes, String... tags) {
-        return new ProfileMetadata(
-                id, name, "", "", notes,
-                Arrays.asList(tags), group);
+        return new ProfileMetadata(id, name, "", "", notes, Arrays.asList(tags), group);
     }
 
     @Test
@@ -60,9 +58,7 @@ public class ProfileCatalogViewPolicyTest {
 
     private List<String> ids(List<ProfileMetadata> profiles) {
         java.util.ArrayList<String> result = new java.util.ArrayList<>();
-        for (ProfileMetadata profile : profiles) {
-            result.add(profile.getId());
-        }
+        for (ProfileMetadata profile : profiles) result.add(profile.getId());
         return result;
     }
 }
