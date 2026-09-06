@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HebLibre Fingerprint Exposure Audit</title>
+<style>
+body{font-family:sans-serif;margin:16px;line-height:1.45}h1{font-size:22px}h2{font-size:17px;margin-top:20px}pre{white-space:pre-wrap;word-break:break-word;background:#f4f4f4;padding:10px;border-radius:6px}.ok{font-weight:600}.warn{font-weight:600}small{display:block;margin-top:20px}
+</style>
+</head>
+<body>
+<h1>Fingerprint exposure audit</h1>
+<p>This is a local, read-only diagnostic. It reports signals a website can observe; it does not modify or randomize them.</p>
+<h2>Browser signals</h2><pre id="browser"></pre>
+<h2>Display and locale</h2><pre id="display"></pre>
+<h2>Graphics/API surface</h2><pre id="graphics"></pre>
+<h2>Storage and permissions surface</h2><pre id="storage"></pre>
+<small>No network request is made by this page.</small>
+<script>
+(function(){
+  function safe(fn){try{return fn()}catch(e){return "unavailable"}}
+  var ua=navigator.userAgent||"";
+  var lang=navigator.language||"";
+  var langs=safe(function(){return (navigator.languages||[]).join(", ")});
+  var tz=safe(function(){return Intl.DateTimeFormat().resolvedOptions().timeZone});
+  var browser=[
+    "User-Agent: "+ua,
+    "Language: "+lang,
+    "Languages: "+langs,
+    "Online: "+navigator.onLine,
+    "Hardware concurrency: "+(navigator.hardwareConcurrency||"unknown"),
+    "Device memory (if exposed): "+(navigator.deviceMemory||"unknown"),
+    "Platform: "+(navigator.platform||"unknown")
+  ].join("\n");
+  var display=[
+    "Viewport: "+window.innerWidth+"x"+window.innerHeight,
+    "Screen: "+screen.width+"x"+screen.height,
+    "Pixel ratio: "+window.devicePixelRatio,
+    "Color depth: "+screen.colorDepth,
+    "Timezone: "+tz
+  ].join("\n");
+  var canvas=safe(function(){var c=document.createElement("canvas");return !!(c.getContext&&c.getContext("2d"))});
+  var webgl=safe(function(){var c=document.createElement("canvas");return !!(c.getContext("webgl")||c.getContext("experimental-webgl"))});
+  var glRenderer=safe(function(){var c=document.createElement("canvas"), gl=c.getContext("webgl")||c.getContext("experimental-webgl"); if(!gl)return "unavailable"; var ext=gl.getExtension("WEBGL_debug_renderer_info"); return ext ? (gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)+" / "+gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : "renderer detail not exposed"});
+  var graphics=[
+    "Canvas 2D available: "+canvas,
+    "WebGL available: "+webgl,
+    "WebGL vendor/renderer: "+glRenderer,
+    "WebAssembly: "+(typeof WebAssembly!=="undefined"),
+    "WebSocket: "+(typeof WebSocket!=="undefined")
+  ].join("\n");
+  var storage=[
+    "localStorage: "+safe(function(){return !!window.localStorage}),
+    "sessionStorage: "+safe(function(){return !!window.sessionStorage}),
+    "IndexedDB: "+(typeof indexedDB!=="undefined"),
+    "Notifications API: "+(typeof Notification!=="undefined"),
+    "Geolocation API: "+(typeof navigator.geolocation!=="undefined"),
+    "MediaDevices API: "+(navigator.mediaDevices ? "available" : "unavailable")
+  ].join("\n");
+  document.getElementById("browser").textContent=browser;
+  document.getElementById("display").textContent=display;
+  document.getElementById("graphics").textContent=graphics;
+  document.getElementById("storage").textContent=storage;
+})();
+</script>
+</body>
+</html>
