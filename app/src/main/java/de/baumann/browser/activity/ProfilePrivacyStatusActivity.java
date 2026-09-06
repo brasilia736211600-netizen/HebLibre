@@ -1,6 +1,7 @@
 package de.baumann.browser.activity;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -34,6 +35,16 @@ public class ProfilePrivacyStatusActivity extends AppCompatActivity {
         root.setOrientation(LinearLayout.VERTICAL);
         int padding = dp(12);
         root.setPadding(padding, padding, padding, padding);
+
+        Button network = new Button(this);
+        network.setText("Network & identity");
+        network.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                startActivity(new Intent(ProfilePrivacyStatusActivity.this, ProfileNetworkSettingsActivity.class));
+            }
+        });
+        root.addView(network, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         ScrollView scroll = new ScrollView(this);
         content = new LinearLayout(this);
@@ -131,14 +142,11 @@ public class ProfilePrivacyStatusActivity extends AppCompatActivity {
                 }).show();
     }
 
-    private void addCount(String label, int count) {
-        add(label + ": " + count, false);
-    }
+    private void addCount(String label, int count) { add(label + ": " + count, false); }
 
     private void addProtection(Map<String, String> settings, String key, String label) {
         String value = settings.get(key);
-        boolean enabled = "b:true".equals(value);
-        add(label + ": " + (enabled ? "ON" : "OFF"), false);
+        add(label + ": " + ("b:true".equals(value) ? "ON" : "OFF"), false);
     }
 
     private void add(String text, boolean heading) {
@@ -150,7 +158,5 @@ public class ProfilePrivacyStatusActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
     }
 
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
-    }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
