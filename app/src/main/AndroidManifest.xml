@@ -68,6 +68,7 @@
         <activity android:name="de.baumann.browser.activity.ProfileTransferActivity" android:label="@string/profile_transfer_title" android:theme="@style/AppTheme"/>
         <activity android:name="de.baumann.browser.activity.ProfilePrivacyStatusActivity" android:label="Privacy &amp; storage" android:theme="@style/AppTheme" />
         <activity android:name="de.baumann.browser.activity.ProfileSitePermissionsActivity" android:label="Site permissions" android:theme="@style/AppTheme" />
+        <activity android:name="de.baumann.browser.activity.FingerprintAuditActivity" android:label="Fingerprint exposure audit" android:theme="@style/AppTheme" />
 
         <activity android:name="de.baumann.browser.activity.Whitelist_AdBlock" android:label="@string/setting_title_whitelist" android:theme="@style/AppTheme"/>
         <activity android:name="de.baumann.browser.activity.Whitelist_Javascript" android:label="@string/setting_title_whitelistJS" android:theme="@style/AppTheme"/>
