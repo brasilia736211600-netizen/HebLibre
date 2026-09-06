@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" tools:node="remove" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
 
     <application
@@ -67,6 +68,7 @@
         <activity android:name="de.baumann.browser.activity.ProfileManagerActivity" android:label="@string/profile_manager_title" android:theme="@style/AppTheme"/>
         <activity android:name="de.baumann.browser.activity.ProfileTransferActivity" android:label="@string/profile_transfer_title" android:theme="@style/AppTheme"/>
         <activity android:name="de.baumann.browser.activity.ProfilePrivacyStatusActivity" android:label="Privacy &amp; storage" android:theme="@style/AppTheme" />
+        <activity android:name="de.baumann.browser.activity.ProfileNetworkSettingsActivity" android:label="Network &amp; identity" android:theme="@style/AppTheme" />
         <activity android:name="de.baumann.browser.activity.ProfileSitePermissionsActivity" android:label="Site permissions" android:theme="@style/AppTheme" />
         <activity android:name="de.baumann.browser.activity.FingerprintAuditActivity" android:label="Fingerprint exposure audit" android:theme="@style/AppTheme" />
 
