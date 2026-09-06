@@ -3,11 +3,11 @@
 ## Repository
 `brasilia736211600-netizen/HebLibre` — active branch `genspark-dev`.
 
-## Current source checkpoint
-`086c7038faa5bbb8b9d2a24f392edfe9cce3a07e` — latest application/test checkpoint.
+## Current branch checkpoint
+`41a9d0d3c4f01f5c798726933f956a7613debcf3` — diagnostic cleanup commit removing the temporary runner probe.
 
-## Latest documented branch checkpoint
-`e7c27c4ff252dd5ac50a08f730c3451579c4a865` — latest state synchronization commit.
+## Current application/source checkpoint
+`086c7038faa5bbb8b9d2a24f392edfe9cce3a07e` — latest application/test checkpoint; no application changes were introduced during the Actions investigation.
 
 ## Completed bounded work
 - Profile metadata/catalog and deterministic profile identity policy.
@@ -21,18 +21,28 @@
 - Transactional HISTORY/BOOKMARK/TAB import with rollback and cleanup of a newly-created profile on failure.
 - Profile deletion purges app-owned records/privacy-rule rows transactionally and clears profile-local preference namespace.
 - Active-profile deletion immediately switches the legacy global preference view back to `default` and requests the existing restart flag.
-- Transfer parser now rejects input larger than 8 MiB before structural parsing/decryption.
+- Transfer parser rejects input larger than 8 MiB before structural parsing/decryption.
 - Runtime smoke harnesses are debug-only and exercise production Profile Manager and Profile Transfer screens without exporting those production activities.
 - Runtime smoke coverage includes database migration, profile isolation, rollback, privacy-rule isolation/purge, preference isolation, preference transfer, and active-profile deletion/default-preference restoration.
 - JVM transfer test coverage includes oversized-input rejection.
 
 ## Verification
-- SOURCE-VERIFIED: current source checkpoint `086c7038...` is present on `genspark-dev`.
-- TEST-VERIFIED: fresh hosted execution is unavailable because current GitHub Actions jobs terminate before the first step; test sources are present and inspected.
-- CI-VERIFIED: current Unit, Runtime Smoke, and Runner Probe jobs consistently fail before runner steps; this is classified as runner allocation/startup, not an application failure.
+- SOURCE-VERIFIED: current application/test checkpoint `086c7038...` remains the basis of the release candidate; branch now also contains documentation/diagnostic commits only.
+- TEST-VERIFIED: fresh hosted execution is blocked before the first step; no new hosted test pass exists after `086c...`.
+- CI-VERIFIED: current Unit Tests run `34002495828` failed before steps; rerunning its exact Job produced new Job `101530040003`, which again failed with `steps: null`. A minimal `ubuntu-latest` probe also failed before any step. This classifies the blocker as runner/Actions startup, not an app test failure.
 - ANDROID-RUNTIME-VERIFIED: historical baseline Runtime Smoke run `33994758706` passed on an older checkpoint; current profile/preference hardening is not yet runtime-verified.
-- ARTIFACT-VERIFIED: historical Actions artifact `9977732103` was downloaded through the official GitHub artifact API; its APK SHA-256 was independently verified against the embedded checksum. It is not current release evidence.
-- Current exact artifact download is blocked until a runner executes the current build.
+- ARTIFACT-VERIFIED: historical Actions artifact `9977732103` was downloaded and checksum-verified locally; it is not current release evidence.
+- DOCUMENTED: GitHub issue #3 records the runner blocker and exact evidence.
+
+## Actions blocker diagnosis
+- Last known successful Runtime Smoke run: `33994758706` (2026-09-05), with normal step execution through emulator smoke.
+- Latest Unit Tests run `34002495828` on head `4a8ad46...` had Job `101403747772` fail before any step.
+- Rerun of the same job created Job `101530040003`; it also failed before any step.
+- The temporary minimal `ubuntu-latest` probe failed before any step as well, ruling out a single workflow YAML path or only the `ubuntu-24.04` label.
+- No job logs are available for these pre-step failures.
+- The symptom matches recent GitHub Community reports of private repositories with fresh standard-runner jobs failing before runner assignment and producing zero-step/no-log runs.
+- The temporary diagnostic probe has been removed; production workflows were not rewritten to chase runner labels.
+- GitHub-side Actions scheduling/dispatch recovery is currently required. Repository YAML cannot repair a runner that never starts.
 
 ## Architectural boundaries
 - WebView profile binding must occur before WebView use/navigation.
@@ -45,7 +55,7 @@
 - Do not emulate profile proxying with process-global `ProxyController`.
 - Do not change SSL override, cleartext, backup, or file-origin/DOM-storage semantics without explicit architectural decision.
 
-## Recent durable decisions
+## Durable decisions
 - `D-022`: complete profile-local settings require explicit ownership/migration coverage.
 - `D-023`: no process-global ProxyController emulation for profile proxying.
 - `D-024`: pre-step Actions failures are runner/workflow initialization failures.
@@ -58,15 +68,18 @@
 - `D-031`: curated browser/privacy settings use a typed compatibility bridge; UI-only preferences remain global.
 - `D-032`: deleting the active profile immediately restores the default preference view and requests restart.
 - `D-033`: transfer input is bounded to 8 MiB before parsing/decryption.
+- `D-034`: temporary runner probes are diagnostic only and must not remain in the release branch.
 
-## Current blockers / gate
+## Current blockers / release gate
 1. GitHub-hosted runner allocation/startup is preventing fresh Unit and Runtime Smoke execution.
 2. No current x86_64 APK artifact exists from Actions until a runner executes.
-3. Fresh emulator verification is therefore pending; historical baseline smoke is the only runtime evidence.
+3. Fresh emulator verification is pending; historical baseline smoke is the only runtime evidence.
 4. Physical-device validation remains pending for the final consolidated build.
 5. Per-profile proxy and complete WebView storage isolation remain intentionally deferred.
 
 ## Next executable slice
-1. On the first Actions run that actually assigns a runner, verify Unit Tests and Runtime Smoke on `086c7038...` or its latest descendant.
-2. Download the exact APK + checksum from that run, independently verify checksum, and run the consolidated emulator gate once.
-3. Then perform the final physical-device validation gate; only after that classify the build as release-ready.
+1. Keep application source stable at `086c7038...` unless a concrete source defect is found.
+2. When a GitHub-hosted runner successfully starts, run Unit Tests and Runtime Smoke against the latest branch descendant.
+3. Download the exact current APK + checksum and independently verify the digest.
+4. Use that artifact for one consolidated emulator smoke gate, then one physical-device validation gate.
+5. Only after that evidence chain classify the build as release-ready.
