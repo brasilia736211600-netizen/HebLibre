@@ -23,6 +23,8 @@ For anti-detect references, current 2026 comparisons repeatedly surface these te
 - Multi-user site access through normal isolated profile/session workflows.
 - Profile health and consistency diagnostics.
 - Privacy & Storage status and per-profile data clearing.
+- Profile-local Network & Identity settings: real WebView proxy configuration for the active profile (applied before browser startup), proxy bypass rules, curated UA presets, custom UA, and preferred language.
+- Fast profile handoff through restart-aware network configuration; proxy settings are not hot-swapped into existing WebViews.
 - Site permission editor.
 - Measurable popup/redirect/resource controls.
 - Lightweight social-web utilities: selection, downloads where permitted, previews, translation, zoom/sound, PDF/print, notes.
@@ -34,7 +36,8 @@ For anti-detect references, current 2026 comparisons repeatedly surface these te
 - Detection-rule test scenarios that exercise controlled combinations of browser, storage, permission, network, and behavioral signals against a test endpoint.
 
 ### Architectural before implementation
-- Genuine per-profile proxy/request routing.
+- Dynamic per-WebView/per-tab proxy switching inside one live process; AndroidX WebKit `ProxyController` is process-wide, so HebLibre intentionally applies the active profile's proxy at process startup instead of pretending it supports hot per-WebView routing.
+- Automatic timezone derivation from proxy geolocation; current WebView APIs do not expose a reliable profile-local timezone override or proxy-location resolver, so no external geolocation service is silently added.
 - Complete WebView disk/storage partitioning beyond currently supported APIs.
 - DoH/custom resolver architecture.
 - Full WebRTC privacy architecture.
@@ -76,7 +79,7 @@ HebLibre may also ship a local diagnostic/test page that helps a site owner insp
 Fast startup, low memory overhead, lifecycle/crash hardening, deterministic tests, GitHub-hosted emulator Smoke, consolidated APK/artifact verification, then physical-device validation only at the final coherent checkpoint.
 
 ### P1 — profile/workspace
-Complete profile metadata and fast switching, profile-local curated settings/data/session boundaries, profile consistency diagnostics, secure transfer/duplication, site permission controls, and site-data management.
+Complete profile metadata and fast switching, profile-local curated settings/data/session boundaries, profile consistency diagnostics, secure transfer/duplication, site permission controls, network/identity controls, and site-data management.
 
 ### P1 — privacy/social web
 Maintain HTTPS-only, GPC, Save-Data, tracking cleanup, screenshot protection, media/geolocation guards, cookie controls, Safe Browsing, and profile-aware whitelists; strengthen popup/redirect/resource controls with measurable tests; add lightweight social-web utilities.
@@ -88,7 +91,7 @@ Storage/site-data viewer and clearer, permission editor, resource diagnostics, f
 Build a local/explicitly authorized detector-test harness with scenario definitions, detector-result assertions, signal inventories, reproducible reports, and regression suites for the user's own future site/platform.
 
 ### P3 — architecture candidates
-Complete WebView partitioning, true per-profile network routing, DoH, full WebRTC privacy, extensions, multi-window, PWA, Reader Mode, and QR/barcode features where justified.
+Complete WebView partitioning, dynamic per-WebView network routing where platform support permits, DoH, full WebRTC privacy, extensions, multi-window, PWA, Reader Mode, and QR/barcode features where justified.
 
 ## Lightweight engineering constraints
 Prefer existing Android/WebView APIs, avoid heavy dependencies and always-on services, keep core browsing local-first, and never claim isolation/capability that is not source/runtime verified. Every material feature must document startup, memory, storage, battery, dependency and lifecycle impact.
@@ -97,4 +100,4 @@ Prefer existing Android/WebView APIs, avoid heavy dependencies and always-on ser
 Do not repeatedly build/install APKs during feature development. Finish source review and deterministic tests, then CI, then one consolidated emulator pass. Physical-device validation comes last for the complete feature checkpoint.
 
 ## Last updated
-2026-09-06 — scope refreshed from the Social Browser GitHub feature inventory and a 2026 anti-detect comparison set. The requested security-testing objective is retained through an explicitly authorized red-team laboratory track; general-purpose third-party anti-fraud/verification bypass remains excluded.
+2026-09-06 — scope refreshed from the Social Browser GitHub feature inventory, 2026 anti-detect comparisons, and AndroidX WebKit API feasibility. Profile-local proxy/UA/language support is now an implemented bounded capability; operational third-party anti-fraud bypass and fingerprint spoofing remain excluded.
