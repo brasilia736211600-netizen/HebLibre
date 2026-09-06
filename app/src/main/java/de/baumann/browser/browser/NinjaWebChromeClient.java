@@ -55,17 +55,6 @@ public class NinjaWebChromeClient extends WebChromeClient {
     }
 
     @Override
-    public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, Message resultMsg) {
-        String profileId = ProfileCatalogStore.getActiveProfileId(ninjaWebView.getContext());
-        java.util.Map<String, String> profileSettings =
-                ProfilePreferencesStore.snapshot(ninjaWebView.getContext(), profileId);
-        if ("b:true".equals(profileSettings.get("block_popups"))) {
-            return false;
-        }
-        return super.onCreateWindow(view, isDialog, isUserGesture, resultMsg);
-    }
-
-    @Override
     public void onPermissionRequest(final PermissionRequest request) {
         String profileId = ProfileCatalogStore.getActiveProfileId(ninjaWebView.getContext());
         String siteDecision = ProfileSitePermissionStore.getDecision(
@@ -93,6 +82,8 @@ public class NinjaWebChromeClient extends WebChromeClient {
                 }
             }
         }
+        // A profile/site 'allow' never bypasses the browser's global media policy
+        // or Android runtime permissions; it only avoids an explicit site-level deny.
         super.onPermissionRequest(request);
     }
 
