@@ -50,7 +50,7 @@ public class ProfileCatalogViewPolicyTest {
 
         assertEquals(Arrays.asList("m", "z", "a"),
                 ids(ProfileCatalogViewPolicy.filterAndSort(
-                        profiles, "", "", ProfileCatalogViewPolicy.SortMode.GROUP)));
+                        profiles, "", "", ProfileCatalogViewPolicy.SortMode.GROUP));
         assertEquals(Arrays.asList("a", "m", "z"),
                 ids(ProfileCatalogViewPolicy.filterAndSort(
                         profiles, "", "", ProfileCatalogViewPolicy.SortMode.ID));
