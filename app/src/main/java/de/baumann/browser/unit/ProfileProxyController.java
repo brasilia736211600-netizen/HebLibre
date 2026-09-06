@@ -8,6 +8,7 @@ import androidx.webkit.ProxyConfig;
 import androidx.webkit.ProxyController;
 import androidx.webkit.WebViewFeature;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 /** Applies the active profile's real WebView proxy before BrowserActivity creates WebViews. */
@@ -15,24 +16,20 @@ public final class ProfileProxyController {
     private ProfileProxyController() { }
 
     public static void applyActiveProfileProxy(Context context, final Runnable afterApply) {
-        if (context == null) {
-            runOnMain(afterApply);
-            return;
-        }
-        if (!WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
+        if (context == null || !WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
             runOnMain(afterApply);
             return;
         }
 
         String profileId = ProfileCatalogStore.getActiveProfileId(context);
         ProfilePreferencesStore.initializeProfile(context, profileId);
-        String proxyUrl = ProfileProxyPolicy.normalize(
-                ProfilePreferencesStore.snapshot(context, profileId).get("proxy_url") == null
-                        ? ""
-                        : ProfilePreferencesStore.snapshot(context, profileId).get("proxy_url").substring(2));
-        String bypass = ProfilePreferencesStore.snapshot(context, profileId).get("proxy_bypass");
-        if (bypass != null && bypass.startsWith("s:")) bypass = ProfileProxyPolicy.normalizeBypassRules(bypass.substring(2));
-        else bypass = "";
+        Map<String, String> snapshot = ProfilePreferencesStore.snapshot(context, profileId);
+        String encodedProxy = snapshot.get("proxy_url");
+        String proxyUrl = encodedProxy != null && encodedProxy.startsWith("s:")
+                ? ProfileProxyPolicy.normalize(encodedProxy.substring(2)) : "";
+        String encodedBypass = snapshot.get("proxy_bypass");
+        String bypass = encodedBypass != null && encodedBypass.startsWith("s:")
+                ? ProfileProxyPolicy.normalizeBypassRules(encodedBypass.substring(2)) : "";
 
         final Runnable callback = new Runnable() {
             @Override public void run() { runOnMain(afterApply); }
