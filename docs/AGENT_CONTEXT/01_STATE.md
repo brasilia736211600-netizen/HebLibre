@@ -7,7 +7,7 @@
 `086c7038faa5bbb8b9d2a24f392edfe9cce3a07e` — latest application/test checkpoint.
 
 ## Latest documented branch checkpoint
-`20f048f61065a81ca1c4e1ab20f6fe8fd2e2e9c5` before the current source/test commits; this file is being synchronized again now.
+`3b3fbdacc3a5c275bcdb84c4ebda2723141f9e17` — latest state synchronization commit.
 
 ## Completed bounded work
 - Profile metadata/catalog and deterministic profile identity policy.
