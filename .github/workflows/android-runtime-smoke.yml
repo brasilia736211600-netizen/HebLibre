@@ -104,10 +104,8 @@ jobs:
             sleep 3
             test "$(adb shell dumpsys activity activities | grep -c 'de.baumann.browser/.activity.ProfileManagerActivity')" -ge 1
             adb shell uiautomator dump /sdcard/profile.xml >/dev/null
-            echo '--- PROFILE UI XML ---'
-            adb shell cat /sdcard/profile.xml
-            echo '--- END PROFILE UI XML ---'
-            adb shell cat /sdcard/profile.xml | grep -F 'Default (default)' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -F 'Profiles' >/dev/null
+            adb shell cat /sdcard/profile.xml | grep -F 'New profile' >/dev/null
             adb shell input keyevent 4
             sleep 1
             adb shell am start -W -n de.baumann.browser/.activity.ProfileTransferSmokeActivity
